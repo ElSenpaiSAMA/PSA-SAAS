@@ -36,10 +36,28 @@ export function weeklyLoad(items: readonly WorkloadItem[], weeks: readonly Week[
   return load;
 }
 
-/** Capacidad de una semana, descontando los días fuera del rango visible (p. ej. otro mes). */
-export function weekCapacity(weeklyHours: number, week: Week, from: ISODate, to: ISODate): number {
-  const visible = workingDays(week.start > from ? week.start : from, week.end < to ? week.end : to).filter(isWeekday);
+/**
+ * Capacidad de una semana: descuenta los días fuera del rango visible (p. ej. otro mes)
+ * y los días libres (vacaciones aprobadas).
+ */
+export function weekCapacity(
+  weeklyHours: number,
+  week: Week,
+  from: ISODate,
+  to: ISODate,
+  daysOff: ReadonlySet<ISODate> = new Set(),
+): number {
+  const visible = workingDays(week.start > from ? week.start : from, week.end < to ? week.end : to).filter(
+    (d) => isWeekday(d) && !daysOff.has(d),
+  );
   return Math.round((weeklyHours / 5) * visible.length * 10) / 10;
+}
+
+/** Días hábiles cubiertos por rangos de vacaciones. */
+export function daysOffFrom(ranges: readonly { start_date: ISODate; end_date: ISODate }[]): Set<ISODate> {
+  const days = new Set<ISODate>();
+  for (const r of ranges) for (let d = r.start_date; d <= r.end_date; d = addDays(d, 1)) if (isWeekday(d)) days.add(d);
+  return days;
 }
 
 export type LoadLevel = "free" | "low" | "healthy" | "high" | "over";

@@ -1,13 +1,16 @@
 "use client";
 
 import { LayoutGroup, motion } from "motion/react";
-import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, Copy, Lock } from "lucide-react";
 import { useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
+import { updateTaskStatus } from "@/app/app/[orgId]/projects/actions";
+import { duplicateTask } from "@/app/app/[orgId]/work-orders/actions";
+import { formatRange, todayISO } from "@/lib/domain/periods";
 import type { TaskStatus } from "@/lib/supabase/database.types";
+import { useHydrated } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { updateTaskStatus } from "../actions";
 
 const COLUMNS: { status: TaskStatus; label: string; dot: string }[] = [
   { status: "todo", label: "Por hacer", dot: "bg-border-strong" },
@@ -22,8 +25,30 @@ export interface BoardTask {
   assigneeName: string | null;
   estimatedHours: number | null;
   loggedHours: number;
+  startDate: string | null;
+  dueDate: string | null;
   canEdit: boolean;
+  canDuplicate: boolean;
   mine: boolean;
+}
+
+function DueDate({ task }: { task: BoardTask }) {
+  const hydrated = useHydrated();
+  if (!task.dueDate) return null;
+  // "Hoy" depende de la zona horaria del navegador: el aviso de vencida se calcula tras hidratar
+  const overdue = hydrated && task.status !== "done" && task.dueDate < todayISO();
+  return (
+    <span
+      className={cn(
+        "mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11.5px]",
+        overdue ? "bg-danger/10 font-medium text-danger" : "bg-muted text-muted-foreground",
+      )}
+    >
+      <CalendarClock className="size-3" strokeWidth={1.75} />
+      {task.startDate ? formatRange(task.startDate, task.dueDate) : formatRange(task.dueDate, task.dueDate)}
+      {overdue ? " · vencida" : ""}
+    </span>
+  );
 }
 
 export function TaskBoard({ orgId, tasks }: { orgId: string; tasks: BoardTask[] }) {
@@ -31,6 +56,7 @@ export function TaskBoard({ orgId, tasks }: { orgId: string; tasks: BoardTask[] 
     state.map((t) => (t.id === move.id ? { ...t, status: move.status } : t)),
   );
   const [, startTransition] = useTransition();
+  const [duplicating, startDuplicate] = useTransition();
 
   const move = (task: BoardTask, dir: -1 | 1) => {
     const index = COLUMNS.findIndex((c) => c.status === task.status) + dir;
@@ -42,6 +68,13 @@ export function TaskBoard({ orgId, tasks }: { orgId: string; tasks: BoardTask[] 
       if (r.status === "error") toast.error(r.message);
     });
   };
+
+  const duplicate = (task: BoardTask) =>
+    startDuplicate(async () => {
+      const r = await duplicateTask(orgId, task.id);
+      if (r.status === "error") toast.error(r.message);
+      else toast.success(r.message, { description: task.title });
+    });
 
   return (
     <LayoutGroup>
@@ -68,9 +101,29 @@ export function TaskBoard({ orgId, tasks }: { orgId: string; tasks: BoardTask[] 
                         t.mine ? "border-accent/30" : "border-border",
                       )}
                     >
-                      <p className={cn("text-[13.5px] leading-snug font-medium", t.status === "done" && "text-muted-foreground line-through decoration-border-strong")}>
-                        {t.title}
-                      </p>
+                      <div className="flex items-start gap-2">
+                        <p
+                          className={cn(
+                            "flex-1 text-[13.5px] leading-snug font-medium",
+                            t.status === "done" && "text-muted-foreground line-through decoration-border-strong",
+                          )}
+                        >
+                          {t.title}
+                        </p>
+                        {t.canDuplicate ? (
+                          <button
+                            type="button"
+                            onClick={() => duplicate(t)}
+                            disabled={duplicating}
+                            aria-label={`Duplicar "${t.title}"`}
+                            title="Duplicar tarea"
+                            className="-mt-1 -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 disabled:opacity-40"
+                          >
+                            <Copy className="size-3.5" strokeWidth={1.75} />
+                          </button>
+                        ) : null}
+                      </div>
+                      <DueDate task={t} />
                       <div className="mt-3 flex items-center gap-2">
                         {t.assigneeName ? (
                           <>

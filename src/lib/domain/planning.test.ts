@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { weeksOfMonth } from "./periods";
-import { dailyHours, loadLevel, weekCapacity, weeklyLoad, workingDays } from "./planning";
+import { dailyHours, daysOffFrom, loadLevel, weekCapacity, weeklyLoad, workingDays } from "./planning";
 
 describe("planificación", () => {
   it("cuenta días hábiles", () => {
@@ -31,6 +31,13 @@ describe("planificación", () => {
   it("descuenta de la capacidad los días fuera del mes", () => {
     const [first] = weeksOfMonth("2026-10-01"); // lun 28/9 – dom 4/10
     expect(weekCapacity(40, first, "2026-10-01", "2026-10-31")).toBe(16); // jue y vie
+  });
+
+  it("las vacaciones aprobadas descuentan capacidad", () => {
+    const week = weeksOfMonth("2026-10-01")[1]; // lun 5/10 – dom 11/10
+    const off = daysOffFrom([{ start_date: "2026-10-08", end_date: "2026-10-12" }]); // jue, vie (+ lun 12 fuera)
+    expect(off.has("2026-10-10")).toBe(false); // sábado
+    expect(weekCapacity(40, week, "2026-10-01", "2026-10-31", off)).toBe(24);
   });
 
   it("clasifica el nivel de carga", () => {

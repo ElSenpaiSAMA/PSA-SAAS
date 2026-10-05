@@ -4,14 +4,16 @@ import { motion } from "motion/react";
 import type { ReactNode } from "react";
 import { AnimatedNumber } from "@/components/ui/motion";
 import { formatMinutes } from "@/lib/domain/time";
+import { formatMoney } from "@/lib/domain/work-orders";
 
-export type StatFormat = "number" | "minutes" | "percent" | "days";
+export type StatFormat = "number" | "minutes" | "percent" | "days" | "currency";
 
 const formatters: Record<StatFormat, (n: number) => string> = {
   number: (n) => Math.round(n).toLocaleString("es-ES"),
   minutes: (n) => formatMinutes(Math.round(n)),
   percent: (n) => `${Math.round(n)}%`,
   days: (n) => `${Math.round(n)} ${Math.round(n) === 1 ? "día" : "días"}`,
+  currency: (n) => formatMoney(n),
 };
 
 export function StatValue({ value, format }: { value: number; format: StatFormat }) {
