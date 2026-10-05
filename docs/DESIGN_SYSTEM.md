@@ -29,6 +29,15 @@ Esto es un SaaS de gestión (RRHH/proyectos), así que el reto es lograr ese niv
 - **Fichaje**: micro-interacción clara al fichar entrada/salida (confirmación visual satisfactoria, no solo un toast de texto).
 - **Command palette**: navegar la app entera sin mouse, con atajos.
 
+## Decisiones tomadas en la implementación
+
+- **Marca**: *Kairos* (en griego, "el momento justo"), centralizada en `src/lib/brand.ts`. Logo: un reloj minimal con la aguja de minutos en el color de acento.
+- **Color**: grises neutros en OKLCH + un único acento índigo (`oklch(0.55 0.2 272)` claro / `oklch(0.68 0.17 272)` oscuro). Estados semánticos (`success`, `warning`, `danger`) solo para estado, nunca decoración. Tokens en `src/app/globals.css`.
+- **Tipografía**: Geist (UI) + Geist Mono (números, relojes) + **Instrument Serif itálica** como acento editorial en titulares ("El tiempo de tu equipo, *en orden.*"). El contraste sans/serif es el gesto de marca.
+- **Movimiento**: una sola curva (`cubic-bezier(0.16, 1, 0.3, 1)`) para todo; entradas con blur + desplazamiento corto; `prefers-reduced-motion` respetado globalmente.
+- **Firmas visuales**: preview del producto en el hero que se "asienta" en perspectiva al hacer scroll, tarjetas con halo que sigue al cursor, contadores animados, tablero kanban con `layoutId` (las tarjetas viajan entre columnas), reloj de fichaje con pulso en vivo, paleta ⌘K.
+- **Estados**: cada lista tiene estado vacío ilustrado; cada ruta tiene `loading.tsx` con skeleton; errores de formulario con micro-shake y foco accesible (`aria-invalid` + `aria-describedby`).
+
 ## Qué evitar
 
 - Plantillas de admin dashboard genéricas "de curso online".
