@@ -30,6 +30,14 @@ Mini SaaS multi-tenant tipo Factorial. Contexto de producto en `docs/APP_FLOW.md
 4. `security-audit` revisa si la feature toca datos, auth o permisos.
 5. Merge a `dev` → CI → deploy a staging → validación `qa` → merge a `main` → deploy a prod.
 
+## Reglas aprendidas (no repetir)
+
+- **CI en verde antes de mergear** a `dev`. Lo que hay en disco no es lo que está commiteado: verificar `git status` (archivos `??` que el código importa) o correr typecheck en un `git worktree` limpio.
+- **Server → Client Components**: nunca pasar funciones como props (p. ej. un ícono de `lucide-react`). Renderizar el ícono en el servidor y pasar solo datos serializables.
+- **Hora y zona horaria**: el servidor corre en UTC. Un Client Component que formatee horas, agrupe por día o use `Date.now()` en el render debe esperar a hidratar (`useHydrated` / `useNow` de `src/lib/use-now.ts`).
+- **Carpetas vacías** no se versionan: si algo (Dockerfile, scripts) depende de una carpeta, garantizar que exista.
+- **Migraciones**: nunca editar una ya mergeada; crear `000N_*.sql` nueva + test pgTAP.
+
 ## Comandos
 
 ```bash

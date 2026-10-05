@@ -10,21 +10,44 @@
 ## Estructura de rutas (Next.js App Router)
 
 ```
-app/
-  (marketing)/          # público, sin auth
-    page.tsx             # landing
-  (auth)/                # login/registro, sin sesión activa
-    login/page.tsx
-    signup/page.tsx
-  select-organization/   # tras login, antes de entrar a una org (si aplica)
-    page.tsx
+src/
+  proxy.ts                     # refresca la sesión y redirige rutas protegidas (Next 16: ex-middleware)
   app/
-    [orgId]/             # todo lo del SaaS, scopeado a una organización
-      dashboard/
-      employees/
-      time-tracking/
-      vacations/
-      projects/
+    (marketing)/page.tsx       # landing pública
+    (auth)/                    # login y registro + Server Actions de auth
+    auth/callback/route.ts     # confirmación de email (PKCE)
+    select-organization/       # selector multi-empresa, invitaciones, crear org
+    app/[orgId]/               # todo el SaaS, scopeado a una organización
+      layout.tsx               # valida membership en servidor (404 si no pertenece) + shell
+      dashboard/               # resumen personal y del equipo
+      time-tracking/           # fichaje, imputación de horas, carga del equipo
+      vacations/               # saldo, solicitudes y aprobaciones
+      projects/[projectId]/    # proyectos y tablero de tareas
+      employees/               # directorio, organigrama, invitaciones
+      audit/                   # auditoría (requiere employees.manage)
 ```
 
-`[orgId]` ancla el contexto de organización en toda request del SaaS: el middleware/layout de `app/[orgId]/` valida que el usuario tenga una `membership` activa en esa org antes de renderizar nada (y RLS en Supabase hace de segunda barrera a nivel de datos).
+`[orgId]` ancla el contexto de organización en toda request del SaaS: el layout de `app/[orgId]/` valida que el usuario tenga una `membership` activa en esa org antes de renderizar nada (y RLS en Supabase hace de segunda barrera a nivel de datos).
+
+## Capas del código
+
+| Capa | Dónde | Responsabilidad |
+|---|---|---|
+| Dominio | `src/lib/domain/` | Lógica pura y testeada: horas, carga, saldo de vacaciones, jerarquía, permisos, auditoría |
+| Validación | `src/lib/validation/` | Esquemas Zod de toda entrada del usuario |
+| Datos | `src/lib/data/` | Consultas tipadas a Supabase (`server-only`, cacheadas por request) |
+| Acciones | `src/app/**/actions.ts` | Server Actions: validan, verifican permisos y escriben |
+| UI | `src/components/`, `src/app/**` | Server Components para datos, Client Components solo donde hay interacción |
+
+## Visibilidad por rol
+
+| Función | Empleado | Manager | Admin | Owner |
+|---|:-:|:-:|:-:|:-:|
+| Fichar e imputar horas propias | ✓ | ✓ | ✓ | ✓ |
+| Solicitar vacaciones | ✓ | ✓ | ✓ | ✓ |
+| Mover sus propias tareas | ✓ | ✓ | ✓ | ✓ |
+| Ver horas y carga de su equipo | | su línea | toda la org | toda la org |
+| Aprobar vacaciones | | su línea | toda la org | toda la org |
+| Crear proyectos y tareas de otros | | | ✓ | ✓ |
+| Invitar y editar miembros | | | rangos inferiores | ✓ |
+| Ver auditoría de la organización | | | ✓ | ✓ |
