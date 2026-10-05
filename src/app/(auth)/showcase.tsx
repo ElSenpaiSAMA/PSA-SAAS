@@ -44,7 +44,8 @@ export function AuthShowcase() {
                 layout
                 initial={{ opacity: 0, y: 40, scale: 0.96 }}
                 animate={{ opacity: 1 - i * 0.28, y: i * 88, scale: 1 - i * 0.03 }}
-                exit={{ opacity: 0, y: -30, scale: 0.96 }}
+                // Salida más corta que la entrada: la tarjeta que se va no llega a cruzarse con la que sube
+                exit={{ opacity: 0, y: -24, scale: 0.96, transition: { duration: 0.3, ease: EASE } }}
                 transition={{ duration: 0.9, ease: EASE }}
                 className="absolute inset-x-0 top-0 flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-xl dark:border-border dark:bg-muted/60"
               >
