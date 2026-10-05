@@ -89,6 +89,48 @@ test("una admin ve la auditoría con la actividad reciente", async ({ page }) =>
   await expect(page.getByText("aprobó una solicitud de vacaciones").first()).toBeVisible();
 });
 
+const projectNames = (page: Page) => page.locator("a[href*='/projects/'] p.font-semibold").allTextContents();
+
+test("una empleada solo ve los proyectos donde es miembro", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/projects`);
+  await expect(page.getByText("Rediseño portal clientes")).toBeVisible();
+  expect(await projectNames(page)).toEqual(["Rediseño portal clientes"]);
+  // Un proyecto ajeno no es accesible ni por URL
+  await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});
+
+test("el responsable ve los proyectos de su departamento y suma miembros", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/projects`);
+  await expect(page.getByText("API de pagos v2")).toBeVisible();
+  expect((await projectNames(page)).sort()).toEqual(["API de pagos v2", "Rediseño portal clientes"]);
+
+  await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
+  await page.getByLabel("Persona a sumar").selectOption({ label: "Ana Torres" });
+  await page.getByRole("button", { name: "Sumar al proyecto" }).click();
+  await expect(page.getByText("Miembro agregado")).toBeVisible();
+});
+
+test("la empleada pasa a ver el proyecto al que la sumaron", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/projects`);
+  await expect(page.getByText("API de pagos v2")).toBeVisible();
+});
+
+test("una admin crea un departamento con responsable", async ({ page }) => {
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/employees`);
+  await page.getByRole("tab", { name: "Departamentos" }).click();
+  await page.getByRole("button", { name: "Nuevo departamento" }).click();
+  await page.getByLabel("Nombre").fill("Ventas");
+  await page.getByLabel("Responsable").selectOption({ label: "Diego Fernández" });
+  await page.getByRole("button", { name: "Crear" }).click();
+  await expect(page.getByText('Departamento "Ventas" creado')).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ventas" })).toBeVisible();
+});
+
 test("una invitación pendiente se acepta desde el selector", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto("/select-organization?new=1");
