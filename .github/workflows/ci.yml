@@ -48,7 +48,7 @@ jobs:
       - run: npm run build
 
   e2e:
-    name: E2E (Playwright)
+    name: E2E (Playwright + Supabase)
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -58,15 +58,35 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Postgres + Auth reales con migraciones y datos demo (supabase/seed.sql)
+      - run: supabase start
+      - id: supabase
+        name: Read local Supabase credentials
+        run: |
+          eval "$(supabase status -o env)"
+          echo "url=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "anon=${ANON_KEY:-$PUBLISHABLE_KEY}" >> "$GITHUB_OUTPUT"
       - run: npx playwright install --with-deps chromium
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ steps.supabase.outputs.anon }}
       - run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ steps.supabase.outputs.anon }}
+          E2E_SUPABASE: "1"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+      - if: always()
+        run: supabase stop --no-backup
 
   database:
     name: Database (migrations + RLS tests)
