@@ -62,20 +62,50 @@ where id in ('bbbbbbbb-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-00
 
 -- Ana ve solo "Portal clientes", Diego solo "API de pagos" (según sus tareas),
 -- Carlos ambos por ser responsable de Ingeniería, Sofía y Laura todo por ser admin/owner.
-insert into public.projects (id, org_id, name, client_name, budgeted_hours, department_id) values
-  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Rediseño portal clientes', 'Acme Corp', 320, 'eeeeeeee-0000-0000-0000-000000000002'),
-  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'API de pagos v2',           'Fintrack',  200, 'eeeeeeee-0000-0000-0000-000000000002'),
-  ('cccccccc-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Onboarding interno',        null,        60,  'eeeeeeee-0000-0000-0000-000000000003');
+insert into public.projects (id, org_id, name, client_name, budgeted_hours, hourly_rate, department_id) values
+  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Rediseño portal clientes', 'Acme Corp', 320, 85,   'eeeeeeee-0000-0000-0000-000000000002'),
+  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'API de pagos v2',           'Fintrack',  200, 95,   'eeeeeeee-0000-0000-0000-000000000002'),
+  ('cccccccc-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Onboarding interno',        null,        60,  null, 'eeeeeeee-0000-0000-0000-000000000003');
+
+-- Órdenes de trabajo: el mes anterior cerrado y facturado, el actual en curso
+create or replace function pg_temp.m0() returns date language sql as $$ select date_trunc('month', current_date)::date $$;
+create or replace function pg_temp.m_end() returns date language sql as $$ select (date_trunc('month', current_date) + interval '1 month - 1 day')::date $$;
+create or replace function pg_temp.prev0() returns date language sql as $$ select (date_trunc('month', current_date) - interval '1 month')::date $$;
+create or replace function pg_temp.month_name(p date) returns text language sql as $$
+  select (array['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'])[extract(month from p)::int]
+         || ' ' || extract(year from p)::int
+$$;
+
+insert into public.work_orders (id, project_id, title, period_start, period_end, budgeted_hours, status, billing_status, invoiced_at) values
+  ('ffffffff-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'Portal clientes · ' || pg_temp.month_name(pg_temp.prev0()), pg_temp.prev0(), pg_temp.m0() - 1, 60, 'closed', 'invoiced', now() - interval '3 days'),
+  ('ffffffff-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'Portal clientes · ' || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 90, 'in_progress', 'unbilled', null),
+  ('ffffffff-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000002', 'API de pagos · '    || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 70, 'in_progress', 'unbilled', null),
+  ('ffffffff-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000003', 'Onboarding · '      || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 20, 'approved',    'unbilled', null);
 
 -- Cada asignado queda como miembro del proyecto (trigger tasks_sync_org)
-insert into public.tasks (id, project_id, title, assigned_to, estimated_hours, status) values
-  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'Sistema de diseño y tokens',     'bbbbbbbb-0000-0000-0000-000000000003', 24, 'done'),
-  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'Dashboard de cliente',           'bbbbbbbb-0000-0000-0000-000000000003', 40, 'in_progress'),
-  ('dddddddd-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000001', 'Accesibilidad AA',               'bbbbbbbb-0000-0000-0000-000000000003', 16, 'todo'),
-  ('dddddddd-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000002', 'Webhooks idempotentes',          'bbbbbbbb-0000-0000-0000-000000000004', 30, 'in_progress'),
-  ('dddddddd-0000-0000-0000-000000000005', 'cccccccc-0000-0000-0000-000000000002', 'Conciliación nocturna',          'bbbbbbbb-0000-0000-0000-000000000004', 20, 'todo'),
-  ('dddddddd-0000-0000-0000-000000000006', 'cccccccc-0000-0000-0000-000000000002', 'Revisión de arquitectura',       'bbbbbbbb-0000-0000-0000-000000000002', 8,  'done'),
-  ('dddddddd-0000-0000-0000-000000000007', 'cccccccc-0000-0000-0000-000000000003', 'Guía de bienvenida',             'bbbbbbbb-0000-0000-0000-000000000005', 10, 'in_progress');
+insert into public.tasks (id, project_id, work_order_id, title, assigned_to, estimated_hours, status, start_date, due_date) values
+  -- Mes anterior (cerrado y facturado): base para "copiar al mes siguiente"
+  ('dddddddd-0000-0000-0000-000000000008', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Mantenimiento evolutivo',    'bbbbbbbb-0000-0000-0000-000000000003', 30, 'done',        pg_temp.prev0() + 1,  pg_temp.prev0() + 20),
+  ('dddddddd-0000-0000-0000-000000000009', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Soporte a usuarios',         'bbbbbbbb-0000-0000-0000-000000000003', 20, 'done',        pg_temp.prev0(),      pg_temp.m0() - 1),
+  ('dddddddd-0000-0000-0000-000000000010', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Informe mensual',            'bbbbbbbb-0000-0000-0000-000000000002', 4,  'done',        pg_temp.m0() - 3,     pg_temp.m0() - 1),
+  -- Mes actual
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Sistema de diseño y tokens', 'bbbbbbbb-0000-0000-0000-000000000003', 24, 'done',        pg_temp.m0(),         pg_temp.m0() + 6),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Dashboard de cliente',       'bbbbbbbb-0000-0000-0000-000000000003', 40, 'in_progress', pg_temp.m0() + 5,     pg_temp.m0() + 19),
+  ('dddddddd-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Accesibilidad AA',           'bbbbbbbb-0000-0000-0000-000000000003', 16, 'todo',        pg_temp.m0() + 18,    pg_temp.m0() + 25),
+  ('dddddddd-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Webhooks idempotentes',      'bbbbbbbb-0000-0000-0000-000000000004', 30, 'in_progress', pg_temp.m0(),         pg_temp.m0() + 13),
+  ('dddddddd-0000-0000-0000-000000000005', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Conciliación nocturna',      'bbbbbbbb-0000-0000-0000-000000000004', 20, 'todo',        pg_temp.m0() + 12,    pg_temp.m0() + 24),
+  ('dddddddd-0000-0000-0000-000000000006', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Revisión de arquitectura',   'bbbbbbbb-0000-0000-0000-000000000002', 8,  'done',        pg_temp.m0(),         pg_temp.m0() + 3),
+  ('dddddddd-0000-0000-0000-000000000007', 'cccccccc-0000-0000-0000-000000000003', 'ffffffff-0000-0000-0000-000000000004', 'Guía de bienvenida',         'bbbbbbbb-0000-0000-0000-000000000005', 10, 'in_progress', pg_temp.m0() + 2,     pg_temp.m0() + 16);
+
+-- Horas del mes anterior (ya facturadas)
+insert into public.time_entries (membership_id, entry_type, task_id, started_at, ended_at)
+select t.assigned_to, 'task', t.id, d + time '10:00', d + time '10:00' + (t.hours * interval '1 hour')
+from generate_series(pg_temp.prev0(), pg_temp.m0() - 1, interval '1 day') d
+cross join (values
+  ('dddddddd-0000-0000-0000-000000000008'::uuid, 'bbbbbbbb-0000-0000-0000-000000000003'::uuid, 1.5),
+  ('dddddddd-0000-0000-0000-000000000009'::uuid, 'bbbbbbbb-0000-0000-0000-000000000003'::uuid, 1)
+) as t(id, assigned_to, hours)
+where extract(isodow from d) < 6;
 
 -- Fichajes y horas de las últimas dos semanas (días hábiles)
 insert into public.time_entries (membership_id, entry_type, task_id, started_at, ended_at)
