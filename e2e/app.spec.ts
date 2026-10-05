@@ -148,7 +148,7 @@ test("el responsable copia la OT del mes anterior al mes siguiente", async ({ pa
   await expect(page.getByText("Facturada", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Copiar al mes siguiente" }).first().click();
   await expect(page).toHaveURL(/\/work-orders\/(?!ffffffff)[0-9a-f-]{36}$/);
-  await expect(page.getByText("Borrador")).toBeVisible();
+  await expect(page.getByText("Borrador", { exact: true })).toBeVisible();
   await expect(page.getByText("Mantenimiento evolutivo")).toBeVisible();
 });
 
