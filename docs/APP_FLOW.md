@@ -23,7 +23,7 @@ src/
       time-tracking/           # fichaje, imputación de horas, carga del equipo
       vacations/               # saldo, solicitudes y aprobaciones
       projects/[projectId]/    # proyectos y tablero de tareas
-      employees/               # directorio, organigrama, invitaciones
+      employees/               # personas: directorio, departamentos, organigrama, invitaciones
       audit/                   # auditoría (requiere employees.manage)
 ```
 
@@ -41,13 +41,17 @@ src/
 
 ## Visibilidad por rol
 
-| Función | Empleado | Manager | Admin | Owner |
+"Responsable" es quien encabeza un departamento (sube automáticamente a rol manager).
+
+| Función | Empleado | Responsable de depto. | Admin | Owner |
 |---|:-:|:-:|:-:|:-:|
-| Fichar e imputar horas propias | ✓ | ✓ | ✓ | ✓ |
+| Fichar e imputar horas propias | ✓ (en sus proyectos) | ✓ | ✓ | ✓ |
 | Solicitar vacaciones | ✓ | ✓ | ✓ | ✓ |
+| Ver proyectos | donde es miembro | su departamento | todos | todos |
+| Crear proyectos, tareas y gestionar miembros | | su departamento | ✓ | ✓ |
 | Mover sus propias tareas | ✓ | ✓ | ✓ | ✓ |
 | Ver horas y carga de su equipo | | su línea | toda la org | toda la org |
 | Aprobar vacaciones | | su línea | toda la org | toda la org |
-| Crear proyectos y tareas de otros | | | ✓ | ✓ |
-| Invitar y editar miembros | | | rangos inferiores | ✓ |
+| Crear departamentos y asignar responsables | | | ✓ | ✓ |
+| Invitar personas y editar rol/departamento | | | rangos inferiores | ✓ |
 | Ver auditoría de la organización | | | ✓ | ✓ |

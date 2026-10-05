@@ -84,6 +84,29 @@ Además agrega el **flujo de alta**:
 - `create_organization(name)`: crea la org y la membership `owner` de forma atómica.
 - `invitations` + `accept_invitation(id)`: un admin invita por email (con rol, manager y puesto); al loguearse, el invitado ve la invitación en el selector de organización y la acepta. Nadie puede invitar con un rango igual o superior al propio.
 
+## Departamentos y miembros de proyecto (`0004_departments_and_project_members.sql`)
+
+### `public.departments`
+`org_id`, `name`, `head_id` (responsable, una persona encabeza como mucho un departamento). `memberships`, `projects` e `invitations` tienen `department_id`.
+
+- Al asignar a alguien a un departamento, **su manager pasa a ser el responsable** (trigger `membership_department_manager`), salvo que el responsable le reporte a esa persona (evita ciclos).
+- Al nombrar un responsable: queda dentro del departamento, sube a rol `manager` si era `employee` (así puede aprobar vacaciones y ver horas) y pasa a ser el manager de todos los miembros (`department_head_sync`).
+- Gestionar departamentos requiere el permiso nuevo `departments.manage` (owner y admin).
+
+### `public.project_members`
+Quién participa de cada proyecto. Asignar una tarea suma automáticamente a la persona como miembro.
+
+### Visibilidad de proyectos
+Resuelta en la base con `can_view_project` / `can_manage_project`, y aplicada a proyectos, tareas, miembros, imputación de horas y horas agregadas:
+
+| Quién | Ve | Gestiona (miembros, tareas, archivar) |
+|---|---|---|
+| Owner / admin (`projects.manage`) | Todos los proyectos | Todos |
+| Responsable de departamento | Los de su departamento + donde es miembro | Los de su departamento |
+| Resto | Solo donde es miembro | — (solo mueve sus tareas) |
+
+Un empleado no puede imputar horas a un proyecto del que no es miembro, ni ver sus horas agregadas. Cubierto por `supabase/tests/departments.test.sql` (16 tests).
+
 ## Desarrollo local
 
 ```bash
