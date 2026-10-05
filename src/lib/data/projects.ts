@@ -15,6 +15,20 @@ export const getProjects = cache(async (orgId: string): Promise<Project[]> => {
   return data ?? [];
 });
 
+/** Minutos imputados por tarea (agregados en la base, sin exponer registros individuales). */
+export const getTaskMinutes = cache(async (orgId: string): Promise<Map<string, number>> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("task_logged_minutes", { p_org_id: orgId });
+  if (error) throw error;
+  return new Map((data ?? []).map((r) => [r.task_id, r.minutes]));
+});
+
+export const getProject = cache(async (projectId: string): Promise<Project | null> => {
+  const supabase = await createClient();
+  const { data } = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
+  return data;
+});
+
 export const getTasks = cache(async (orgId: string): Promise<Task[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
