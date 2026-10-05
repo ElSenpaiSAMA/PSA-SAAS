@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { auditCategory, changedFields, describeAudit, type AuditLike } from "./audit";
+import { auditCategory, changedFields, describeAudit, relativeTime, type AuditLike } from "./audit";
 
 const entry = (partial: Partial<AuditLike>): AuditLike => ({
   action: "INSERT",
@@ -74,6 +74,18 @@ describe("describeAudit", () => {
 
   it("invitaciones", () => {
     expect(describeAudit(entry({ table_name: "invitations", new_data: { email: "a@b.com" } }))).toBe("invitó a a@b.com");
+  });
+});
+
+describe("relativeTime", () => {
+  const now = new Date("2026-10-05T12:00:00Z").getTime();
+  it.each([
+    ["2026-10-05T11:59:30Z", "hace instantes"],
+    ["2026-10-05T11:55:00Z", "hace 5 minutos"],
+    ["2026-10-05T09:00:00Z", "hace 3 horas"],
+    ["2026-10-04T12:00:00Z", "ayer"],
+  ])("%s → %s", (iso, expected) => {
+    expect(relativeTime(iso, now)).toBe(expected);
   });
 });
 

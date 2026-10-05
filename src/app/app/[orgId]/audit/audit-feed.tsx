@@ -5,7 +5,8 @@ import { CalendarDays, Clock3, FolderKanban, KeyRound, ScrollText, Users, type L
 import { useMemo, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { auditCategory, changedFields, describeAudit, type AuditCategory } from "@/lib/domain/audit";
+import { auditCategory, changedFields, describeAudit, relativeTime, type AuditCategory } from "@/lib/domain/audit";
+import { useNow } from "@/lib/use-now";
 import type { AuditLog } from "@/lib/supabase/database.types";
 import { cn } from "@/lib/utils";
 
@@ -18,17 +19,9 @@ const CATEGORIES: { id: AuditCategory | "all"; label: string; icon: LucideIcon }
   { id: "auth", label: "Accesos", icon: KeyRound },
 ];
 
-function relative(iso: string) {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  const rtf = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
-  if (diff < 60) return "hace instantes";
-  if (diff < 3600) return rtf.format(-Math.round(diff / 60), "minute");
-  if (diff < 86_400) return rtf.format(-Math.round(diff / 3600), "hour");
-  if (diff < 604_800) return rtf.format(-Math.round(diff / 86_400), "day");
-  return new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
-}
-
 export function AuditFeed({ entries, names }: { entries: AuditLog[]; names: Record<string, string> }) {
+  // Tiempo relativo y fecha local solo tras hidratar (servidor en UTC, cliente en hora local)
+  const now = useNow();
   const [filter, setFilter] = useState<AuditCategory | "all">("all");
   const [expanded, setExpanded] = useState<number | null>(null);
 
@@ -101,8 +94,12 @@ export function AuditFeed({ entries, names }: { entries: AuditLog[]; names: Reco
                         {fields.length} {fields.length === 1 ? "cambio" : "cambios"}
                       </span>
                     ) : null}
-                    <time dateTime={e.created_at} className="shrink-0 text-[12px] text-muted-foreground" title={new Date(e.created_at).toLocaleString("es-ES")}>
-                      {relative(e.created_at)}
+                    <time
+                      dateTime={e.created_at}
+                      className="min-w-16 shrink-0 text-right text-[12px] text-muted-foreground"
+                      title={now === null ? undefined : new Date(e.created_at).toLocaleString("es-ES")}
+                    >
+                      {now === null ? " " : relativeTime(e.created_at, now)}
                     </time>
                   </button>
                   <AnimatePresence>

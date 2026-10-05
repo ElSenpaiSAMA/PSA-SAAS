@@ -6,7 +6,18 @@ export interface AuditLike {
   metadata?: Record<string, unknown> | null;
 }
 
-export type AuditCategory = "auth" | "people" | "time" | "vacations" | "projects" | "other";
+/** "hace 5 minutos", "ayer"… relativo a `now`; más de una semana: fecha corta. */
+export function relativeTime(iso: string, now: number): string {
+  const diff = (now - new Date(iso).getTime()) / 1000;
+  const rtf = new Intl.RelativeTimeFormat("es", { numeric: "auto" });
+  if (diff < 60) return "hace instantes";
+  if (diff < 3600) return rtf.format(-Math.round(diff / 60), "minute");
+  if (diff < 86_400) return rtf.format(-Math.round(diff / 3600), "hour");
+  if (diff < 604_800) return rtf.format(-Math.round(diff / 86_400), "day");
+  return new Date(iso).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+}
+
+export type AuditCategory ="auth" | "people" | "time" | "vacations" | "projects" | "other";
 
 const TABLE_CATEGORY: Record<string, AuditCategory> = {
   memberships: "people",
