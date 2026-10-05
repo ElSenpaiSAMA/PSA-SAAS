@@ -1,0 +1,81 @@
+export type VacationStatus = "pending" | "approved" | "rejected" | "cancelled";
+
+export interface VacationRange {
+  start_date: string; // YYYY-MM-DD
+  end_date: string;
+}
+
+export interface VacationRequestLike extends VacationRange {
+  membership_id: string;
+  status: VacationStatus;
+}
+
+function parseDate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+/** Días hábiles (lunes a viernes) entre dos fechas, ambas inclusive. */
+export function businessDays(range: VacationRange): number {
+  const start = parseDate(range.start_date);
+  const end = parseDate(range.end_date);
+  if (end < start) return 0;
+  let count = 0;
+  for (let d = start; d <= end; d = new Date(d.getTime() + 86_400_000)) {
+    const day = d.getUTCDay();
+    if (day !== 0 && day !== 6) count++;
+  }
+  return count;
+}
+
+export function rangesOverlap(a: VacationRange, b: VacationRange): boolean {
+  return a.start_date <= b.end_date && b.start_date <= a.end_date;
+}
+
+export interface VacationBalance {
+  allowance: number;
+  used: number;
+  pending: number;
+  available: number;
+}
+
+export function vacationBalance(
+  allowance: number,
+  requests: readonly VacationRequestLike[],
+  year: number,
+): VacationBalance {
+  const inYear = requests.filter((r) => r.start_date.startsWith(`${year}-`));
+  const sum = (status: VacationStatus) =>
+    inYear.filter((r) => r.status === status).reduce((acc, r) => acc + businessDays(r), 0);
+  const used = sum("approved");
+  const pending = sum("pending");
+  return { allowance, used, pending, available: allowance - used - pending };
+}
+
+export type RequestValidationError =
+  | "invalid_range"
+  | "starts_in_past"
+  | "overlaps_existing"
+  | "insufficient_balance"
+  | "no_business_days";
+
+export function validateNewRequest(
+  range: VacationRange,
+  existing: readonly VacationRequestLike[],
+  balance: VacationBalance,
+  today: string,
+): RequestValidationError | null {
+  if (range.end_date < range.start_date) return "invalid_range";
+  if (range.start_date < today) return "starts_in_past";
+  const days = businessDays(range);
+  if (days === 0) return "no_business_days";
+  const active = existing.filter((r) => r.status === "pending" || r.status === "approved");
+  if (active.some((r) => rangesOverlap(r, range))) return "overlaps_existing";
+  if (days > balance.available) return "insufficient_balance";
+  return null;
+}
+
+/** Nadie puede decidir sobre su propia solicitud, y solo se deciden las pendientes. */
+export function canDecide(request: VacationRequestLike, deciderMembershipId: string): boolean {
+  return request.status === "pending" && request.membership_id !== deciderMembershipId;
+}
