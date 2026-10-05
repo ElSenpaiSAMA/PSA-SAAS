@@ -7,26 +7,30 @@ export interface WorkloadItem {
   due_date: ISODate;
 }
 
-/** Días hábiles entre dos fechas (inclusive). Si no hay ninguno, el último día cuenta igual. */
-export function workingDays(start: ISODate, end: ISODate): ISODate[] {
+/** Días hábiles entre dos fechas (inclusive), sin festivos. Si no hay ninguno, el último día cuenta igual. */
+export function workingDays(start: ISODate, end: ISODate, holidays: ReadonlySet<ISODate> = new Set()): ISODate[] {
   const days: ISODate[] = [];
-  for (let d = start; d <= end; d = addDays(d, 1)) if (isWeekday(d)) days.push(d);
+  for (let d = start; d <= end; d = addDays(d, 1)) if (isWeekday(d) && !holidays.has(d)) days.push(d);
   return days.length ? days : [end];
 }
 
 /** Reparte las horas estimadas de forma pareja entre los días hábiles de la tarea. */
-export function dailyHours(item: WorkloadItem): Map<ISODate, number> {
-  const days = workingDays(item.start_date, item.due_date);
+export function dailyHours(item: WorkloadItem, holidays: ReadonlySet<ISODate> = new Set()): Map<ISODate, number> {
+  const days = workingDays(item.start_date, item.due_date, holidays);
   const perDay = item.estimated_hours / days.length;
   return new Map(days.map((d) => [d, perDay]));
 }
 
 /** Horas planificadas por persona y semana. */
-export function weeklyLoad(items: readonly WorkloadItem[], weeks: readonly Week[]): Map<string, number[]> {
+export function weeklyLoad(
+  items: readonly WorkloadItem[],
+  weeks: readonly Week[],
+  holidays: ReadonlySet<ISODate> = new Set(),
+): Map<string, number[]> {
   const load = new Map<string, number[]>();
   for (const item of items) {
     const row = load.get(item.membership_id) ?? weeks.map(() => 0);
-    for (const [day, hours] of dailyHours(item)) {
+    for (const [day, hours] of dailyHours(item, holidays)) {
       const index = weeks.findIndex((w) => day >= w.start && day <= w.end);
       if (index >= 0) row[index] += hours;
     }
