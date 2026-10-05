@@ -2,12 +2,12 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { Mail, X } from "lucide-react";
-import { useActionState, useEffect, useRef, useTransition } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { idle } from "@/lib/actions";
+import { idle, type ActionState } from "@/lib/actions";
 import { outranks, ROLE_LABEL, ROLES, type Role } from "@/lib/domain/permissions";
 import { inviteEmployee, revokeInvitation } from "./actions";
 
@@ -16,18 +16,27 @@ export interface PendingInvite {
   email: string;
   role: Role;
   position: string | null;
+  departmentName: string | null;
   createdAt: string;
+}
+
+export interface DepartmentOption {
+  id: string;
+  name: string;
+  hasHead: boolean;
 }
 
 export function InvitePanel({
   orgId,
   myRole,
   managers,
+  departments,
   pending,
 }: {
   orgId: string;
   myRole: Role;
   managers: { id: string; name: string }[];
+  departments: DepartmentOption[];
   pending: PendingInvite[];
 }) {
   const [state, action] = useActionState(inviteEmployee.bind(null, orgId), idle);
@@ -44,39 +53,7 @@ export function InvitePanel({
   return (
     <div className="grid gap-6">
       <form key={state.status === "success" ? state.submittedAt : "draft"} action={action} noValidate className="grid gap-3">
-        <Field label="Email" error={state.fieldErrors?.email}>
-          <Input name="email" type="email" placeholder="nombre@empresa.com" />
-        </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Rol" error={state.fieldErrors?.role}>
-            <Select name="role" defaultValue="employee">
-              {roles.map((r) => (
-                <option key={r} value={r}>
-                  {ROLE_LABEL[r]}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Reporta a" error={state.fieldErrors?.managerId}>
-            <Select name="managerId" defaultValue="">
-              <option value="">Nadie</option>
-              {managers.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-        <Field label="Puesto" error={state.fieldErrors?.position}>
-          <Input name="position" placeholder="Ej: Product Designer" />
-        </Field>
-        <SubmitButton pendingLabel="Invitando…">
-          <Mail className="size-4" /> Enviar invitación
-        </SubmitButton>
-        <p className="text-[12px] leading-relaxed text-muted-foreground">
-          La persona verá la invitación al iniciar sesión con ese email y podrá aceptarla desde el selector de organización.
-        </p>
+        <InviteFields state={state} roles={roles} managers={managers} departments={departments} />
       </form>
 
       {pending.length > 0 ? (
@@ -95,6 +72,76 @@ export function InvitePanel({
   );
 }
 
+function InviteFields({
+  state,
+  roles,
+  managers,
+  departments,
+}: {
+  state: ActionState;
+  roles: Role[];
+  managers: { id: string; name: string }[];
+  departments: DepartmentOption[];
+}) {
+  const [departmentId, setDepartmentId] = useState("");
+  // Con departamento (y responsable), el manager es el responsable
+  const managedByHead = departments.find((d) => d.id === departmentId)?.hasHead ?? false;
+
+  return (
+    <>
+      <Field label="Email" error={state.fieldErrors?.email}>
+        <Input name="email" type="email" placeholder="nombre@empresa.com" />
+      </Field>
+      <Field label="Departamento" error={state.fieldErrors?.departmentId}>
+        <Select name="departmentId" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+          <option value="">Sin departamento</option>
+          {departments.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Rol" error={state.fieldErrors?.role}>
+          <Select name="role" defaultValue="employee">
+            {roles.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_LABEL[r]}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        {managedByHead ? (
+          <Field label="Reporta a" hint="Al responsable del departamento">
+            <Input value="Responsable" disabled readOnly />
+          </Field>
+        ) : (
+          <Field label="Reporta a" error={state.fieldErrors?.managerId}>
+            <Select name="managerId" defaultValue="">
+              <option value="">Nadie</option>
+              {managers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        )}
+      </div>
+      <Field label="Puesto" error={state.fieldErrors?.position}>
+        <Input name="position" placeholder="Ej: Product Designer" />
+      </Field>
+      <SubmitButton pendingLabel="Invitando…">
+        <Mail className="size-4" /> Enviar invitación
+      </SubmitButton>
+      <p className="text-[12px] leading-relaxed text-muted-foreground">
+        La persona verá la invitación al iniciar sesión con ese email y podrá aceptarla desde el selector de organización.
+      </p>
+    </>
+  );
+}
+
 function PendingRow({ orgId, invite }: { orgId: string; invite: PendingInvite }) {
   const [pending, start] = useTransition();
   return (
@@ -110,6 +157,7 @@ function PendingRow({ orgId, invite }: { orgId: string; invite: PendingInvite })
         <p className="truncate text-[13px] font-medium">{invite.email}</p>
         <p className="text-[12px] text-muted-foreground">
           {ROLE_LABEL[invite.role]}
+          {invite.departmentName ? ` · ${invite.departmentName}` : ""}
           {invite.position ? ` · ${invite.position}` : ""}
         </p>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Network, Pencil, Rows3, X } from "lucide-react";
+import { Building2, Network, Pencil, Rows3, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
@@ -14,6 +14,7 @@ import { reportsOf } from "@/lib/domain/hierarchy";
 import { outranks, ROLE_LABEL, ROLES, type Role } from "@/lib/domain/permissions";
 import { cn } from "@/lib/utils";
 import { updateMember } from "./actions";
+import { DepartmentsView, type DepartmentInfo } from "./departments-view";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -24,6 +25,7 @@ export interface Person {
   role: Role;
   position: string | null;
   managerId: string | null;
+  departmentId: string | null;
   weeklyHours: number;
   isMe: boolean;
 }
@@ -37,16 +39,22 @@ function EditMember({
   person,
   people,
   myRole,
+  departments,
   onDone,
 }: {
   orgId: string;
   person: Person;
   people: Person[];
   myRole: Role;
+  departments: DepartmentInfo[];
   onDone: () => void;
 }) {
   const [state, action] = useActionState(updateMember.bind(null, orgId), idle);
   const handled = useRef<number | undefined>(undefined);
+  const [departmentId, setDepartmentId] = useState(person.departmentId ?? "");
+  const department = departments.find((d) => d.id === departmentId);
+  // Con departamento, el manager es su responsable (lo asigna la base)
+  const managedByHead = !!department?.headId && department.headId !== person.id;
 
   useEffect(() => {
     if (!state.submittedAt || handled.current === state.submittedAt) return;
@@ -85,15 +93,37 @@ function EditMember({
             ))}
           </Select>
         </Field>
-        <Field label="Reporta a" error={state.fieldErrors?.managerId}>
-          <Select name="managerId" defaultValue={person.managerId ?? ""}>
-            <option value="">Nadie</option>
-            {managers.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
+        <Field label="Departamento" error={state.fieldErrors?.departmentId}>
+          <Select name="departmentId" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+            <option value="">Sin departamento</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
               </option>
             ))}
           </Select>
+        </Field>
+        <Field
+          label="Reporta a"
+          error={state.fieldErrors?.managerId}
+          hint={managedByHead ? `Lo define el responsable de ${department?.name}` : undefined}
+        >
+          {managedByHead ? (
+            <Select key="head" name="managerId" value={department?.headId ?? ""} onChange={() => {}} aria-readonly className="pointer-events-none opacity-70">
+              <option value={department?.headId ?? ""}>
+                {people.find((p) => p.id === department?.headId)?.name ?? "Responsable"}
+              </option>
+            </Select>
+          ) : (
+            <Select key="manual" name="managerId" defaultValue={person.managerId ?? ""}>
+              <option value="">Nadie</option>
+              {managers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
+          )}
         </Field>
         <Field label="Puesto" error={state.fieldErrors?.position}>
           <Input name="position" defaultValue={person.position ?? ""} />
@@ -101,7 +131,7 @@ function EditMember({
         <Field label="Horas semanales" error={state.fieldErrors?.weeklyHours}>
           <Input name="weeklyHours" type="number" min="1" max="60" defaultValue={person.weeklyHours} />
         </Field>
-        <div className="flex justify-end gap-2 sm:col-span-2">
+        <div className="flex items-end justify-end gap-2">
           <button type="button" onClick={onDone} className="h-10 rounded-xl px-4 text-sm text-muted-foreground hover:bg-muted">
             Cancelar
           </button>
@@ -112,9 +142,29 @@ function EditMember({
   );
 }
 
-function Directory({ orgId, people, myRole, canManage }: { orgId: string; people: Person[]; myRole: Role; canManage: boolean }) {
+function Directory({
+  orgId,
+  people,
+  allPeople,
+  myRole,
+  canManage,
+  departments,
+}: {
+  orgId: string;
+  people: Person[];
+  allPeople: Person[];
+  myRole: Role;
+  canManage: boolean;
+  departments: DepartmentInfo[];
+}) {
   const [editing, setEditing] = useState<string | null>(null);
-  const names = new Map(people.map((p) => [p.id, p.name]));
+  const names = new Map(allPeople.map((p) => [p.id, p.name]));
+  const departmentName = new Map(departments.map((d) => [d.id, d.name]));
+  const heads = new Set(departments.map((d) => d.headId).filter(Boolean));
+
+  if (people.length === 0) {
+    return <p className="py-10 text-center text-[13px] text-muted-foreground">No hay personas que coincidan con el filtro.</p>;
+  }
 
   return (
     <div className="grid gap-3 md:grid-cols-2">
@@ -140,6 +190,13 @@ function Directory({ orgId, people, myRole, canManage }: { orgId: string; people
                   {p.position ?? "Sin puesto"}
                   {p.managerId ? ` · reporta a ${names.get(p.managerId) ?? "—"}` : ""}
                 </p>
+                {p.departmentId ? (
+                  <p className="mt-1 inline-flex items-center gap-1 text-[12px] text-muted-foreground">
+                    <Building2 className="size-3" strokeWidth={1.75} />
+                    {departmentName.get(p.departmentId)}
+                    {heads.has(p.id) ? <span className="font-medium text-accent"> · Responsable</span> : null}
+                  </p>
+                ) : null}
               </div>
               <Badge tone={roleTone(p.role)}>{ROLE_LABEL[p.role]}</Badge>
               {editable ? (
@@ -155,7 +212,14 @@ function Directory({ orgId, people, myRole, canManage }: { orgId: string; people
             </div>
             <AnimatePresence>
               {open ? (
-                <EditMember orgId={orgId} person={p} people={people} myRole={myRole} onDone={() => setEditing(null)} />
+                <EditMember
+                  orgId={orgId}
+                  person={p}
+                  people={allPeople}
+                  myRole={myRole}
+                  departments={departments}
+                  onDone={() => setEditing(null)}
+                />
               ) : null}
             </AnimatePresence>
           </motion.div>
@@ -231,26 +295,49 @@ function OrgChart({ people }: { people: Person[] }) {
   );
 }
 
-export function TeamView({ orgId, people, myRole, canManage }: { orgId: string; people: Person[]; myRole: Role; canManage: boolean }) {
-  const [view, setView] = useState<"directory" | "chart">("directory");
+type View = "directory" | "departments" | "chart";
+
+const TABS: { id: View; label: string; icon: typeof Rows3 }[] = [
+  { id: "directory", label: "Directorio", icon: Rows3 },
+  { id: "departments", label: "Departamentos", icon: Building2 },
+  { id: "chart", label: "Organigrama", icon: Network },
+];
+
+export function TeamView({
+  orgId,
+  people,
+  myRole,
+  canManage,
+  canManageDepartments,
+  departments,
+}: {
+  orgId: string;
+  people: Person[];
+  myRole: Role;
+  canManage: boolean;
+  canManageDepartments: boolean;
+  departments: DepartmentInfo[];
+}) {
+  const [view, setView] = useState<View>("directory");
   const [query, setQuery] = useState("");
-  const filtered = people.filter((p) =>
-    `${p.name} ${p.email ?? ""} ${p.position ?? ""}`.toLowerCase().includes(query.trim().toLowerCase()),
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const filtered = people.filter(
+    (p) =>
+      (departmentFilter === "all" ||
+        (departmentFilter === "none" ? !p.departmentId : p.departmentId === departmentFilter)) &&
+      `${p.name} ${p.email ?? ""} ${p.position ?? ""}`.toLowerCase().includes(query.trim().toLowerCase()),
   );
 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="relative inline-flex rounded-xl border border-border bg-card p-1">
-          {(
-            [
-              { id: "directory", label: "Directorio", icon: Rows3 },
-              { id: "chart", label: "Organigrama", icon: Network },
-            ] as const
-          ).map((t) => (
+        <div className="relative inline-flex rounded-xl border border-border bg-card p-1" role="tablist">
+          {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
+              role="tab"
+              aria-selected={view === t.id}
               onClick={() => setView(t.id)}
               className={cn(
                 "relative inline-flex h-8 items-center gap-2 rounded-lg px-3 text-[13px] transition-colors",
@@ -258,7 +345,11 @@ export function TeamView({ orgId, people, myRole, canManage }: { orgId: string; 
               )}
             >
               {view === t.id ? (
-                <motion.span layoutId="team-tab" className="absolute inset-0 rounded-lg bg-muted" transition={{ type: "spring", stiffness: 500, damping: 40 }} />
+                <motion.span
+                  layoutId="team-tab"
+                  className="absolute inset-0 rounded-lg bg-muted"
+                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                />
               ) : null}
               <t.icon className="relative size-4" strokeWidth={1.75} />
               <span className="relative">{t.label}</span>
@@ -266,13 +357,31 @@ export function TeamView({ orgId, people, myRole, canManage }: { orgId: string; 
           ))}
         </div>
         {view === "directory" ? (
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por nombre, email o puesto…"
-            className="h-10 max-w-xs"
-            aria-label="Buscar en el equipo"
-          />
+          <>
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar por nombre, email o puesto…"
+              className="h-10 max-w-xs"
+              aria-label="Buscar personas"
+            />
+            {departments.length > 0 ? (
+              <Select
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="h-10 w-56"
+                aria-label="Filtrar por departamento"
+              >
+                <option value="all">Todos los departamentos</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+                <option value="none">Sin departamento</option>
+              </Select>
+            ) : null}
+          </>
         ) : null}
       </div>
 
@@ -285,7 +394,16 @@ export function TeamView({ orgId, people, myRole, canManage }: { orgId: string; 
           transition={{ duration: 0.25 }}
         >
           {view === "directory" ? (
-            <Directory orgId={orgId} people={filtered} myRole={myRole} canManage={canManage} />
+            <Directory
+              orgId={orgId}
+              people={filtered}
+              allPeople={people}
+              myRole={myRole}
+              canManage={canManage}
+              departments={departments}
+            />
+          ) : view === "departments" ? (
+            <DepartmentsView orgId={orgId} departments={departments} people={people} canManage={canManageDepartments} />
           ) : (
             <OrgChart people={people} />
           )}
