@@ -153,6 +153,7 @@ export type Database = {
         Returns: undefined;
       };
       has_permission: { Args: { p_org_id: string; p_key: string }; Returns: boolean };
+      task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

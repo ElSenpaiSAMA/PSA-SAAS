@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(16);
+select plan(18);
 
 -- Simula una request autenticada como el usuario dado
 create or replace function pg_temp.login_as(p_user uuid, p_email text)
@@ -54,6 +54,18 @@ select is(
    where membership_id <> 'bbbbbbbb-0000-0000-0000-000000000004'),
   0,
   'un empleado solo ve sus propias vacaciones'
+);
+
+-- ── Horas agregadas por tarea ────────────────────────────────
+select ok(
+  (select count(*) from public.task_logged_minutes('aaaaaaaa-0000-0000-0000-000000000001')) > 0,
+  'un miembro ve las horas agregadas de todas las tareas de su org'
+);
+
+select is(
+  (select count(*)::int from public.task_logged_minutes('aaaaaaaa-0000-0000-0000-000000000002')),
+  0,
+  'no se obtienen horas de tareas de una org ajena'
 );
 
 -- ── Fichaje ──────────────────────────────────────────────────
