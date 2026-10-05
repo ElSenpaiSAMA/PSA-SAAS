@@ -80,7 +80,7 @@ Con Docker Compose: `docker compose up --build`.
 | Staging | `dev` | Vercel Preview | Supabase staging |
 | Producción | `main` | Vercel Production | Supabase prod |
 
-- **CI** (`.github/workflows/ci.yml`) en cada push a `feat/*`/`fix/*` y en PRs: lint → typecheck → tests → build → E2E (contra Supabase real con datos demo) → tests RLS → imagen Docker.
+- **CI** (`.github/workflows/ci.yml`) en cada push a `feat/*`, `fix/*` y `docs/*`, y en PRs: lint → typecheck → tests → build → E2E (contra Supabase real con datos demo) → tests RLS → imagen Docker.
 - **Deploy** (`.github/workflows/deploy.yml`): `dev` → staging, `main` → producción. Aplica migraciones con `supabase db push` y despliega en Vercel. Los pasos se saltan con un aviso si faltan los secretos del entorno.
 
 Secretos por entorno (GitHub → Settings → Environments `staging` y `production`): `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, `SUPABASE_PROJECT_REF`, `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
