@@ -13,8 +13,8 @@ Mini SaaS multi-tenant de gestión de personas y proyectos (en la línea de Fact
 | **Organizaciones** | Selector multi-empresa, creación de organización, invitaciones por email |
 | **Fichaje y horas** | Entrada/salida en un clic, imputación de horas a tareas, gráfico semanal, carga del equipo |
 | **Vacaciones** | Saldo en días hábiles, solicitud con validación en vivo, aprobación por la línea de reporte |
-| **Proyectos** | Presupuesto vs. horas reales, tablero kanban con actualizaciones optimistas |
-| **Equipo** | Directorio, organigrama, edición de rol/manager respetando rangos, invitaciones |
+| **Proyectos** | Por departamento, con miembros: cada persona ve solo los suyos y el responsable los de su área. Presupuesto vs. horas reales y tablero kanban |
+| **Personas** | Directorio, departamentos con responsable, organigrama, invitaciones con departamento y rol |
 | **Auditoría** | Registro inmutable de toda acción sensible, con detalle del cambio campo por campo |
 | **⌘K** | Paleta de comandos para navegar y ejecutar acciones sin mouse |
 

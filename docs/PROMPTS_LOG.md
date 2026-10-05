@@ -145,3 +145,15 @@ Formato de cada entrada:
 **Por qué:** Los riesgos reales del producto están detrás del login: permisos por rol, aislamiento entre empresas y los workflows de aprobación.
 
 **Resultado:** `e2e/app.spec.ts` cubre: login inválido, selector multi-empresa, fichaje entrada/salida, solicitud de vacaciones, aprobación por el manager, empleado sin acceso a auditoría, empleado sin acceso a una empresa ajena, admin viendo la auditoría y aceptación de una invitación.
+
+---
+
+## 2026-10-06 Departamentos y proyectos por membresía
+
+**Prompt (resumen):** "Faltan más funciones de una PSA: poder añadir gente a la empresa y subdividirla en departamentos con alguien a cargo; no todo el mundo debe ver todos los proyectos, solo los que le pertenecen, y el encargado del departamento todos los de su departamento."
+
+**Decisiones (consultadas):** alta por invitación con departamento (no alta directa con contraseña, para no usar la clave de servicio); miembros de proyecto explícitos; el responsable del departamento es el manager natural de su gente (aprueba vacaciones y ve horas).
+
+**Por qué en la base y no solo en la UI:** la visibilidad es una regla de seguridad. Si solo se filtrara en pantalla, cualquiera podría pedir los datos a la API directamente. `can_view_project` se aplica en RLS a proyectos, tareas, miembros, imputación de horas y horas agregadas.
+
+**Resultado:** migración `0004`, "Equipo" pasa a ser **Personas** (directorio, departamentos, organigrama), panel de miembros en cada proyecto, 16 tests pgTAP nuevos y 4 E2E nuevos (31 en total). Verificado con datos reales: Ana ve 1 proyecto, Carlos los 2 de Ingeniería, Sofía los 3.
