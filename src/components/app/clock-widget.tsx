@@ -1,22 +1,20 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState, useTransition } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/submit-button";
 import { clockIn, clockOut } from "@/app/app/[orgId]/time-tracking/actions";
+import { useHydrated, useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 function useElapsed(startedAt: string | null) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!startedAt) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [startedAt]);
+  const now = useNow();
   if (!startedAt) return null;
+  // Antes de hidratar no hay hora de cliente: placeholder estable (igual en servidor y cliente)
+  if (now === null) return ["--", "--", "--"];
   const s = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
   return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60].map((n) => String(n).padStart(2, "0"));
 }
@@ -43,9 +41,12 @@ export function ClockWidget({
       else toast.success(result.message, { description: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }) });
     });
 
-  const since = openSince
-    ? new Date(openSince).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
-    : null;
+  const hydrated = useHydrated();
+  // Hora local del navegador: solo tras hidratar (el servidor corre en UTC)
+  const since =
+    openSince && hydrated
+      ? new Date(openSince).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })
+      : null;
 
   return (
     <div
@@ -70,7 +71,7 @@ export function ClockWidget({
               {active ? <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" /> : null}
               <span className={cn("relative inline-flex size-2 rounded-full", active ? "bg-success" : "bg-border-strong")} />
             </span>
-            {active ? `Trabajando desde las ${since}` : "Fuera de jornada"}
+            {active ? (since ? `Trabajando desde las ${since}` : "Trabajando") : "Fuera de jornada"}
           </div>
 
           <div

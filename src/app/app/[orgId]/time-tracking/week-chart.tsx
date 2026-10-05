@@ -4,16 +4,21 @@ import { motion } from "motion/react";
 import { useMemo } from "react";
 import { formatMinutes, isSameDay, startOfWeek, weekTotals } from "@/lib/domain/time";
 import type { TimeEntry } from "@/lib/supabase/database.types";
+import { useHydrated } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 const DAY = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 export function WeekChart({ entries, dailyTargetMinutes }: { entries: TimeEntry[]; dailyTargetMinutes: number }) {
+  // Los días se calculan en la zona horaria del navegador: hasta hidratar, barras en cero
+  // (que luego crecen animadas) para que servidor y cliente rendericen lo mismo.
+  const hydrated = useHydrated();
   const { days, today } = useMemo(() => {
     const now = new Date();
-    return { days: weekTotals(entries, startOfWeek(now), now), today: now };
-  }, [entries]);
+    const totals = weekTotals(hydrated ? entries : [], startOfWeek(now), now);
+    return { days: totals, today: hydrated ? now : null };
+  }, [entries, hydrated]);
 
   const max = Math.max(dailyTargetMinutes * 1.25, ...days.map((d) => Math.max(d.clockMinutes, d.taskMinutes)));
   const targetPct = (dailyTargetMinutes / max) * 100;
@@ -30,7 +35,7 @@ export function WeekChart({ entries, dailyTargetMinutes }: { entries: TimeEntry[
           </span>
         </div>
         {days.map((d, i) => {
-          const isToday = isSameDay(d.date, today);
+          const isToday = today !== null && isSameDay(d.date, today);
           return (
             <div key={i} className="group relative flex h-full flex-1 flex-col justify-end">
               <div className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-foreground px-2.5 py-1.5 text-[11.5px] whitespace-nowrap text-background opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
@@ -60,7 +65,7 @@ export function WeekChart({ entries, dailyTargetMinutes }: { entries: TimeEntry[
             key={i}
             className={cn(
               "flex-1 text-center text-[12px]",
-              isSameDay(d.date, today) ? "font-medium text-foreground" : "text-muted-foreground",
+              today && isSameDay(d.date, today) ? "font-medium text-foreground" : "text-muted-foreground",
             )}
           >
             {DAY[i]}
