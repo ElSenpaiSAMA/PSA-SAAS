@@ -18,6 +18,7 @@ jobs:
     name: Supabase migrations
     needs: ci
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -45,6 +46,7 @@ jobs:
     name: Vercel
     needs: migrate
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
       url: ${{ steps.deploy.outputs.url }}
