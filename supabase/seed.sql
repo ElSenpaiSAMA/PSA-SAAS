@@ -51,11 +51,23 @@ insert into public.memberships (id, org_id, user_id, role_id, manager_id, positi
   ('bbbbbbbb-0000-0000-0000-000000000011', 'aaaaaaaa-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', 'owner',    null,                                   'Founder'),
   ('bbbbbbbb-0000-0000-0000-000000000012', 'aaaaaaaa-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'employee', 'bbbbbbbb-0000-0000-0000-000000000011', 'Advisor');
 
-insert into public.projects (id, org_id, name, client_name, budgeted_hours) values
-  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Rediseño portal clientes', 'Acme Corp', 320),
-  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'API de pagos v2',           'Fintrack',  200),
-  ('cccccccc-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Onboarding interno',        null,        60);
+-- Departamentos de Nébula Studio: el responsable pasa a ser el manager de sus miembros
+insert into public.departments (id, org_id, name, head_id) values
+  ('eeeeeeee-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Dirección',  'bbbbbbbb-0000-0000-0000-000000000001'),
+  ('eeeeeeee-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Ingeniería', 'bbbbbbbb-0000-0000-0000-000000000002'),
+  ('eeeeeeee-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'People',     'bbbbbbbb-0000-0000-0000-000000000005');
 
+update public.memberships set department_id = 'eeeeeeee-0000-0000-0000-000000000002'
+where id in ('bbbbbbbb-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000004');
+
+-- Ana ve solo "Portal clientes", Diego solo "API de pagos" (según sus tareas),
+-- Carlos ambos por ser responsable de Ingeniería, Sofía y Laura todo por ser admin/owner.
+insert into public.projects (id, org_id, name, client_name, budgeted_hours, department_id) values
+  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Rediseño portal clientes', 'Acme Corp', 320, 'eeeeeeee-0000-0000-0000-000000000002'),
+  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'API de pagos v2',           'Fintrack',  200, 'eeeeeeee-0000-0000-0000-000000000002'),
+  ('cccccccc-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Onboarding interno',        null,        60,  'eeeeeeee-0000-0000-0000-000000000003');
+
+-- Cada asignado queda como miembro del proyecto (trigger tasks_sync_org)
 insert into public.tasks (id, project_id, title, assigned_to, estimated_hours, status) values
   ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'Sistema de diseño y tokens',     'bbbbbbbb-0000-0000-0000-000000000003', 24, 'done'),
   ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'Dashboard de cliente',           'bbbbbbbb-0000-0000-0000-000000000003', 40, 'in_progress'),

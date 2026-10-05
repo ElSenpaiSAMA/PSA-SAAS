@@ -34,6 +34,7 @@ export type Membership = {
   user_id: string;
   role_id: Role;
   manager_id: string | null;
+  department_id: string | null;
   position: string | null;
   weekly_hours: number;
   annual_vacation_days: number;
@@ -47,6 +48,7 @@ export type Project = {
   name: string;
   client_name: string | null;
   budgeted_hours: number | null;
+  department_id: string | null;
   status: ProjectStatus;
   created_at: Timestamp;
 };
@@ -91,10 +93,25 @@ export type Invitation = {
   email: string;
   role_id: Exclude<Role, "owner">;
   manager_id: string | null;
+  department_id: string | null;
   position: string | null;
   invited_by: string | null;
   accepted_at: Timestamp | null;
   created_at: Timestamp;
+};
+
+export type Department = {
+  id: string;
+  org_id: string;
+  name: string;
+  head_id: string | null;
+  created_at: Timestamp;
+};
+
+export type ProjectMember = {
+  project_id: string;
+  membership_id: string;
+  added_at: Timestamp;
 };
 
 export type AuditLog = {
@@ -137,6 +154,8 @@ export type Database = {
       time_entries: Table<TimeEntry, "membership_id" | "entry_type">;
       vacation_requests: Table<VacationRequest, "membership_id" | "start_date" | "end_date">;
       invitations: Table<Invitation, "org_id" | "email">;
+      departments: Table<Department, "org_id" | "name">;
+      project_members: Table<ProjectMember, "project_id" | "membership_id">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;
@@ -153,6 +172,7 @@ export type Database = {
         Returns: undefined;
       };
       has_permission: { Args: { p_org_id: string; p_key: string }; Returns: boolean };
+      can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
     };
     Enums: Record<string, never>;
