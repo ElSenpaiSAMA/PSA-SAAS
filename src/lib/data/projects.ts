@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { Project, Task } from "@/lib/supabase/database.types";
+import type { Project, ProjectMember, Task } from "@/lib/supabase/database.types";
 
 export const getProjects = cache(async (orgId: string): Promise<Project[]> => {
   const supabase = await createClient();
@@ -27,6 +27,22 @@ export const getProject = cache(async (projectId: string): Promise<Project | nul
   const supabase = await createClient();
   const { data } = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
   return data;
+});
+
+/** Membresías de proyectos visibles para el usuario (RLS filtra el resto). */
+export const getProjectMembers = cache(async (orgId: string): Promise<ProjectMember[]> => {
+  const supabase = await createClient();
+  const projects = await getProjects(orgId);
+  if (projects.length === 0) return [];
+  const { data, error } = await supabase
+    .from("project_members")
+    .select("*")
+    .in(
+      "project_id",
+      projects.map((p) => p.id),
+    );
+  if (error) throw error;
+  return data ?? [];
 });
 
 export const getTasks = cache(async (orgId: string): Promise<Task[]> => {

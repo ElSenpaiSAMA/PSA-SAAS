@@ -6,12 +6,21 @@ import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Input, Select } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { idle } from "@/lib/actions";
 import { createProject } from "./actions";
 
-export function NewProject({ orgId }: { orgId: string }) {
+export function NewProject({
+  orgId,
+  departments,
+  allowNoDepartment,
+}: {
+  orgId: string;
+  /** Departamentos donde el usuario puede crear (todos si es admin, el propio si es responsable) */
+  departments: { id: string; name: string }[];
+  allowNoDepartment: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(createProject.bind(null, orgId), idle);
   const [handled, setHandled] = useState<number | undefined>();
@@ -43,9 +52,19 @@ export function NewProject({ orgId }: { orgId: string }) {
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="col-span-full basis-full overflow-hidden"
           >
-            <div className="mt-2 grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-[2fr_1.5fr_1fr_auto] sm:items-end">
+            <div className="mt-2 grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2 lg:grid-cols-[2fr_1.4fr_1.4fr_1fr_auto] lg:items-end">
               <Field label="Nombre" error={state.fieldErrors?.name}>
                 <Input name="name" placeholder="Rediseño portal clientes" autoFocus />
+              </Field>
+              <Field label="Departamento" error={state.fieldErrors?.departmentId}>
+                <Select name="departmentId" defaultValue={allowNoDepartment ? "" : departments[0]?.id}>
+                  {allowNoDepartment ? <option value="">Sin departamento</option> : null}
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </Select>
               </Field>
               <Field label="Cliente" error={state.fieldErrors?.clientName}>
                 <Input name="clientName" placeholder="Opcional" />
