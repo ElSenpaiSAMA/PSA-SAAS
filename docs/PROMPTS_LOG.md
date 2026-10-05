@@ -80,3 +80,23 @@ Formato de cada entrada:
 **Por qué:** Sin esto, la estructura de rutas de Next.js habría asumido una sola organización por usuario; el modelo real necesita un paso de selección de organización antes de entrar al dashboard.
 
 **Resultado:** Se documentó en `docs/APP_FLOW.md`: landing pública → `(auth)` login/registro → `/select-organization` (si aplica) → `/app/[orgId]/...` con todo el SaaS scopeado por organización.
+
+---
+
+## 2026-10-05 Construcción autónoma del proyecto
+
+**Prompt (resumen):** "Ya puedes empezar con la creación del proyecto, dale a todo que sí; si necesitas solicitar algo, tú trabaja."
+
+**Por qué:** Con el alcance, el esquema, el diseño y el flujo de ramas ya definidos, se delegó la ejecución completa respetando las reglas acordadas (ramas `feat/*` desde `dev`, commits por capa, sin atribución de IA en el historial).
+
+**Resultado:** Scaffold de Next.js 16 (`feat/nextjs-scaffold`), subagentes restantes + `CLAUDE.md` (`feat/dev-agents`), y el resto de capas en sus propias ramas.
+
+---
+
+## 2026-10-05 Revisión de seguridad del esquema → migración `0002`
+
+**Prompt (resumen):** Antes de escribir código que dependa de la base, se aplicó el checklist del agente `security-audit` a `0001_init.sql`.
+
+**Por qué:** Detectar fallos de RLS antes de que lleguen a un entorno es mucho más barato que después. La revisión encontró, entre otros, una recursión infinita en las policies de `memberships`, `organizations` sin RLS, autoaprobación de vacaciones y edición retroactiva de fichajes.
+
+**Resultado:** `supabase/migrations/0002_security_hardening.sql` (no se edita `0001`, ya mergeada: se respeta la regla del agente `backend`), más el flujo de alta (crear organización, invitaciones) y un seed con dos empresas demo. Detalle en `docs/DATABASE_SCHEMA.md`.

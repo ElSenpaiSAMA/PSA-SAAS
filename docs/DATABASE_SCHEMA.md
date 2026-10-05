@@ -42,6 +42,9 @@ Evita duplicar el concepto de "registro de tiempo" en dos tablas distintas.
 ### `public.vacation_requests` + vista `vacation_balances`
 Workflow de aprobación: el empleado crea la solicitud (`pending`), su manager (o quien tenga `vacations.approve`) la aprueba/rechaza. El saldo de días (`vacation_balances`) se **calcula** sumando solicitudes aprobadas del año — no se guarda un contador separado que se pueda desincronizar.
 
+### `public.invitations`
+Alta de empleados por email: `org_id`, `email`, `role_id` (nunca `owner`), `manager_id`, `position`. Se acepta vía `accept_invitation()`, que crea la membership.
+
 ### `public.audit_log`
 Igual que antes: tabla genérica enganchada vía un único trigger reutilizable (`audit.log_change()`) a `memberships`, `vacation_requests`, `time_entries` y `tasks` (los cambios que realmente importa rastrear). Para auditar una tabla nueva, un solo `create trigger ... execute function audit.log_change()`, sin escribir lógica nueva.
 
@@ -60,6 +63,36 @@ Igual que antes: tabla genérica enganchada vía un único trigger reutilizable 
 - Acceso a funciones de gestión (empleados, proyectos, tareas de otros, aprobar vacaciones, ver horas del equipo) gated por `role_permissions`, no hardcodeado por rol — así es fácil ajustar permisos sin tocar políticas RLS.
 - Jerarquía (ver datos de "mi equipo") resuelta con `is_in_reporting_line`, soporta cualquier profundidad de organigrama.
 
+## Revisión de seguridad (`0002_security_hardening.sql`)
+
+La revisión del agente `security-audit` sobre `0001` encontró problemas que se corrigen en una migración nueva (nunca se edita una migración ya mergeada):
+
+| Problema en 0001 | Corrección |
+|---|---|
+| La policy de `memberships` consultaba `memberships` → recursión infinita de RLS | Helpers `security definer` (`is_org_member`, `is_own_membership`, `membership_org`, `my_membership_id`) |
+| `organizations` sin RLS | RLS: solo miembros (o invitados) ven la org |
+| `= (select id from memberships where user_id = auth.uid())` falla si el usuario está en 2+ orgs | `is_own_membership(membership_id)` |
+| Un manager podía aprobar sus propias vacaciones | Trigger `guard_vacation_changes`: el solicitante solo puede cancelar; `decided_by/at` se setean en servidor |
+| Un admin podía ascenderse a owner o gestionar a alguien de igual rango | Trigger `guard_membership_changes` por nivel de rol |
+| Un empleado podía reescribir la hora de entrada de su fichaje | Trigger `guard_time_entry_changes`: el fichaje se abre siempre "ahora" y solo se puede cerrar |
+| Ciclos en el organigrama colgaban la CTE recursiva | `union` en lugar de `union all` + check anti-ciclo al asignar manager |
+| `vacation_balances` saltaba RLS y contaba días corridos | Vista `security_invoker` + `business_days()` (lunes a viernes) |
+| Un empleado asignado podía reasignar/reestimar su tarea | Trigger `guard_task_changes`: solo puede cambiar el estado |
+| Admins no podían ver la auditoría de su org | `audit_log.org_id` (sin FK, para que el log sobreviva al borrado) + policy por `employees.manage` |
+
+Además agrega el **flujo de alta**:
+- `create_organization(name)`: crea la org y la membership `owner` de forma atómica.
+- `invitations` + `accept_invitation(id)`: un admin invita por email (con rol, manager y puesto); al loguearse, el invitado ve la invitación en el selector de organización y la acepta. Nadie puede invitar con un rango igual o superior al propio.
+
+## Desarrollo local
+
+```bash
+npx supabase start      # Postgres + Auth + Studio en Docker
+npx supabase db reset   # aplica migraciones + supabase/seed.sql
+```
+
+El seed crea dos organizaciones demo (*Nébula Studio* y *Orbital Labs*) con jerarquía owner → manager → empleados, proyectos, fichajes de dos semanas, vacaciones pendientes de aprobar y una invitación. Usuarios: `laura@`, `carlos@`, `ana@`, `diego@`, `sofia@demo.com`, contraseña `Demo1234!`. Laura y Carlos pertenecen a ambas orgs con roles distintos, para probar el selector de organización.
+
 ## Migraciones
 
-SQL versionado en `supabase/migrations/0001_init.sql`, aplicado igual en dev/staging/prod vía CI.
+SQL versionado en `supabase/migrations/`, aplicado igual en dev/staging/prod vía CI (`supabase db push`).
