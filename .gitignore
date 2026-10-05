@@ -4,6 +4,15 @@ node_modules/
 # Next.js
 .next/
 out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+*.pem
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
 
 # Env
 .env
