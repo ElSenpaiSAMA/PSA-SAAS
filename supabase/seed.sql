@@ -148,3 +148,14 @@ insert into public.vacation_requests (membership_id, start_date, end_date, statu
 -- Invitación pendiente para probar el alta de empleados
 insert into public.invitations (org_id, email, role_id, manager_id, position) values
   ('aaaaaaaa-0000-0000-0000-000000000002', 'ana@demo.com', 'employee', 'bbbbbbbb-0000-0000-0000-000000000011', 'Designer');
+
+-- Festivos nacionales (año actual y siguiente) para Nébula Studio
+insert into public.holidays (org_id, date, name)
+select 'aaaaaaaa-0000-0000-0000-000000000001', make_date(y, h.m, h.d), h.name
+from generate_series(extract(year from current_date)::int, extract(year from current_date)::int + 1) y
+cross join (values
+  (1, 1, 'Año Nuevo'), (1, 6, 'Reyes'), (5, 1, 'Día del Trabajador'), (8, 15, 'Asunción'),
+  (10, 12, 'Fiesta Nacional'), (11, 1, 'Todos los Santos'), (12, 6, 'Día de la Constitución'),
+  (12, 8, 'Inmaculada Concepción'), (12, 25, 'Navidad')
+) as h(m, d, name)
+on conflict do nothing;
