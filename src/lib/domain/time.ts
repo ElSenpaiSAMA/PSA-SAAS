@@ -56,3 +56,34 @@ export function startOfDay(date: Date): Date {
 export function findOpenEntry<T extends TimeSpan>(entries: readonly T[]): T | undefined {
   return entries.find((e) => e.ended_at === null);
 }
+
+export interface DayTotals {
+  date: Date;
+  clockMinutes: number;
+  taskMinutes: number;
+}
+
+/** Totales por día (lunes a domingo, hora local) de la semana que empieza en `weekStart`. */
+export function weekTotals(
+  entries: readonly (TimeSpan & { entry_type: "clock" | "task" })[],
+  weekStart: Date,
+  now: Date = new Date(),
+): DayTotals[] {
+  const days: DayTotals[] = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+    return { date, clockMinutes: 0, taskMinutes: 0 };
+  });
+  for (const e of entries) {
+    const index = Math.floor((startOfDay(new Date(e.started_at)).getTime() - weekStart.getTime()) / 86_400_000);
+    const day = days[index];
+    if (!day) continue;
+    if (e.entry_type === "clock") day.clockMinutes += entryMinutes(e, now);
+    else day.taskMinutes += entryMinutes(e, now);
+  }
+  return days;
+}
+
+export function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}

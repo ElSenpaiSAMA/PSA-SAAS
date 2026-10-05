@@ -3,8 +3,10 @@ import {
   entryMinutes,
   findOpenEntry,
   formatMinutes,
+  isSameDay,
   startOfWeek,
   totalMinutes,
+  weekTotals,
   workloadLevel,
   workloadPercent,
 } from "./time";
@@ -75,6 +77,33 @@ describe("startOfWeek", () => {
 
   it("si es domingo, vuelve al lunes anterior", () => {
     expect(startOfWeek(new Date(2026, 9, 11)).getDate()).toBe(5);
+  });
+});
+
+describe("weekTotals", () => {
+  it("agrupa fichaje y horas de tarea por día de la semana", () => {
+    const monday = new Date(2026, 9, 5);
+    const at = (d: number, h: number, m = 0) => new Date(2026, 9, d, h, m).toISOString();
+    const totals = weekTotals(
+      [
+        { entry_type: "clock", started_at: at(5, 9), ended_at: at(5, 17) },
+        { entry_type: "task", started_at: at(5, 10), ended_at: at(5, 12, 30) },
+        { entry_type: "clock", started_at: at(7, 9), ended_at: at(7, 13) },
+        { entry_type: "clock", started_at: at(12, 9), ended_at: at(12, 10) }, // semana siguiente
+      ],
+      monday,
+    );
+    expect(totals).toHaveLength(7);
+    expect(totals[0]).toMatchObject({ clockMinutes: 480, taskMinutes: 150 });
+    expect(totals[2]).toMatchObject({ clockMinutes: 240, taskMinutes: 0 });
+    expect(totals.reduce((s, d) => s + d.clockMinutes, 0)).toBe(720);
+  });
+});
+
+describe("isSameDay", () => {
+  it("compara fecha local ignorando la hora", () => {
+    expect(isSameDay(new Date(2026, 9, 5, 1), new Date(2026, 9, 5, 23))).toBe(true);
+    expect(isSameDay(new Date(2026, 9, 5), new Date(2026, 9, 6))).toBe(false);
   });
 });
 
