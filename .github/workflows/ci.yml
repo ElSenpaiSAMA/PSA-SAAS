@@ -23,6 +23,7 @@ jobs:
   quality:
     name: Lint · Typecheck · Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -37,6 +38,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: quality
     steps:
       - uses: actions/checkout@v4
@@ -48,8 +50,9 @@ jobs:
       - run: npm run build
 
   e2e:
-    name: E2E (Playwright)
+    name: E2E (Playwright + Supabase)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     needs: build
     steps:
       - uses: actions/checkout@v4
@@ -58,19 +61,40 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Postgres + Auth reales con migraciones y datos demo (supabase/seed.sql)
+      - run: supabase start
+      - id: supabase
+        name: Read local Supabase credentials
+        run: |
+          eval "$(supabase status -o env)"
+          echo "url=$API_URL" >> "$GITHUB_OUTPUT"
+          echo "anon=${ANON_KEY:-$PUBLISHABLE_KEY}" >> "$GITHUB_OUTPUT"
       - run: npx playwright install --with-deps chromium
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ steps.supabase.outputs.anon }}
       - run: npm run test:e2e
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ steps.supabase.outputs.url }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ steps.supabase.outputs.anon }}
+          E2E_SUPABASE: "1"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+      - if: always()
+        run: supabase stop --no-backup
 
   database:
     name: Database (migrations + RLS tests)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -85,6 +109,7 @@ jobs:
   docker:
     name: Docker image
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: quality
     steps:
       - uses: actions/checkout@v4
