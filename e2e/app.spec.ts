@@ -134,6 +134,48 @@ test("una admin crea un departamento con responsable", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Ventas" })).toBeVisible();
 });
 
+const monthParam = (offset: number) => {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+};
+
+test("el responsable copia la OT del mes anterior al mes siguiente", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/work-orders?month=${monthParam(-1)}`);
+  await page.getByText(/^Portal clientes · /).first().click();
+  await expect(page.getByText("Facturada", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Copiar al mes siguiente" }).first().click();
+  await expect(page).toHaveURL(/\/work-orders\/(?!ffffffff)[0-9a-f-]{36}$/);
+  await expect(page.getByText("Borrador")).toBeVisible();
+  await expect(page.getByText("Mantenimiento evolutivo")).toBeVisible();
+});
+
+test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/time-tracking`);
+  const options = await page.getByLabel("Tarea").locator("option").allTextContents();
+  expect(options).toContain("Dashboard de cliente");
+  // La copia del test anterior está en borrador: sus tareas todavía no admiten horas
+  expect(options).not.toContain("Mantenimiento evolutivo");
+
+  await page.goto(`/app/${NEBULA}/planning`);
+  await expect(page.getByRole("heading", { name: "Planificación" })).toBeVisible();
+  await expect(page.locator("tbody tr").filter({ hasText: "(vos)" })).toHaveCount(1);
+  await expect(page.getByText("Diego Fernández")).toHaveCount(0);
+});
+
+test("una admin cierra y factura una OT", async ({ page }) => {
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/work-orders/ffffffff-0000-0000-0000-000000000003`);
+  await page.getByRole("button", { name: "Cerrar OT" }).click();
+  await expect(page.getByText("Estado actualizado")).toBeVisible();
+  await page.getByRole("button", { name: "Marcar facturada" }).click();
+  await expect(page.getByText("OT marcada como facturada")).toBeVisible();
+  await expect(page.getByText("OT facturada: queda bloqueada para cambios.")).toBeVisible();
+});
+
 test("una invitación pendiente se acepta desde el selector", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto("/select-organization?new=1");
