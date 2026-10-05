@@ -22,6 +22,16 @@ describe("layoutWeek", () => {
     expect(slots[0]).toMatchObject({ col: 0, span: 7, continuesBefore: true, continuesAfter: true });
   });
 
+  it("prioriza ausencias y tareas sobre los períodos de OT", () => {
+    const wo: CalendarEvent = { id: "wo", kind: "workOrder", title: "OT", start: "2026-10-01", end: "2026-10-31" };
+    const abs: CalendarEvent = { id: "abs", kind: "absence", title: "Ana", start: "2026-10-08", end: "2026-10-09" };
+    const { slots } = layoutWeek([wo, ev("t", "2026-10-07", "2026-10-07"), abs], week);
+    const lane = (id: string) => slots.find((s) => s.event.id === id)!.lane;
+    expect(lane("abs")).toBe(0);
+    expect(lane("t")).toBe(0); // no se superpone con la ausencia
+    expect(lane("wo")).toBe(1);
+  });
+
   it("ignora eventos fuera de la semana", () => {
     expect(layoutWeek([ev("z", "2026-10-12", "2026-10-13")], week).slots).toHaveLength(0);
   });
