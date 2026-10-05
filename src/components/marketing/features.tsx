@@ -52,28 +52,33 @@ function ClockDemo() {
 }
 
 function HierarchyDemo() {
+  // Coordenadas en % del contenedor: el centro del avatar cae exactamente en (x, y)
   const people = [
-    { name: "Laura Méndez", role: "Owner", x: "50%", y: 0 },
-    { name: "Carlos Ruiz", role: "Manager", x: "25%", y: 1 },
-    { name: "Sofía Navarro", role: "Admin", x: "75%", y: 1 },
-    { name: "Ana Torres", role: "Empleada", x: "12%", y: 2 },
-    { name: "Diego Fernández", role: "Empleado", x: "38%", y: 2 },
+    { name: "Laura Méndez", role: "Owner", x: 50, y: 12 },
+    { name: "Carlos Ruiz", role: "Manager", x: 27, y: 46 },
+    { name: "Sofía Navarro", role: "Admin", x: 73, y: 46 },
+    { name: "Ana Torres", role: "Empleada", x: 14, y: 80 },
+    { name: "Diego Fernández", role: "Empleado", x: 40, y: 80 },
+  ];
+  const edges: [number, number][] = [
+    [0, 1],
+    [0, 2],
+    [1, 3],
+    [1, 4],
   ];
   return (
-    <div className="relative mt-8 h-44">
+    <div className="relative mt-8 h-48">
       <svg className="absolute inset-0 size-full" preserveAspectRatio="none" viewBox="0 0 100 100" aria-hidden>
-        {[
-          "M50 14 L25 50",
-          "M50 14 L75 50",
-          "M25 50 L12 86",
-          "M25 50 L38 86",
-        ].map((d, i) => (
+        {edges
+          .map(([a, b]) => `M${people[a].x} ${people[a].y} L${people[b].x} ${people[b].y}`)
+          .map((d, i) => (
           <motion.path
             key={d}
             d={d}
             fill="none"
-            stroke="var(--border-strong)"
-            strokeWidth="0.6"
+            stroke="var(--muted-foreground)"
+            strokeOpacity="0.35"
+            strokeWidth="1.5"
             vectorEffect="non-scaling-stroke"
             initial={{ pathLength: 0 }}
             whileInView={{ pathLength: 1 }}
@@ -89,11 +94,13 @@ function HierarchyDemo() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ delay: i * 0.1, duration: 0.6, ease: EASE }}
-          className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-          style={{ left: p.x, top: `${14 + p.y * 36}%` }}
+          className="absolute size-[30px] -translate-x-1/2 -translate-y-1/2"
+          style={{ left: `${p.x}%`, top: `${p.y}%` }}
         >
-          <Avatar name={p.name} size={30} />
-          <span className="mt-1 text-[10.5px] text-muted-foreground">{p.role}</span>
+          <Avatar name={p.name} size={30} className="ring-card" />
+          <span className="absolute top-full left-1/2 mt-1 -translate-x-1/2 text-[10.5px] whitespace-nowrap text-muted-foreground">
+            {p.role}
+          </span>
         </motion.div>
       ))}
     </div>

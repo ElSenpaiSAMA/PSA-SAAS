@@ -30,7 +30,7 @@ function Step({ index, active, onActive, children }: { index: number; active: bo
   }, [inView, index, onActive]);
 
   return (
-    <div ref={ref} className={cn("py-10 transition-opacity duration-500 md:py-24", active ? "opacity-100" : "opacity-30")}>
+    <div ref={ref} className={cn("py-10 transition-opacity duration-500 md:py-16", active ? "opacity-100" : "opacity-30")}>
       {children}
     </div>
   );
@@ -61,7 +61,7 @@ export function HowItWorks() {
           </div>
         </div>
 
-        <div className="pb-16 md:py-[25vh]">
+        <div className="pb-16 md:py-[18vh]">
           {steps.map((s, i) => (
             <Step key={s.n} index={i} active={active === i} onActive={setActive}>
               <span className="font-mono text-[13px] text-muted-foreground">{s.n}</span>
