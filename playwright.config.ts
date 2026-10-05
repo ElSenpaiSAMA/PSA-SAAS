@@ -15,7 +15,8 @@ export default defineConfig({
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    // La suite autenticada modifica datos: corre una sola vez (desktop)
+    { name: "mobile", use: { ...devices["Pixel 7"] }, testIgnore: /app\.spec\.ts/ },
   ],
   // Contra un entorno ya desplegado (E2E_BASE_URL) no se levanta servidor local
   webServer: process.env.E2E_BASE_URL
