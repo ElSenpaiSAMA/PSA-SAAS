@@ -1,0 +1,98 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { getOrgContext } from "@/lib/data/session";
+import { getVisibleVacationRequests } from "@/lib/data/vacations";
+import {
+  businessDays,
+  canDecide,
+  validateNewRequest,
+  vacationBalance,
+  type RequestValidationError,
+} from "@/lib/domain/vacations";
+import { createClient } from "@/lib/supabase/server";
+import { fieldErrors, vacationRequestSchema } from "@/lib/validation/schemas";
+
+const MESSAGES: Record<RequestValidationError, { field: "startDate" | "endDate"; text: string }> = {
+  invalid_range: { field: "endDate", text: "La fecha de fin debe ser posterior al inicio." },
+  starts_in_past: { field: "startDate", text: "No podés solicitar días pasados." },
+  overlaps_existing: { field: "startDate", text: "Se solapa con otra solicitud tuya." },
+  insufficient_balance: { field: "endDate", text: "No te alcanzan los días disponibles." },
+  no_business_days: { field: "endDate", text: "El rango no incluye días hábiles." },
+};
+
+function refresh(orgId: string) {
+  revalidatePath(`/app/${orgId}`, "layout");
+}
+
+export async function requestVacation(orgId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { membership } = await getOrgContext(orgId);
+  const parsed = vacationRequestSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return fail("Revisá las fechas.", fieldErrors(parsed.error));
+
+  const { startDate, endDate, reason } = parsed.data;
+  const mine = await getVisibleVacationRequests([membership.id]);
+  const year = Number(startDate.slice(0, 4));
+  const balance = vacationBalance(membership.annual_vacation_days, mine, year);
+  const today = new Date().toISOString().slice(0, 10);
+
+  const problem = validateNewRequest({ start_date: startDate, end_date: endDate }, mine, balance, today);
+  if (problem) {
+    const { field, text } = MESSAGES[problem];
+    return fail(text, { [field]: [text] });
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("vacation_requests").insert({
+    membership_id: membership.id,
+    start_date: startDate,
+    end_date: endDate,
+    reason,
+  });
+  if (error) return fail(dbErrorMessage(error));
+
+  refresh(orgId);
+  const days = businessDays({ start_date: startDate, end_date: endDate });
+  return ok(`Solicitud enviada · ${days} ${days === 1 ? "día hábil" : "días hábiles"}`);
+}
+
+export async function cancelVacation(orgId: string, requestId: string): Promise<ActionState> {
+  const { membership } = await getOrgContext(orgId);
+  const id = z.guid().parse(requestId);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("vacation_requests")
+    .update({ status: "cancelled" })
+    .eq("id", id)
+    .eq("membership_id", membership.id)
+    .eq("status", "pending")
+    .select("id");
+  if (error) return fail(dbErrorMessage(error));
+  if (!data?.length) return fail("La solicitud ya no está pendiente.");
+  refresh(orgId);
+  return ok("Solicitud cancelada");
+}
+
+export async function decideVacation(
+  orgId: string,
+  requestId: string,
+  decision: "approved" | "rejected",
+): Promise<ActionState> {
+  const ctx = await getOrgContext(orgId);
+  if (!ctx.can("vacations.approve")) return fail("No tenés permisos para aprobar vacaciones.");
+  const id = z.guid().parse(requestId);
+  const status = z.enum(["approved", "rejected"]).parse(decision);
+
+  const supabase = await createClient();
+  const { data: request } = await supabase.from("vacation_requests").select("*").eq("id", id).maybeSingle();
+  if (!request || !canDecide(request, ctx.membership.id)) return fail("No podés decidir sobre esta solicitud.");
+
+  // decided_by y decided_at los fija un trigger en la base
+  const { error } = await supabase.from("vacation_requests").update({ status }).eq("id", id);
+  if (error) return fail(dbErrorMessage(error));
+
+  refresh(orgId);
+  return ok(status === "approved" ? "Vacaciones aprobadas" : "Solicitud rechazada");
+}
