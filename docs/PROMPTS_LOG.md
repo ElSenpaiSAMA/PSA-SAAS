@@ -100,3 +100,48 @@ Formato de cada entrada:
 **Por qué:** Detectar fallos de RLS antes de que lleguen a un entorno es mucho más barato que después. La revisión encontró, entre otros, una recursión infinita en las policies de `memberships`, `organizations` sin RLS, autoaprobación de vacaciones y edición retroactiva de fichajes.
 
 **Resultado:** `supabase/migrations/0002_security_hardening.sql` (no se edita `0001`, ya mergeada: se respeta la regla del agente `backend`), más el flujo de alta (crear organización, invitaciones) y un seed con dos empresas demo. Detalle en `docs/DATABASE_SCHEMA.md`.
+
+---
+
+## 2026-10-05 Validar SQL sin Docker local → CI con Supabase real + pgTAP
+
+**Prompt (resumen):** El entorno de desarrollo no tenía Docker, así que no se podía levantar Supabase para probar migraciones ni RLS.
+
+**Por qué:** Un esquema de seguridad que nunca se ejecutó es solo una hipótesis. En lugar de saltear la verificación, se movió a CI, donde los runners de GitHub sí tienen Docker.
+
+**Resultado:** Job `database` en CI: `supabase start` (aplica migraciones + seed) y `supabase test db` con tests pgTAP que verifican aislamiento entre empresas, fichaje inmutable, no autoaprobación, no escalada de rol y no ciclos en el organigrama. Pasó en verde en la primera ejecución.
+
+---
+
+## 2026-10-05 Lo que CI detectó y cómo cambió el proceso
+
+**Contexto:** Dos fallos llegaron a `dev` que localmente no se veían:
+1. Un commit de la capa de datos omitió 5 módulos (`src/lib/data/*`). En el disco local existían (sin commitear), así que lint, tipos y build pasaban; CI, que clona el repo limpio, falló en el typecheck.
+2. Al quitar los SVG de ejemplo del scaffold, `public/` quedó vacía; git no versiona carpetas vacías y el `COPY public` del Dockerfile falló en CI.
+
+**Por qué importa:** Es exactamente el tipo de error que un pipeline de CI existe para atrapar ("en mi máquina funciona"). Se corrigió con ramas `fix/*` desde `dev`, como cualquier otro cambio.
+
+**Cambio de proceso:**
+- No se mergea a `dev` sin CI en verde sobre la rama (`feat/*` o `fix/*`).
+- Antes de mergear, typecheck sobre un *git worktree* limpio del commit (lo que está commiteado, no lo que hay en disco).
+- Recomendación: activar *branch protection* en `dev` y `main` exigiendo los checks de CI (configuración de GitHub del repositorio).
+
+---
+
+## 2026-10-05 QA visual con una ruta de preview local → bug de serialización
+
+**Prompt (resumen):** Sin Supabase local, las pantallas internas no se podían ver. Se armó una ruta de preview **solo local** (excluida de git) que renderiza los componentes reales de la app con datos ficticios, y se capturaron con Playwright en modo claro, oscuro y mobile.
+
+**Por qué:** "Compila" no es lo mismo que "funciona". Typecheck y build pasaban, pero nadie había renderizado esas pantallas.
+
+**Resultado:** La preview encontró un bug que habría tirado error 500 en producción: `StatCard` era un Client Component y las páginas (Server Components) le pasaban el ícono como función, que React no puede serializar entre servidor y cliente. Se corrigió en `fix/stat-card-serialization` separando el componente: el ícono se renderiza en el servidor y solo el número animado vive en el cliente. Además se sumó una suite E2E autenticada contra Supabase real en CI, que cubre estas pantallas para que este tipo de error no vuelva a depender de una revisión manual.
+
+---
+
+## 2026-10-05 E2E autenticados contra Supabase real
+
+**Prompt (resumen):** Los E2E iniciales solo cubrían páginas públicas (con credenciales ficticias). Se pasó a levantar Supabase en el job de E2E, con migraciones y seed, y probar flujos completos de punta a punta.
+
+**Por qué:** Los riesgos reales del producto están detrás del login: permisos por rol, aislamiento entre empresas y los workflows de aprobación.
+
+**Resultado:** `e2e/app.spec.ts` cubre: login inválido, selector multi-empresa, fichaje entrada/salida, solicitud de vacaciones, aprobación por el manager, empleado sin acceso a auditoría, empleado sin acceso a una empresa ajena, admin viendo la auditoría y aceptación de una invitación.
