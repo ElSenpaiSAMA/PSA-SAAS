@@ -157,3 +157,23 @@ Formato de cada entrada:
 **Por qué en la base y no solo en la UI:** la visibilidad es una regla de seguridad. Si solo se filtrara en pantalla, cualquiera podría pedir los datos a la API directamente. `can_view_project` se aplica en RLS a proyectos, tareas, miembros, imputación de horas y horas agregadas.
 
 **Resultado:** migración `0004`, "Equipo" pasa a ser **Personas** (directorio, departamentos, organigrama), panel de miembros en cada proyecto, 16 tests pgTAP nuevos y 4 E2E nuevos (31 en total). Verificado con datos reales: Ana ve 1 proyecto, Carlos los 2 de Ingeniería, Sofía los 3.
+
+---
+
+## 2026-10-06 La app como PSA: órdenes de trabajo, períodos y planificación
+
+**Prompt (resumen):** Se propusieron automatizaciones con IA y se descartaron: "No tiene sentido, me refería más a duplicar tarea, copiar tarea del mes anterior. La idea es que la app funcione como una PSA y tenga una función en el tiempo; actualmente estamos trabajando sin meses, tareas, cargas de trabajo, órdenes de trabajo."
+
+**Decisiones (consultadas):** estructura Proyecto → OT → Tareas; facturación básica (tarifa por hora, importe, facturada/no facturada); la IA queda para después, sobre esta base.
+
+**Por qué:** una PSA organiza el trabajo en el tiempo. Sin períodos no hay presupuesto mensual, ni planificación de capacidad, ni facturación por período. Las tareas recurrentes de cada mes se resuelven duplicando la OT, no recreándolas a mano.
+
+**Resultado:**
+- Migración `0005`: OT con período, presupuesto, tarifa, estados y facturación, más reglas en la base (horas solo en OT abiertas, facturar solo cerradas, bloqueo tras facturar) y duplicado con fechas corridas.
+- Nuevas secciones **Órdenes de trabajo** (por mes, con importes y pendiente de facturar) y **Planificación** (persona × semana, horas planificadas contra capacidad, descontando vacaciones).
+- Duplicar tarea, copiar OT al mes siguiente y duplicar a cualquier período.
+- 17 tests pgTAP y 3 E2E nuevos.
+
+**Verificado con datos reales:** desde la OT de septiembre (cerrada y facturada) "Copiar al mes siguiente" generó la de octubre con sus tareas. La planificación detectó una sobrecarga real: Ana tenía tareas planificadas la semana de sus vacaciones aprobadas.
+
+**Aprendizaje de QA:** dos E2E fallaron por el test y no por la app. Uno porque completaba un formulario antes de que React hidratara, otro por un selector ambiguo. Se corrigieron haciendo los tests más robustos, no relajándolos.
