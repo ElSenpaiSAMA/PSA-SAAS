@@ -50,8 +50,8 @@ select is(
 
 select is(
   (select count(*)::int from public.task_logged_minutes('aaaaaaaa-0000-0000-0000-000000000001')
-   where task_id not in ('dddddddd-0000-0000-0000-000000000001', 'dddddddd-0000-0000-0000-000000000002',
-                         'dddddddd-0000-0000-0000-000000000003')),
+   where task_id in ('dddddddd-0000-0000-0000-000000000004', 'dddddddd-0000-0000-0000-000000000005',
+                     'dddddddd-0000-0000-0000-000000000006', 'dddddddd-0000-0000-0000-000000000007')),
   0,
   'las horas agregadas solo incluyen proyectos visibles'
 );

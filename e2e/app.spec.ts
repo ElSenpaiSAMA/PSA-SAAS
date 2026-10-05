@@ -53,9 +53,12 @@ test("empleada solicita vacaciones y quedan pendientes", async ({ page }) => {
   start.setDate(start.getDate() + 70);
   while (start.getDay() === 0 || start.getDay() === 6) start.setDate(start.getDate() + 1);
   const iso = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
-  await page.getByLabel("Desde").fill(iso);
-  await page.getByLabel("Hasta").fill(iso);
-  await expect(page.getByText("1 día hábil")).toBeVisible();
+  // Si se completa antes de que React hidrate, el estado se resetea: reintentar hasta que reaccione
+  await expect(async () => {
+    await page.getByLabel("Desde").fill(iso);
+    await page.getByLabel("Hasta").fill(iso);
+    await expect(page.getByText("1 día hábil")).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
   await page.getByRole("button", { name: "Solicitar vacaciones" }).click();
   await expect(page.getByText(/Solicitud enviada/)).toBeVisible();
 });

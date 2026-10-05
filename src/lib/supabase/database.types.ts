@@ -4,6 +4,7 @@
 
 import type { Permission, Role } from "@/lib/domain/permissions";
 import type { VacationStatus } from "@/lib/domain/vacations";
+import type { BillingStatus, WorkOrderStatus } from "@/lib/domain/work-orders";
 
 type Timestamp = string;
 type DateString = string;
@@ -48,6 +49,7 @@ export type Project = {
   name: string;
   client_name: string | null;
   budgeted_hours: number | null;
+  hourly_rate: number | null;
   department_id: string | null;
   status: ProjectStatus;
   created_at: Timestamp;
@@ -62,6 +64,9 @@ export type Task = {
   assigned_to: string | null;
   estimated_hours: number | null;
   status: TaskStatus;
+  work_order_id: string | null;
+  start_date: DateString | null;
+  due_date: DateString | null;
   created_at: Timestamp;
 };
 
@@ -106,6 +111,31 @@ export type Department = {
   name: string;
   head_id: string | null;
   created_at: Timestamp;
+};
+
+export type WorkOrder = {
+  id: string;
+  org_id: string;
+  project_id: string;
+  number: number;
+  title: string;
+  period_start: DateString;
+  period_end: DateString;
+  budgeted_hours: number | null;
+  hourly_rate: number | null;
+  status: WorkOrderStatus;
+  billing_status: BillingStatus;
+  invoiced_at: Timestamp | null;
+  created_by: string | null;
+  created_at: Timestamp;
+};
+
+export type WorkloadItemRow = {
+  membership_id: string;
+  task_id: string;
+  estimated_hours: number;
+  start_date: DateString;
+  due_date: DateString;
 };
 
 export type ProjectMember = {
@@ -156,6 +186,7 @@ export type Database = {
       invitations: Table<Invitation, "org_id" | "email">;
       departments: Table<Department, "org_id" | "name">;
       project_members: Table<ProjectMember, "project_id" | "membership_id">;
+      work_orders: Table<WorkOrder, "project_id" | "title" | "period_start" | "period_end">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;
@@ -172,6 +203,11 @@ export type Database = {
         Returns: undefined;
       };
       has_permission: { Args: { p_org_id: string; p_key: string }; Returns: boolean };
+      duplicate_work_order: {
+        Args: { p_work_order_id: string; p_title: string; p_period_start: string; p_period_end: string };
+        Returns: string;
+      };
+      workload_items: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: WorkloadItemRow[] };
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
     };
