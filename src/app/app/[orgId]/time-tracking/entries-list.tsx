@@ -5,6 +5,8 @@ import { Clock3, FolderKanban, Trash2 } from "lucide-react";
 import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useHydrated } from "@/lib/use-now";
 import { entryMinutes, formatMinutes, startOfDay } from "@/lib/domain/time";
 import type { TimeEntryWithTask } from "@/lib/data/time";
 import { deleteTaskEntry } from "./actions";
@@ -41,6 +43,7 @@ function DeleteButton({ orgId, id }: { orgId: string; id: string }) {
 }
 
 export function EntriesList({ orgId, entries }: { orgId: string; entries: TimeEntryWithTask[] }) {
+  const hydrated = useHydrated();
   const groups = useMemo(() => {
     const map = new Map<number, TimeEntryWithTask[]>();
     for (const e of entries) {
@@ -52,6 +55,16 @@ export function EntriesList({ orgId, entries }: { orgId: string; entries: TimeEn
 
   if (entries.length === 0) {
     return <EmptyState icon={Clock3} title="Sin registros todavía" description="Fichá tu entrada para empezar a llevar la cuenta." />;
+  }
+
+  // Agrupar por día y mostrar horas depende de la zona horaria del navegador
+  if (!hydrated) {
+    return (
+      <div className="grid gap-3" aria-busy="true">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-28 rounded-xl" />
+      </div>
+    );
   }
 
   return (
