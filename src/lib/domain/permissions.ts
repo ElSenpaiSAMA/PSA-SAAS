@@ -8,6 +8,7 @@ export const PERMISSIONS = [
   "time.view_team",
   "vacations.approve",
   "departments.manage",
+  "billing.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
