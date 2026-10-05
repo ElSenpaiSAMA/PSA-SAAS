@@ -6,6 +6,8 @@ import { getEmployees } from "@/lib/data/employees";
 import { getProjects, getTasks } from "@/lib/data/projects";
 import { getOrgContext } from "@/lib/data/session";
 import { getMyEntriesSince, getWeekEntriesFor } from "@/lib/data/time";
+import { getAllWorkOrders } from "@/lib/data/work-orders";
+import { acceptsTimeEntries, workOrderCode } from "@/lib/domain/work-orders";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
 import { entryMinutes, formatMinutes, isSameDay, startOfDay, startOfWeek } from "@/lib/domain/time";
 import { EntriesList } from "./entries-list";
@@ -24,16 +26,30 @@ export default async function TimeTrackingPage({ params }: PageProps<"/app/[orgI
   const since = startOfWeek(new Date());
   since.setDate(since.getDate() - 7);
 
-  const [entries, tasks, projects] = await Promise.all([
+  const [entries, tasks, projects, workOrders] = await Promise.all([
     getMyEntriesSince(me.id, since.toISOString()),
     getTasks(orgId),
     getProjects(orgId),
+    getAllWorkOrders(orgId),
   ]);
 
   const projectName = new Map(projects.map((p) => [p.id, p.name]));
+  const workOrderById = new Map(workOrders.map((w) => [w.id, w]));
+  // Solo tareas de OT abiertas (aprobadas o en curso) admiten horas; se agrupan por OT
   const myTasks = tasks
     .filter((t) => t.assigned_to === me.id && t.status !== "done")
-    .map((t) => ({ id: t.id, title: t.title, projectName: projectName.get(t.project_id) ?? "Proyecto" }));
+    .filter((t) => {
+      const wo = t.work_order_id ? workOrderById.get(t.work_order_id) : undefined;
+      return !t.work_order_id || (wo !== undefined && acceptsTimeEntries(wo.status));
+    })
+    .map((t) => {
+      const wo = t.work_order_id ? workOrderById.get(t.work_order_id) : undefined;
+      return {
+        id: t.id,
+        title: t.title,
+        projectName: wo ? `${workOrderCode(wo.number)} · ${wo.title}` : (projectName.get(t.project_id) ?? "Proyecto"),
+      };
+    });
 
   const open = entries.find((e) => e.entry_type === "clock" && e.ended_at === null) ?? null;
   const now = new Date();

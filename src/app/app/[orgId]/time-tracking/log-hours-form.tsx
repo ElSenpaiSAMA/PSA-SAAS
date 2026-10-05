@@ -37,7 +37,7 @@ export function LogHoursForm({ orgId, tasks }: { orgId: string; tasks: TaskOptio
   if (tasks.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-[13px] text-muted-foreground">
-        No tenés tareas asignadas todavía. Cuando te asignen una, vas a poder imputarle horas desde acá.
+        No tenés tareas abiertas en órdenes de trabajo activas. Cuando te asignen una, vas a poder imputarle horas desde acá.
       </p>
     );
   }
