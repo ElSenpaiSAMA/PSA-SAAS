@@ -52,7 +52,7 @@ export function NewProject({
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
             className="col-span-full basis-full overflow-hidden"
           >
-            <div className="mt-2 grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2 lg:grid-cols-[2fr_1.4fr_1.4fr_1fr_auto] lg:items-end">
+            <div className="mt-2 grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2 lg:grid-cols-[2fr_1.3fr_1.3fr_0.9fr_0.9fr_auto] lg:items-end">
               <Field label="Nombre" error={state.fieldErrors?.name}>
                 <Input name="name" placeholder="Rediseño portal clientes" autoFocus />
               </Field>
@@ -71,6 +71,9 @@ export function NewProject({
               </Field>
               <Field label="Presupuesto (h)" error={state.fieldErrors?.budgetedHours}>
                 <Input name="budgetedHours" type="number" min="0" placeholder="120" />
+              </Field>
+              <Field label="Tarifa €/h" error={state.fieldErrors?.hourlyRate}>
+                <Input name="hourlyRate" type="number" min="0" step="0.5" placeholder="85" />
               </Field>
               <SubmitButton pendingLabel="Creando…">Crear</SubmitButton>
             </div>
