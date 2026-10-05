@@ -1,3 +1,5 @@
+import { formatMonth, type ISODate } from "./periods";
+
 export const WORK_ORDER_STATUSES = ["draft", "approved", "in_progress", "closed"] as const;
 export type WorkOrderStatus = (typeof WORK_ORDER_STATUSES)[number];
 export type BillingStatus = "unbilled" | "invoiced";
@@ -65,6 +67,15 @@ export function workOrderAmounts({ budgetedHours, loggedHours, hourlyRate }: Wor
     budgetAmount: hourlyRate !== null && budgetedHours !== null ? round2(budgetedHours * hourlyRate) : null,
     actualAmount: hourlyRate !== null ? round2(loggedHours * hourlyRate) : null,
   };
+}
+
+/** Título para la copia en otro período: reemplaza el mes si aparece, si no lo agrega. */
+export function titleForPeriod(title: string, oldStart: ISODate, newStart: ISODate): string {
+  const oldMonth = formatMonth(oldStart);
+  const newMonth = formatMonth(newStart);
+  if (title.includes(oldMonth)) return title.replace(oldMonth, newMonth);
+  const base = title.replace(/\s·\s[^·]+\d{4}$/, "");
+  return `${base} · ${newMonth}`;
 }
 
 export function formatMoney(amount: number | null): string {

@@ -4,6 +4,7 @@ import {
   canInvoice,
   formatMoney,
   nextStatuses,
+  titleForPeriod,
   workOrderAmounts,
   workOrderCode,
 } from "./work-orders";
@@ -46,6 +47,11 @@ describe("órdenes de trabajo", () => {
       budgetAmount: null,
       actualAmount: null,
     });
+  });
+
+  it("renombra el título para el nuevo período", () => {
+    expect(titleForPeriod("Portal · Septiembre 2026", "2026-09-01", "2026-10-01")).toBe("Portal · Octubre 2026");
+    expect(titleForPeriod("Soporte mensual", "2026-09-01", "2026-10-01")).toBe("Soporte mensual · Octubre 2026");
   });
 
   it("formatea importes en euros", () => {
