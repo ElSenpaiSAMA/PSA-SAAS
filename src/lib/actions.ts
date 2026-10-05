@@ -34,6 +34,10 @@ export function dbErrorMessage(error: { message?: string; code?: string } | null
     "cannot invite with a rank equal or higher than yours": "No podés invitar con un rango igual o superior al tuyo.",
     "invitation not found": "La invitación no existe o ya fue usada.",
     "task must belong to the same organization": "La tarea no pertenece a esta organización.",
+    "not a member of this project": "No sos miembro de este proyecto.",
+    "department must belong to the same organization": "El departamento no pertenece a esta organización.",
+    "department head must belong to the same organization": "El responsable debe pertenecer a la organización.",
+    "member must belong to the same organization": "La persona no pertenece a esta organización.",
   };
   for (const [key, text] of Object.entries(known)) if (msg.includes(key)) return text;
   if (error?.code === "23505") return "Ya existe un registro igual.";

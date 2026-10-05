@@ -52,6 +52,7 @@ export const projectSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(80),
   clientName: optionalText(80),
   budgetedHours: emptyToUndefined.or(z.coerce.number().min(0).max(100_000)).optional(),
+  departmentId: emptyToUndefined.or(id).optional(),
 });
 
 export const taskSchema = z.object({
@@ -69,6 +70,7 @@ export const invitationSchema = z.object({
   email,
   role: assignableRole,
   managerId: emptyToUndefined.or(id).optional(),
+  departmentId: emptyToUndefined.or(id).optional(),
   position: optionalText(80),
 });
 
@@ -76,8 +78,19 @@ export const memberUpdateSchema = z.object({
   membershipId: id,
   role: assignableRole,
   managerId: emptyToUndefined.or(id).optional(),
+  departmentId: emptyToUndefined.or(id).optional(),
   position: optionalText(80),
   weeklyHours: z.coerce.number().min(1, "Mínimo 1 hora").max(60, "Máximo 60 horas"),
+});
+
+export const departmentSchema = z.object({
+  name: z.string().trim().min(2, "Mínimo 2 caracteres").max(60, "Máximo 60 caracteres"),
+  headId: emptyToUndefined.or(id).optional(),
+});
+
+export const projectMemberSchema = z.object({
+  projectId: id,
+  membershipId: id,
 });
 
 export type FieldErrors = Record<string, string[] | undefined>;

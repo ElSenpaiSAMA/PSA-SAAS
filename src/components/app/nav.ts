@@ -17,7 +17,7 @@ export const NAV: NavItem[] = [
   { href: "time-tracking", label: "Fichaje y horas", icon: "clock", keywords: ["fichar", "horas", "tiempo"] },
   { href: "vacations", label: "Vacaciones", icon: "calendar", keywords: ["ausencias", "días libres"] },
   { href: "projects", label: "Proyectos", icon: "projects", keywords: ["tareas", "presupuesto"] },
-  { href: "employees", label: "Equipo", icon: "team", keywords: ["empleados", "organigrama", "invitar"] },
+  { href: "employees", label: "Personas", icon: "team", keywords: ["equipo", "empleados", "departamentos", "organigrama", "invitar"] },
   { href: "audit", label: "Auditoría", icon: "audit", permission: "employees.manage", keywords: ["log", "historial"] },
 ];
 
