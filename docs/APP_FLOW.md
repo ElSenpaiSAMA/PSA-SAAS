@@ -22,7 +22,9 @@ src/
       dashboard/               # resumen personal y del equipo
       time-tracking/           # fichaje, imputación de horas, carga del equipo
       vacations/               # saldo, solicitudes y aprobaciones
-      projects/[projectId]/    # proyectos y tablero de tareas
+      projects/[projectId]/    # proyectos: sus órdenes de trabajo y miembros
+      work-orders/[workOrderId]/ # OT por mes: tareas con fechas, estados, copiar al mes siguiente, facturación
+      planning/                # carga de trabajo persona × semana vs. capacidad
       employees/               # personas: directorio, departamentos, organigrama, invitaciones
       audit/                   # auditoría (requiere employees.manage)
 ```
@@ -54,4 +56,7 @@ src/
 | Aprobar vacaciones | | su línea | toda la org | toda la org |
 | Crear departamentos y asignar responsables | | | ✓ | ✓ |
 | Invitar personas y editar rol/departamento | | | rangos inferiores | ✓ |
+| Crear OT, duplicarlas y copiarlas de mes | | su departamento | ✓ | ✓ |
+| Facturar OT y definir tarifas | | | ✓ | ✓ |
+| Ver planificación | la propia | su línea | toda la org | toda la org |
 | Ver auditoría de la organización | | | ✓ | ✓ |

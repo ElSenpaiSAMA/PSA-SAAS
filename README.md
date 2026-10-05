@@ -2,7 +2,7 @@
 
 > El tiempo de tu equipo, en orden.
 
-Mini SaaS multi-tenant de gestión de personas y proyectos (en la línea de Factorial): fichaje, horas por proyecto, vacaciones con aprobación jerárquica, organigrama con permisos por rango y auditoría completa. Cada empresa es un tenant aislado; un mismo usuario puede pertenecer a varias con roles distintos.
+PSA (*Professional Services Automation*) multi-tenant de gestión de personas, proyectos y órdenes de trabajo (en la línea de Factorial): fichaje, horas por proyecto, vacaciones con aprobación jerárquica, organigrama con permisos por rango y auditoría completa. Cada empresa es un tenant aislado; un mismo usuario puede pertenecer a varias con roles distintos.
 
 ## Qué incluye
 
@@ -13,6 +13,8 @@ Mini SaaS multi-tenant de gestión de personas y proyectos (en la línea de Fact
 | **Organizaciones** | Selector multi-empresa, creación de organización, invitaciones por email |
 | **Fichaje y horas** | Entrada/salida en un clic, imputación de horas a tareas, gráfico semanal, carga del equipo |
 | **Vacaciones** | Saldo en días hábiles, solicitud con validación en vivo, aprobación por la línea de reporte |
+| **Órdenes de trabajo** | Trabajo de cada proyecto por período: presupuesto, tarifa, estados, facturación, copiar al mes siguiente y duplicar tareas |
+| **Planificación** | Carga persona × semana: horas planificadas contra capacidad, descontando vacaciones |
 | **Proyectos** | Por departamento, con miembros: cada persona ve solo los suyos y el responsable los de su área. Presupuesto vs. horas reales y tablero kanban |
 | **Personas** | Directorio, departamentos con responsable, organigrama, invitaciones con departamento y rol |
 | **Auditoría** | Registro inmutable de toda acción sensible, con detalle del cambio campo por campo |

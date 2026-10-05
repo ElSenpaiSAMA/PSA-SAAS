@@ -107,6 +107,31 @@ Resuelta en la base con `can_view_project` / `can_manage_project`, y aplicada a 
 
 Un empleado no puede imputar horas a un proyecto del que no es miembro, ni ver sus horas agregadas. Cubierto por `supabase/tests/departments.test.sql` (16 tests).
 
+## Órdenes de trabajo y planificación (`0005_work_orders.sql`)
+
+**Proyecto → Orden de trabajo (OT) → Tareas.** El proyecto es el cliente/contrato; cada OT es el trabajo de un período (típicamente un mes) con su presupuesto de horas y tarifa; las tareas viven dentro de una OT y tienen fecha de inicio y vencimiento.
+
+### `public.work_orders`
+`project_id`, `number` (correlativo por organización → `OT-0001`), `title`, `period_start` / `period_end`, `budgeted_hours`, `hourly_rate` (si no se indica, hereda la del proyecto), `status` (`draft → approved → in_progress → closed`), `billing_status` (`unbilled` / `invoiced`), `invoiced_at`.
+
+Reglas en la base (triggers):
+
+| Regla | Dónde |
+|---|---|
+| Solo se imputan horas a tareas de OT **aprobadas o en curso** | `open_work_order_for_task` en insert/update/delete de `time_entries` |
+| La primera imputación pasa una OT aprobada a **en curso** | ídem |
+| Solo se factura una OT **cerrada**; una OT facturada queda **bloqueada** (ni ella ni sus tareas cambian) | `guard_work_order_changes`, `guard_task_changes` |
+| Facturar y cambiar tarifas requiere `billing.manage` (owner/admin) | `guard_work_order_changes` |
+| Visibilidad igual que su proyecto (`can_view_project` / `can_manage_project`) | RLS |
+
+### Duplicar ("copiar del mes anterior")
+`duplicate_work_order(id, título, desde, hasta)` crea la OT nueva en **borrador** y copia todas las tareas reiniciadas a "por hacer", corriendo sus fechas lo mismo que el período (y acotándolas al nuevo período). La UI ofrece "Copiar al mes siguiente" (un clic) y "Duplicar a otro período".
+
+### Planificación
+`workload_items(org, desde, hasta)` devuelve las tareas abiertas con horas estimadas y fechas de las personas que el usuario puede ver (él mismo o su línea de reporte / toda la org si es admin), **sin títulos**. La app reparte las horas de cada tarea entre sus días hábiles (`src/lib/domain/planning.ts`) y las compara con la capacidad semanal (`weekly_hours`), descontando las vacaciones aprobadas.
+
+Cubierto por `supabase/tests/work_orders.test.sql` (17 tests).
+
 ## Desarrollo local
 
 ```bash
