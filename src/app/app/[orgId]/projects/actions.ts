@@ -45,6 +45,7 @@ export async function createProject(orgId: string, _prev: ActionState, formData:
     name: parsed.data.name,
     client_name: parsed.data.clientName,
     budgeted_hours: parsed.data.budgetedHours ?? null,
+    hourly_rate: parsed.data.hourlyRate ?? null,
     department_id: departmentId,
   });
   if (error) return fail(dbErrorMessage(error));
@@ -107,9 +108,12 @@ export async function createTask(orgId: string, _prev: ActionState, formData: Fo
   const supabase = await createClient();
   const { error } = await supabase.from("tasks").insert({
     project_id: parsed.data.projectId,
+    work_order_id: parsed.data.workOrderId ?? null,
     title: parsed.data.title,
     assigned_to: parsed.data.assignedTo ?? null,
     estimated_hours: parsed.data.estimatedHours ?? null,
+    start_date: parsed.data.startDate ?? null,
+    due_date: parsed.data.dueDate ?? null,
   });
   if (error) return fail(dbErrorMessage(error));
   refresh(orgId);

@@ -52,15 +52,24 @@ export const projectSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(80),
   clientName: optionalText(80),
   budgetedHours: emptyToUndefined.or(z.coerce.number().min(0).max(100_000)).optional(),
+  hourlyRate: emptyToUndefined.or(z.coerce.number().min(0).max(10_000)).optional(),
   departmentId: emptyToUndefined.or(id).optional(),
 });
 
-export const taskSchema = z.object({
-  projectId: id,
-  title: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
-  assignedTo: emptyToUndefined.or(id).optional(),
-  estimatedHours: emptyToUndefined.or(z.coerce.number().min(0).max(1000)).optional(),
-});
+export const taskSchema = z
+  .object({
+    projectId: id,
+    workOrderId: emptyToUndefined.or(id).optional(),
+    startDate: emptyToUndefined.or(isoDate).optional(),
+    dueDate: emptyToUndefined.or(isoDate).optional(),
+    title: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
+    assignedTo: emptyToUndefined.or(id).optional(),
+    estimatedHours: emptyToUndefined.or(z.coerce.number().min(0).max(1000)).optional(),
+  })
+  .refine((v) => !v.startDate || !v.dueDate || v.dueDate >= v.startDate, {
+    message: "El vencimiento debe ser posterior al inicio",
+    path: ["dueDate"],
+  });
 
 export const taskStatusSchema = z.enum(["todo", "in_progress", "done"]);
 
@@ -92,6 +101,34 @@ export const projectMemberSchema = z.object({
   projectId: id,
   membershipId: id,
 });
+
+const period = {
+  periodStart: isoDate,
+  periodEnd: isoDate,
+};
+const validPeriod = (v: { periodStart: string; periodEnd: string }) => v.periodEnd >= v.periodStart;
+const periodError = { message: "El fin debe ser posterior al inicio", path: ["periodEnd"] };
+
+export const workOrderSchema = z
+  .object({
+    projectId: id,
+    title: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
+    ...period,
+    budgetedHours: emptyToUndefined.or(z.coerce.number().min(0).max(100_000)).optional(),
+    hourlyRate: emptyToUndefined.or(z.coerce.number().min(0).max(10_000)).optional(),
+  })
+  .refine(validPeriod, periodError);
+
+export const duplicateWorkOrderSchema = z
+  .object({
+    workOrderId: id,
+    title: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
+    ...period,
+  })
+  .refine(validPeriod, periodError);
+
+export const workOrderStatusSchema = z.enum(["draft", "approved", "in_progress", "closed"]);
+export const billingStatusSchema = z.enum(["unbilled", "invoiced"]);
 
 export type FieldErrors = Record<string, string[] | undefined>;
 
