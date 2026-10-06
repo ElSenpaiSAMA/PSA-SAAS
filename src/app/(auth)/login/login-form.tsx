@@ -17,12 +17,12 @@ export function LoginForm({ next }: { next?: string }) {
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <FormAlert state={state} />
       <Field label="Email" error={state.fieldErrors?.email}>
-        <Input name="email" type="email" autoComplete="email" placeholder="vos@empresa.com" autoFocus required />
+        <Input name="email" type="email" autoComplete="email" placeholder="vos@diplonautic.com" autoFocus required />
       </Field>
       <Field label="Contraseña" error={state.fieldErrors?.password}>
         <Input name="password" type="password" autoComplete="current-password" placeholder="••••••••" required />
       </Field>
-      <SubmitButton className="group mt-2 w-full" size="lg" pendingLabel="Ingresando…">
+      <SubmitButton className="group mt-2 w-full bg-blue-600 text-white hover:bg-blue-500" size="lg" pendingLabel="Ingresando…">
         Ingresar
         <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
       </SubmitButton>

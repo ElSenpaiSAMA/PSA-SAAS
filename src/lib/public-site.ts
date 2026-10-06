@@ -1,5 +1,5 @@
-/** Páginas de la web pública de la empresa (siempre en tema claro, sin selector de tema). */
-const PUBLIC_SITE_PATHS = ["/", "/contacto"];
+/** Páginas públicas de la empresa: la web y la entrada a la intranet (siempre en tema claro, sin selector). */
+const PUBLIC_SITE_PATHS = ["/", "/contacto", "/login", "/signup"];
 
 export function isPublicSitePath(pathname: string | null): boolean {
   if (!pathname) return false;
