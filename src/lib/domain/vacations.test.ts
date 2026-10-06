@@ -6,6 +6,7 @@ import {
   validateNewRequest,
   vacationBalance,
   type VacationRequestLike,
+  naturalApprovers,
 } from "./vacations";
 
 const req = (
@@ -104,5 +105,31 @@ describe("canDecide", () => {
 
   it("solo se deciden solicitudes pendientes", () => {
     expect(canDecide(req("2026-10-12", "2026-10-13", "approved", "m1"), "m2")).toBe(false);
+  });
+});
+
+describe("naturalApprovers", () => {
+  const can = (role: string) => role !== "employee";
+  const admin = (role: string) => role === "owner" || role === "admin";
+  const org = [
+    { id: "ceo", manager_id: null, role_id: "owner", status: "active" },
+    { id: "hr", manager_id: "ceo", role_id: "admin", status: "active" },
+    { id: "lead", manager_id: "ceo", role_id: "manager", status: "active" },
+    { id: "senior", manager_id: "lead", role_id: "employee", status: "active" },
+    { id: "junior", manager_id: "senior", role_id: "employee", status: "active" },
+  ];
+
+  it("sube por la línea de reporte hasta el primero que puede aprobar", () => {
+    expect(naturalApprovers(org, "junior", can, admin)).toEqual(["lead"]);
+    expect(naturalApprovers(org, "lead", can, admin)).toEqual(["ceo"]);
+  });
+
+  it("sin nadie por encima, aprueba administración (nunca uno mismo)", () => {
+    expect(naturalApprovers(org, "ceo", can, admin)).toEqual(["hr"]);
+  });
+
+  it("salta responsables dados de baja", () => {
+    const withInactive = org.map((n) => (n.id === "lead" ? { ...n, status: "inactive" } : n));
+    expect(naturalApprovers(withInactive, "junior", can, admin)).toEqual(["ceo"]);
   });
 });
