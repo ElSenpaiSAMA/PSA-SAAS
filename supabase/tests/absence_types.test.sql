@@ -79,7 +79,7 @@ select is(
 -- ── El calendario de toda la empresa no expone el tipo ───────
 select pg_temp.login_as('33333333-3333-3333-3333-333333333333', 'ana@demo.com');
 select ok(
-  exists (select 1 from public.org_absences('aaaaaaaa-0000-0000-0000-000000000001', current_date, current_date + 400)
+  exists (select 1 from public.org_absences('aaaaaaaa-0000-0000-0000-000000000001', date_trunc('year', current_date)::date, current_date + 400)
           where membership_id = 'bbbbbbbb-0000-0000-0000-000000000004'),
   'una compañera ve que Diego estará ausente'
 );
