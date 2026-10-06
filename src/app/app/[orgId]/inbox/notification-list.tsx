@@ -10,6 +10,8 @@ import {
   FileCheck2,
   FolderKanban,
   Gauge,
+  Megaphone,
+  MessagesSquare,
   Palmtree,
   SquareCheckBig,
   type LucideIcon,
@@ -42,6 +44,8 @@ const ICON: Record<string, LucideIcon> = {
   "team.weekly_summary": BarChart3,
   "time.correction_requested": Clock3,
   "time.correction_decided": Clock3,
+  "forum.reply": MessagesSquare,
+  "forum.notice": Megaphone,
 };
 
 export function NotificationList({ orgId, items }: { orgId: string; items: Notification[] }) {
