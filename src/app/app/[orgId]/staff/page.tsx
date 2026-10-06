@@ -1,0 +1,78 @@
+import type { Metadata } from "next";
+import { Building2, UserCheck, Users } from "lucide-react";
+import { PageHeader } from "@/components/app/page-header";
+import { StatCard } from "@/components/app/stat-card";
+import { getDepartments } from "@/lib/data/departments";
+import { getEmployees } from "@/lib/data/employees";
+import { getOrgContext } from "@/lib/data/session";
+import { recordAt } from "@/lib/domain/employee-records";
+import { displayName } from "@/lib/domain/hierarchy";
+import { isRole, ROLE_LABEL } from "@/lib/domain/permissions";
+import { todayISO } from "@/lib/domain/periods";
+import { createClient } from "@/lib/supabase/server";
+import { StaffTable, type StaffRow } from "./staff-table";
+
+export const metadata: Metadata = { title: "Empleados" };
+
+export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staff">) {
+  const { orgId } = await params;
+  const ctx = await getOrgContext(orgId);
+  const sensitive = ctx.can("people.sensitive");
+
+  const supabase = await createClient();
+  const [employees, departments, records] = await Promise.all([
+    getEmployees(orgId),
+    getDepartments(orgId),
+    // RLS: con people.sensitive vuelven todas las fichas; si no, solo la propia
+    sensitive
+      ? supabase
+          .from("employee_records")
+          .select("*")
+          .eq("org_id", orgId)
+          .then((r) => r.data ?? [])
+      : Promise.resolve([]),
+  ]);
+
+  const names = new Map(employees.map((e) => [e.id, displayName(e.profile)]));
+  const deptName = new Map(departments.map((d) => [d.id, d.name]));
+  const today = todayISO();
+
+  const rows: StaffRow[] = employees
+    .map((e) => ({
+      id: e.id,
+      name: displayName(e.profile),
+      email: e.profile?.email ?? null,
+      position: e.position,
+      roleLabel: isRole(e.role_id) ? ROLE_LABEL[e.role_id] : e.role_id,
+      departmentId: e.department_id,
+      departmentName: e.department_id ? (deptName.get(e.department_id) ?? null) : null,
+      managerName: e.manager_id ? (names.get(e.manager_id) ?? null) : null,
+      reports: employees.filter((x) => x.manager_id === e.id && x.status === "active").length,
+      status: e.status,
+      hireDate: sensitive
+        ? (recordAt(
+            records.filter((r) => r.membership_id === e.id),
+            today,
+          )?.hire_date ?? null)
+        : null,
+      isMe: e.id === ctx.membership.id,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+
+  const active = rows.filter((r) => r.status === "active");
+
+  return (
+    <>
+      <PageHeader
+        title="Empleados"
+        description="Todas las personas de la empresa. Abrí un perfil para ver su ficha, su trabajo, sus horas, vacaciones y actividad."
+      />
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <StatCard index={0} label="Empleados activos" value={active.length} icon={Users} />
+        <StatCard index={1} label="Con personas a cargo" value={active.filter((r) => r.reports > 0).length} icon={UserCheck} />
+        <StatCard index={2} label="Departamentos" value={departments.length} icon={Building2} />
+      </div>
+      <StaffTable orgId={orgId} rows={rows} departments={departments.map((d) => ({ id: d.id, name: d.name }))} showHireDate={sensitive} />
+    </>
+  );
+}

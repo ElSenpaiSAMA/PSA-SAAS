@@ -245,3 +245,45 @@ test("una invitación pendiente se acepta desde el selector", async ({ page }) =
   await page.getByRole("button", { name: "Aceptar" }).click();
   await expect(page).toHaveURL(new RegExp(`/app/${ORBITAL}/dashboard`));
 });
+
+test("una admin abre la ficha de un empleado, navega en el tiempo y registra un cambio", async ({ page }) => {
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/staff`);
+  await page.getByRole("link", { name: "Ver perfil de Ana Torres" }).click();
+  await expect(page.getByRole("heading", { name: "Ana Torres" })).toBeVisible();
+  await expect(page.getByText("Calle Luna 12, Madrid").first()).toBeVisible();
+
+  // El mes pasado se mudó: al volver a ese mes, el cambio aparece resaltado
+  await page.getByRole("link", { name: "Mes anterior" }).click();
+  await expect(page.getByText(/Estás viendo/)).toBeVisible();
+  await expect(page.getByText(/^Cambió en /)).toBeVisible();
+
+  // Un cambio con vigencia futura queda programado en el historial
+  await page.getByRole("link", { name: "Volver a hoy" }).click();
+  await expect(async () => {
+    await page.getByRole("button", { name: "Registrar un cambio" }).click();
+    await expect(page.getByLabel("Vigente desde")).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+  const nextYear = new Date().getFullYear() + 1;
+  await page.getByLabel("Vigente desde").fill(`${nextYear}-01-01`);
+  await page.getByLabel("Salario bruto anual").fill("37000");
+  await page.getByLabel("Motivo del cambio").fill("Revisión salarial");
+  await page.getByRole("button", { name: "Guardar versión" }).click();
+  await expect(page.getByText("Ficha actualizada")).toBeVisible();
+  await expect(page.getByText("Programado", { exact: true })).toBeVisible();
+  await expect(page.getByText("Revisión salarial")).toBeVisible();
+});
+
+test("un empleado ve su propia ficha pero no los datos sensibles de otros", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/staff/bbbbbbbb-0000-0000-0000-000000000004`);
+  await expect(page.getByText("Ficha personal", { exact: true })).toBeVisible();
+  await expect(page.getByText("45678901G")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Registrar un cambio" })).toHaveCount(0);
+
+  await page.goto(`/app/${NEBULA}/staff/bbbbbbbb-0000-0000-0000-000000000003`);
+  await expect(page.getByRole("heading", { name: "Ana Torres" })).toBeVisible();
+  await expect(page.getByText("Ficha personal", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("34567890V")).toHaveCount(0);
+  await expect(page.getByText(/solo las ven la propia persona/)).toBeVisible();
+});

@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Clock3,
   FolderKanban,
+  IdCard,
   LayoutDashboard,
   Palmtree,
   ScrollText,
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "audit";
+export type NavIcon = "dashboard" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "audit";
 
 export interface NavItem {
   href: string;
@@ -31,7 +32,8 @@ export const NAV: NavItem[] = [
   { href: "work-orders", label: "Órdenes de trabajo", icon: "workOrders", keywords: ["ot", "mes", "facturación", "tareas"] },
   { href: "planning", label: "Planificación", icon: "planning", keywords: ["carga", "capacidad", "semanas", "recursos"] },
   { href: "vacations", label: "Vacaciones", icon: "vacations", keywords: ["ausencias", "días libres"] },
-  { href: "employees", label: "Personas", icon: "team", keywords: ["equipo", "empleados", "departamentos", "organigrama", "invitar"] },
+  { href: "staff", label: "Empleados", icon: "staff", keywords: ["perfil", "ficha", "dni", "sueldo", "contrato", "rrhh"] },
+  { href: "employees", label: "Personas", icon: "team", keywords: ["equipo", "departamentos", "organigrama", "invitar"] },
   { href: "audit", label: "Auditoría", icon: "audit", permission: "employees.manage", keywords: ["log", "historial"] },
 ];
 
@@ -44,5 +46,6 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   workOrders: ClipboardList,
   planning: CalendarRange,
   team: Users,
+  staff: IdCard,
   audit: ScrollText,
 };
