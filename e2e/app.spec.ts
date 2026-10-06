@@ -79,6 +79,24 @@ test("el manager aprueba vacaciones de su equipo", async ({ page }) => {
   await expect(page.getByText("Vacaciones aprobadas")).toBeVisible();
 });
 
+test("el aprobador resuelve desde la bandeja y el solicitante recibe el aviso", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/inbox`);
+  const request = page.getByRole("listitem").filter({ hasText: "Diego Fernández pidió vacaciones" }).filter({ has: page.getByRole("button", { name: "Aprobar" }) });
+  await expect(request).toBeVisible();
+  await request.getByRole("button", { name: "Aprobar" }).click();
+  await expect(page.getByText("Vacaciones aprobadas")).toBeVisible();
+  await expect(request).toHaveCount(0);
+});
+
+test("el solicitante recibe la decisión en su bandeja y ve quién aprueba", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/inbox`);
+  await expect(page.getByText("Tus vacaciones fueron aprobadas")).toBeVisible();
+  await page.goto(`/app/${NEBULA}/vacations`);
+  await expect(page.getByText(/^La aprueba Carlos Ruiz/)).toBeVisible();
+});
+
 test("un empleado no accede a la auditoría", async ({ page }) => {
   await login(page, "diego@demo.com");
   await page.goto(`/app/${NEBULA}/audit`);
