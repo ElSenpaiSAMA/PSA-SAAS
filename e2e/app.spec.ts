@@ -377,7 +377,9 @@ test("rechazar exige motivo y la persona lo ve", async ({ page }) => {
   await row.getByLabel("Motivo del rechazo").fill("Falta el parte médico");
   await row.getByRole("button", { name: "Confirmar rechazo" }).click();
   await expect(page.getByText("Solicitud rechazada")).toBeVisible();
+});
 
+test("la persona ve el motivo del rechazo", async ({ page }) => {
   await login(page, "diego@demo.com");
   await page.goto(`/app/${NEBULA}/vacations`);
   await expect(page.getByText("Respuesta: «Falta el parte médico»")).toBeVisible();
