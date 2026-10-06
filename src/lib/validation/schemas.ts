@@ -39,6 +39,7 @@ export const taskHoursSchema = z.object({
 
 export const vacationRequestSchema = z
   .object({
+    kind: z.enum(["vacation", "personal", "sick", "other"], "Tipo de ausencia inválido").default("vacation"),
     startDate: isoDate,
     endDate: isoDate,
     reason: optionalText(200),
@@ -46,7 +47,13 @@ export const vacationRequestSchema = z
   .refine((v) => v.endDate >= v.startDate, {
     message: "La fecha de fin debe ser posterior al inicio",
     path: ["endDate"],
+  })
+  .refine((v) => v.kind !== "other" || !!v.reason, {
+    message: "Contá de qué se trata la ausencia",
+    path: ["reason"],
   });
+
+export const decisionNoteSchema = z.string().trim().max(300, "Máximo 300 caracteres");
 
 export const projectSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(80),

@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { idle, type ActionState } from "@/lib/actions";
-import { businessDays } from "@/lib/domain/vacations";
+import { ABSENCE_HINT, ABSENCE_KINDS, ABSENCE_LABEL, businessDays, countsAgainstBalance, type AbsenceKind } from "@/lib/domain/vacations";
 import { cn } from "@/lib/utils";
 import { requestVacation } from "./actions";
 
@@ -34,20 +34,45 @@ export function RequestForm({ orgId, available, holidays }: { orgId: string; ava
 }
 
 function RequestFields({ state, available, holidays }: { state: ActionState; available: number; holidays: string[] }) {
+  const [kind, setKind] = useState<AbsenceKind>("vacation");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
   const days = start && end && end >= start ? businessDays({ start_date: start, end_date: end }, new Set(holidays)) : 0;
-  const exceeds = days > available;
+  const usesBalance = countsAgainstBalance(kind);
+  const exceeds = usesBalance && days > available;
+  // Una baja médica se suele cargar después de empezar
+  const minDate = kind === "sick" ? undefined : isoToday();
 
   return (
     <>
+      <input type="hidden" name="kind" value={kind} />
+      <div role="radiogroup" aria-label="Tipo de ausencia" className="grid gap-2">
+        <div className="grid grid-cols-2 gap-1.5">
+          {ABSENCE_KINDS.map((k) => (
+            <button
+              key={k}
+              type="button"
+              role="radio"
+              aria-checked={kind === k}
+              onClick={() => setKind(k)}
+              className={cn(
+                "h-9 rounded-lg border px-2 text-[12.5px] transition-colors",
+                kind === k ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {ABSENCE_LABEL[k]}
+            </button>
+          ))}
+        </div>
+        <p className="text-[12px] text-muted-foreground">{ABSENCE_HINT[kind]}</p>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Desde" error={state.fieldErrors?.startDate}>
           <Input
             name="startDate"
             type="date"
-            min={isoToday()}
+            min={minDate}
             value={start}
             onChange={(e) => {
               setStart(e.target.value);
@@ -56,7 +81,7 @@ function RequestFields({ state, available, holidays }: { state: ActionState; ava
           />
         </Field>
         <Field label="Hasta" error={state.fieldErrors?.endDate}>
-          <Input name="endDate" type="date" min={start || isoToday()} value={end} onChange={(e) => setEnd(e.target.value)} />
+          <Input name="endDate" type="date" min={start || minDate} value={end} onChange={(e) => setEnd(e.target.value)} />
         </Field>
       </div>
 
@@ -78,14 +103,14 @@ function RequestFields({ state, available, holidays }: { state: ActionState; ava
                 <span className="font-semibold tabular">{days}</span> {days === 1 ? "día hábil" : "días hábiles"}
               </span>
               <span className={exceeds ? "" : "text-muted-foreground"}>
-                {exceeds ? "Supera tu saldo" : `Te quedarían ${available - days}`}
+                {!usesBalance ? "No descuenta vacaciones" : exceeds ? "Supera tu saldo" : `Te quedarían ${available - days}`}
               </span>
             </div>
           </motion.div>
         ) : null}
       </AnimatePresence>
 
-      <Field label="Motivo (opcional)" error={state.fieldErrors?.reason}>
+      <Field label={kind === "other" ? "Motivo" : "Motivo (opcional)"} error={state.fieldErrors?.reason}>
         <Textarea name="reason" maxLength={200} placeholder="Viaje, trámite, descanso…" />
       </Field>
 
@@ -94,7 +119,7 @@ function RequestFields({ state, available, holidays }: { state: ActionState; ava
       ) : null}
 
       <SubmitButton pendingLabel="Enviando…" disabled={exceeds}>
-        Solicitar vacaciones
+        {kind === "vacation" ? "Solicitar vacaciones" : kind === "sick" ? "Registrar baja médica" : `Solicitar ${ABSENCE_LABEL[kind].toLowerCase()}`}
       </SubmitButton>
     </>
   );

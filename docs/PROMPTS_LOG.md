@@ -329,3 +329,17 @@ Las que cambian datos por su cuenta (cerrar o crear OT, aprobar vacaciones) vien
 - Lógica nueva en el dominio, con tests: `absenceGrid` y `overlappingPeople`.
 
 **Verificado:** Diego pidió dos días. A Carlos le llegó la notificación (sin botón de aprobar en la bandeja); el click lo llevó a la pestaña Equipo, vio la solicitud en el calendario y la aprobó. Diego no ve la pestaña.
+
+---
+
+## 2026-10-06 Fase 3a: tipos de ausencia y motivo de rechazo
+
+**Contexto:** la fase 3 del plan completa cada sección. Esta parte cubre lo que faltaba en Vacaciones.
+
+**Resultado:**
+- **Tipos de ausencia**: vacaciones, asuntos propios, baja médica y otra (esta última con motivo obligatorio). Solo las vacaciones descuentan saldo; el formulario lo explica según el tipo elegido. Una baja médica se puede cargar con fecha pasada, porque se suele avisar después.
+- **Rechazar exige motivo**, tanto en la base como en la UI: al tocar "Rechazar" aparece un campo y "Confirmar rechazo" no se habilita hasta escribirlo. La persona ve el motivo en su lista y en la notificación.
+- El calendario del equipo colorea por tipo y mantiene el rayado para las pendientes.
+- **Privacidad:** el calendario de toda la empresa sigue mostrando solo "ausente"; el tipo (dato de salud en una baja) solo lo ven la persona y quien aprueba.
+
+**Verificado en el navegador:** Diego registró una baja de ayer y pidió un día de vacaciones. Carlos aprobó la baja y rechazó las vacaciones con motivo. El saldo de Diego no se movió por la baja y el motivo le llegó.

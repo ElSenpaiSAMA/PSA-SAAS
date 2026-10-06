@@ -244,6 +244,28 @@ Cubierto por `supabase/tests/automations.test.sql` (14 tests).
 
 Las solicitudes de vacaciones se deciden en **Vacaciones → Equipo**, no en la bandeja. Esta migración redefine `notify_vacation_change` y `automation_vacations_escalate` para que los avisos de solicitud, cancelación y escalado enlacen a `/vacations?tab=equipo`, y corrige el enlace de los avisos ya enviados. Suspende el guard de notificaciones solo durante ese `update`.
 
+## Tipos de ausencia y motivo de la decisión (`0012_absence_types.sql`)
+
+`vacation_requests` suma dos columnas:
+
+| Columna | Valores | Detalle |
+|---|---|---|
+| `kind` | `vacation`, `personal`, `sick`, `other` | Vacaciones, asuntos propios, baja médica, otra. **Solo las vacaciones descuentan saldo**: la vista `vacation_balances` se recrea filtrando por tipo |
+| `decision_note` | texto | Motivo de la decisión |
+
+**Reglas del guard:**
+- El tipo no cambia después de pedirse.
+- **Rechazar exige motivo.**
+- Solo quien decide puede escribir el motivo.
+
+**Avisos:** dicen el tipo ("Ana pidió una baja médica") y, si hay rechazo, el motivo.
+
+**Aprobación automática:** de las ausencias cortas aplica solo a vacaciones y asuntos propios. Una baja o "otra" siempre la revisa una persona.
+
+**Privacidad:** `org_absences` (el calendario de toda la empresa) sigue sin exponer el tipo, porque una baja médica es un dato de salud. El tipo solo lo ven la persona y quien aprueba.
+
+Cubierto por `supabase/tests/absence_types.test.sql` (9 tests).
+
 ## Desarrollo local
 
 ```bash

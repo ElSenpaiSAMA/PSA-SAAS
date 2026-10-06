@@ -87,6 +87,8 @@ export type VacationRequest = {
   end_date: DateString;
   status: VacationStatus;
   reason: string | null;
+  kind: "vacation" | "personal" | "sick" | "other";
+  decision_note: string | null;
   decided_by: string | null;
   decided_at: Timestamp | null;
   created_at: Timestamp;

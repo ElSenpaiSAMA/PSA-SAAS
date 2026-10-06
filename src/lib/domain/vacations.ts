@@ -1,5 +1,25 @@
 export type VacationStatus = "pending" | "approved" | "rejected" | "cancelled";
 
+export const ABSENCE_KINDS = ["vacation", "personal", "sick", "other"] as const;
+export type AbsenceKind = (typeof ABSENCE_KINDS)[number];
+
+export const ABSENCE_LABEL: Record<AbsenceKind, string> = {
+  vacation: "Vacaciones",
+  personal: "Asuntos propios",
+  sick: "Baja médica",
+  other: "Otra ausencia",
+};
+
+export const ABSENCE_HINT: Record<AbsenceKind, string> = {
+  vacation: "Descuenta de tu saldo anual",
+  personal: "No descuenta vacaciones",
+  sick: "No descuenta vacaciones. Se puede cargar con fecha pasada",
+  other: "No descuenta vacaciones. Explicá el motivo",
+};
+
+/** Solo las vacaciones consumen el saldo anual. */
+export const countsAgainstBalance = (kind: AbsenceKind | undefined) => (kind ?? "vacation") === "vacation";
+
 export interface VacationRange {
   start_date: string; // YYYY-MM-DD
   end_date: string;
@@ -8,6 +28,8 @@ export interface VacationRange {
 export interface VacationRequestLike extends VacationRange {
   membership_id: string;
   status: VacationStatus;
+  /** Sin tipo = vacaciones (compatibilidad) */
+  kind?: AbsenceKind;
 }
 
 function parseDate(iso: string): Date {
@@ -47,7 +69,7 @@ export function vacationBalance(
   year: number,
   holidays: ReadonlySet<string> = NO_HOLIDAYS,
 ): VacationBalance {
-  const inYear = requests.filter((r) => r.start_date.startsWith(`${year}-`));
+  const inYear = requests.filter((r) => r.start_date.startsWith(`${year}-`) && countsAgainstBalance(r.kind));
   const sum = (status: VacationStatus) =>
     inYear.filter((r) => r.status === status).reduce((acc, r) => acc + businessDays(r, holidays), 0);
   const used = sum("approved");
@@ -68,14 +90,16 @@ export function validateNewRequest(
   balance: VacationBalance,
   today: string,
   holidays: ReadonlySet<string> = NO_HOLIDAYS,
+  kind: AbsenceKind = "vacation",
 ): RequestValidationError | null {
   if (range.end_date < range.start_date) return "invalid_range";
-  if (range.start_date < today) return "starts_in_past";
+  // Una baja médica se registra muchas veces después de empezar
+  if (range.start_date < today && kind !== "sick") return "starts_in_past";
   const days = businessDays(range, holidays);
   if (days === 0) return "no_business_days";
   const active = existing.filter((r) => r.status === "pending" || r.status === "approved");
   if (active.some((r) => rangesOverlap(r, range))) return "overlaps_existing";
-  if (days > balance.available) return "insufficient_balance";
+  if (countsAgainstBalance(kind) && days > balance.available) return "insufficient_balance";
   return null;
 }
 

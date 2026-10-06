@@ -2,13 +2,13 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { Check, X } from "lucide-react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/submit-button";
 import type { ActionState } from "@/lib/actions";
-import { businessDays, type VacationStatus } from "@/lib/domain/vacations";
+import { ABSENCE_LABEL, businessDays, type VacationStatus } from "@/lib/domain/vacations";
 import type { VacationRequest } from "@/lib/supabase/database.types";
 import { cancelVacation, decideVacation } from "./actions";
 
@@ -18,6 +18,8 @@ const STATUS: Record<VacationStatus, { label: string; tone: BadgeTone }> = {
   rejected: { label: "Rechazada", tone: "danger" },
   cancelled: { label: "Cancelada", tone: "neutral" },
 };
+
+const daysLabel = (n: number) => `${n} ${n === 1 ? "día hábil" : "días hábiles"}`;
 
 function range(r: Pick<VacationRequest, "start_date" | "end_date">) {
   const fmt = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
@@ -43,10 +45,17 @@ export function MyRequests({ orgId, requests, holidays }: { orgId: string; reque
         {requests.map((r) => (
           <motion.li key={r.id} layout className="flex items-center gap-4 py-3.5">
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-medium">{range(r)}</p>
-              <p className="truncate text-[12.5px] text-muted-foreground">
-                {businessDays(r, off)} días hábiles{r.reason ? ` · ${r.reason}` : ""}
+              <p className="text-[14px] font-medium">
+                {range(r)} {r.kind !== "vacation" ? <span className="font-normal text-muted-foreground">· {ABSENCE_LABEL[r.kind]}</span> : null}
               </p>
+              <p className="truncate text-[12.5px] text-muted-foreground">
+                {daysLabel(businessDays(r, off))}{r.reason ? ` · ${r.reason}` : ""}
+              </p>
+              {r.decision_note ? (
+                <p className={`mt-1 text-[12.5px] ${r.status === "rejected" ? "text-danger" : "text-muted-foreground"}`}>
+                  Respuesta: «{r.decision_note}»
+                </p>
+              ) : null}
             </div>
             <Badge tone={STATUS[r.status].tone} dot>
               {STATUS[r.status].label}
@@ -101,9 +110,14 @@ export function Approvals({ orgId, requests, holidays }: { orgId: string; reques
             <div className="min-w-0 flex-1">
               <p className="text-[14px]">
                 <span className="font-medium">{r.name}</span> <span className="text-muted-foreground">· {range(r)}</span>
+                {r.kind !== "vacation" ? (
+                  <Badge tone={r.kind === "sick" ? "danger" : "accent"} className="ml-2">
+                    {ABSENCE_LABEL[r.kind]}
+                  </Badge>
+                ) : null}
               </p>
               <p className="truncate text-[12.5px] text-muted-foreground">
-                {businessDays(r, off)} días hábiles · le quedan {r.available}
+                {daysLabel(businessDays(r, off))}{r.kind === "vacation" ? ` · le quedan ${r.available}` : " · no descuenta vacaciones"}
                 {r.reason ? ` · “${r.reason}”` : ""}
               </p>
               {r.overlaps || r.approverName ? (
@@ -127,12 +141,47 @@ export function Approvals({ orgId, requests, holidays }: { orgId: string; reques
 
 function DecisionButtons({ orgId, id }: { orgId: string; id: string }) {
   const [pending, run] = useAction();
+  const [rejecting, setRejecting] = useState(false);
+  const [note, setNote] = useState("");
+
+  if (rejecting) {
+    return (
+      <form
+        className="flex basis-full flex-wrap items-center gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          run(() => decideVacation(orgId, id, "rejected", note));
+        }}
+      >
+        <input
+          autoFocus
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          maxLength={300}
+          aria-label="Motivo del rechazo"
+          placeholder="¿Por qué la rechazás? La persona lo va a ver"
+          className="h-9 min-w-60 flex-1 rounded-xl border border-border bg-card px-3 text-[13px] outline-none focus:border-border-strong"
+        />
+        <button type="button" onClick={() => setRejecting(false)} className="h-9 px-2 text-[13px] text-muted-foreground hover:text-foreground">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          disabled={pending || !note.trim()}
+          className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-danger px-3.5 text-[13px] font-medium text-white transition-opacity disabled:opacity-50"
+        >
+          {pending ? <Spinner className="size-3.5" /> : <X className="size-4" />} Confirmar rechazo
+        </button>
+      </form>
+    );
+  }
+
   return (
     <div className="flex items-center gap-2">
       <button
         type="button"
         disabled={pending}
-        onClick={() => run(() => decideVacation(orgId, id, "rejected"))}
+        onClick={() => setRejecting(true)}
         className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border px-3 text-[13px] text-muted-foreground transition-colors hover:border-danger/40 hover:bg-danger/10 hover:text-danger disabled:opacity-50"
       >
         <X className="size-4" /> Rechazar
