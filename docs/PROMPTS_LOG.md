@@ -357,3 +357,17 @@ Las que cambian datos por su cuenta (cerrar o crear OT, aprobar vacaciones) vien
 - Igual que con las vacaciones, las decisiones viven en su sección y llegan como notificación, no como pendiente de la bandeja.
 
 **Lección de CI (de la fase 3a):** un test pgTAP pasaba contra la base de desarrollo, que tenía datos de pruebas anteriores, y fallaba en CI, sobre una base limpia. Se agregó a `CLAUDE.md` la regla de tests independientes de los datos, y la de un login por test E2E.
+
+---
+
+## 2026-10-06 Fase 3c: editar y borrar tareas
+
+**Problema:** las tareas solo se podían crear y mover de columna. No se podía corregir un título, cambiar el responsable o las fechas, ni borrar una tarea creada por error.
+
+**Resultado:**
+- En el tablero, quien gestiona el proyecto tiene **"Editar"** en cada tarjeta (si la OT no está facturada). Abre un formulario dentro de la tarjeta para título, responsable, estimación y fechas.
+- **Borrar** pide confirmación en dos pasos.
+- **Una tarea con horas imputadas no se borra**: lo garantiza la base (`0014`) y en la UI el botón aparece deshabilitado con la explicación ("márcala como hecha").
+- Quien solo tiene la tarea asignada sigue pudiendo moverla de columna, pero no editar sus datos (guard existente).
+
+**Verificado en el navegador:** se editó la estimación de una tarea con horas (se pudo editar, no borrar) y se creó y borró una tarea temporal.

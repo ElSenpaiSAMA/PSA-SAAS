@@ -280,6 +280,10 @@ El fichaje no se edita a mano: la hora de entrada la pone la base. Para corregir
 
 Cubierto por `supabase/tests/time_corrections.test.sql` (12 tests).
 
+## Borrado de tareas (`0014_task_delete_guard.sql`)
+
+Una tarea con horas imputadas no se puede borrar: esas horas pueden estar ya facturadas en una OT, y borrarla las dejaría huérfanas. Se marca como hecha. Las tareas sin horas se borran normalmente (`can_manage_project`). Cubierto por `supabase/tests/task_delete.test.sql`.
+
 ## Desarrollo local
 
 ```bash
