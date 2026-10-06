@@ -173,3 +173,20 @@ export const employeeRecordSchema = z.object({
     .transform((v) => v || null),
   notes: optionalText(300),
 });
+
+const isoInstant = z.iso.datetime({ offset: true, error: "Fecha y hora inválidas" });
+
+/** Corrección de fichaje: corrige un tramo (entryId) o agrega uno olvidado. */
+export const timeCorrectionSchema = z
+  .object({
+    entryId: emptyToUndefined.or(id).optional(),
+    start: isoInstant,
+    end: isoInstant,
+    reason: z.string().trim().min(3, "Contá brevemente qué pasó").max(300),
+  })
+  .refine((v) => new Date(v.end) > new Date(v.start), { message: "La salida tiene que ser posterior a la entrada", path: ["end"] })
+  .refine((v) => new Date(v.end).getTime() - new Date(v.start).getTime() <= 16 * 3_600_000, {
+    message: "Un tramo no puede superar las 16 horas",
+    path: ["end"],
+  })
+  .refine((v) => new Date(v.end).getTime() <= Date.now(), { message: "No se pueden corregir horas futuras", path: ["end"] });

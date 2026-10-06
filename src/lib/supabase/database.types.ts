@@ -185,6 +185,21 @@ export type ProjectMember = {
   added_at: Timestamp;
 };
 
+export type TimeCorrection = {
+  id: string;
+  org_id: string;
+  membership_id: string;
+  entry_id: string | null;
+  proposed_start: Timestamp;
+  proposed_end: Timestamp;
+  reason: string;
+  status: "pending" | "approved" | "rejected" | "cancelled";
+  decision_note: string | null;
+  decided_by: string | null;
+  decided_at: Timestamp | null;
+  created_at: Timestamp;
+};
+
 export type NotificationKind =
   | "vacation.requested"
   | "vacation.decided"
@@ -200,7 +215,9 @@ export type NotificationKind =
   | "work_order.created"
   | "task.due_soon"
   | "task.overdue"
-  | "team.weekly_summary";
+  | "team.weekly_summary"
+  | "time.correction_requested"
+  | "time.correction_decided";
 
 export type AutomationTemplate = {
   key: string;
@@ -290,6 +307,7 @@ export type Database = {
       holidays: Table<Holiday, "org_id" | "date" | "name">;
       employee_records: Table<EmployeeRecord, "membership_id" | "effective_from">;
       notifications: Table<Notification, "org_id" | "recipient_id" | "kind" | "title">;
+      time_corrections: Table<TimeCorrection, "membership_id" | "proposed_start" | "proposed_end" | "reason">;
       automation_templates: Table<AutomationTemplate, "key" | "trigger_kind" | "default_enabled">;
       automation_rules: Table<AutomationRule, "org_id" | "key" | "enabled">;
       automation_runs: Table<AutomationRun, "org_id" | "rule_key" | "dedupe_key">;
