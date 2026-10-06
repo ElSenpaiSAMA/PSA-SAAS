@@ -83,3 +83,34 @@ export function validateNewRequest(
 export function canDecide(request: VacationRequestLike, deciderMembershipId: string): boolean {
   return request.status === "pending" && request.membership_id !== deciderMembershipId;
 }
+
+export interface ApproverNode {
+  id: string;
+  manager_id: string | null;
+  role_id: string;
+  status: string;
+}
+
+/**
+ * Quién aprueba las vacaciones de `membershipId` (espejo de la función
+ * public.vacation_approvers de la base): el primer responsable hacia arriba que
+ * pueda aprobar; si no hay, administración. `canApprove` y `isAdmin` deciden por rol.
+ */
+export function naturalApprovers(
+  nodes: readonly ApproverNode[],
+  membershipId: string,
+  canApprove: (role: string) => boolean,
+  isAdmin: (role: string) => boolean,
+): string[] {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  let current = byId.get(membershipId)?.manager_id ?? null;
+  for (let depth = 0; current && depth < 20; depth++) {
+    const node = byId.get(current);
+    if (!node) break;
+    if (node.status === "active" && canApprove(node.role_id)) return [node.id];
+    current = node.manager_id;
+  }
+  return nodes
+    .filter((n) => n.id !== membershipId && n.status === "active" && isAdmin(n.role_id) && canApprove(n.role_id))
+    .map((n) => n.id);
+}

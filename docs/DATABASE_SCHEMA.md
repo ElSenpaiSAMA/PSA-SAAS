@@ -183,6 +183,29 @@ Datos personales y sensibles **versionados**. Cada fila es una versión vigente 
 
 Cubierto por `supabase/tests/employee_records.test.sql` (10 tests).
 
+## Notificaciones (`0009_notifications.sql`)
+
+### `public.notifications`
+Avisos dentro de la app, privados de cada destinatario (`recipient_id` es una membresía). Guarda tipo (`kind`), título, detalle, enlace, entidad relacionada, quién lo provocó (`actor_id`) y `read_at`.
+
+- **El cliente no las crea**: no hay política de insert y `notify()` no se puede ejecutar desde la app. Las generan triggers, así ningún flujo se olvida de avisar y no se pueden fabricar avisos.
+- **Solo se marcan como leídas**: un guard impide cambiar cualquier otro campo. Cada persona puede borrar las suyas.
+- Nadie recibe aviso de algo que hizo él mismo.
+
+| Evento | Quién recibe el aviso |
+|---|---|
+| Solicitud de vacaciones | Su aprobador natural |
+| Vacaciones aprobadas o rechazadas | Quien las pidió |
+| Solicitud cancelada | Su aprobador natural |
+| Tarea asignada o reasignada | La persona asignada |
+| Alta como miembro de un proyecto | Esa persona |
+| OT cerrada sin facturar | Quienes tienen `billing.manage` |
+
+### `vacation_approvers(membresía)`
+El **aprobador natural**: el primer responsable hacia arriba en la línea de reporte con `vacations.approve`. Si no hay ninguno, administración (`employees.manage` + `vacations.approve`). La app usa la misma regla (`naturalApprovers` en el dominio) para mostrar "La aprueba X" y armar la bandeja. Administración puede decidir igual sobre cualquier solicitud, pero en su bandeja solo ve las que le tocan.
+
+Cubierto por `supabase/tests/notifications.test.sql` (13 tests).
+
 ## Desarrollo local
 
 ```bash

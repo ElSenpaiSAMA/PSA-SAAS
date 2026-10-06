@@ -264,3 +264,19 @@ Formato de cada entrada:
 - Un velo suave detrás del texto mantiene la legibilidad.
 - El contenido es fijo (sin hora real ni aleatorios) para no romper la hidratación. Con "reducir movimiento" las tarjetas no flotan.
 - Es decorativo: `aria-hidden` y sin eventos de puntero.
+## 2026-10-06 Bandeja de pendientes y notificaciones
+
+**Prompt (resumen):** "¿Le falta algo al PSA? Siento que cada apartado está incompleto: por ejemplo, vacaciones se puede solicitar, ¿pero quién las aprueba y dónde?" Y: "Necesito más workflows que permitan realizar acciones automáticamente."
+
+**Diagnóstico:** casi todas las secciones tenían la acción principal, pero no el circuito: quién decide, cómo se entera y qué pasa después. Las vacaciones sí se aprobaban (lista "Por aprobar" en Vacaciones), pero nadie avisaba al aprobador y el empleado no sabía quién era. Se acordó este orden: (1) notificaciones + bandeja, (2) motor de automatizaciones, (3) completar secciones. Las notificaciones son solo dentro de la app; el email queda para más adelante.
+
+**Fase 1 (esta entrega):**
+- **Notificaciones generadas por la base** (triggers): vacaciones pedidas, decididas y canceladas; tarea asignada; alta en un proyecto; OT cerrada pendiente de facturar.
+- **Aprobador natural** (`vacation_approvers`): el primer responsable hacia arriba con permiso; si no hay, administración.
+- **Bandeja** (`/inbox`) con dos partes:
+  - **Pendientes**, calculados en el momento, con acción directa: aprobar o rechazar vacaciones ahí mismo; cerrar OT vencidas, aprobar borradores que ya empezaron, facturar OT cerradas, tareas propias vencidas y fichajes olvidados de días anteriores. Lo urgente va primero.
+  - **Notificaciones**, con leído/no leído y "marcar todo como leído".
+- **Contador en el menú** y campanita en móvil. Los avisos que ya figuran como pendiente no se cuentan dos veces.
+- En Vacaciones, el empleado ve "La aprueba Carlos Ruiz. Le llega un aviso a su bandeja."
+
+**Verificado con datos reales:** Diego pidió un día, a Carlos le apareció el contador, el pendiente y el aviso; lo aprobó desde la bandeja y a Diego le llegó la decisión. Los datos de prueba se borraron.
