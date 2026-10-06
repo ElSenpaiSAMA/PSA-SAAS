@@ -4,21 +4,19 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ClipboardList, Clock3, Euro, Tag } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { StatCard } from "@/components/app/stat-card";
-import { BillingBadge, WorkOrderStatusBadge } from "@/components/app/work-order-badges";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ProgressBar } from "@/components/ui/motion";
 import { getDepartments, getHeadedDepartmentId } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
 import { getProject, getProjectMembers, getTaskMinutes, getTasks } from "@/lib/data/projects";
 import { getOrgContext } from "@/lib/data/session";
 import { getProjectWorkOrders } from "@/lib/data/work-orders";
 import { displayName } from "@/lib/domain/hierarchy";
-import { formatRange, monthEnd, monthStart, todayISO } from "@/lib/domain/periods";
+import { monthEnd, monthStart, todayISO } from "@/lib/domain/periods";
 import { canManageProject } from "@/lib/domain/projects";
-import { formatMoney, workOrderAmounts, workOrderCode } from "@/lib/domain/work-orders";
-import { CopyNextButton } from "../../work-orders/copy-next-button";
+import { findContinuation, workOrderAmounts } from "@/lib/domain/work-orders";
 import { NewWorkOrder } from "../../work-orders/new-work-order";
+import { toWorkOrderRow, WorkOrderList } from "../../work-orders/work-order-row";
 import { ArchiveButton } from "./archive-button";
 import { MembersPanel } from "./members-panel";
 
@@ -58,18 +56,17 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
     .map((e) => ({ id: e.id, name: displayName(e.profile), sameDepartment: !!project.department_id && e.department_id === project.department_id }))
     .sort((a, b) => Number(b.sameDepartment) - Number(a.sameDepartment) || a.name.localeCompare(b.name, "es"));
 
-  const rows = workOrders.map((wo) => {
-    const own = allTasks.filter((t) => t.work_order_id === wo.id);
-    const logged = own.reduce((s, t) => s + (minutes.get(t.id) ?? 0), 0) / 60;
-    const amounts = workOrderAmounts({
-      budgetedHours: wo.budgeted_hours === null ? null : Number(wo.budgeted_hours),
-      loggedHours: logged,
-      hourlyRate: wo.hourly_rate === null ? null : Number(wo.hourly_rate),
-    });
-    return { wo, logged, amounts, taskCount: own.length };
-  });
-  const totalLogged = rows.reduce((s, r) => s + r.logged, 0);
-  const totalAmount = rows.reduce((s, r) => s + (r.amounts.actualAmount ?? 0), 0);
+  const rows = workOrders.map((wo) =>
+    toWorkOrderRow(wo, allTasks, minutes, {
+      canCopy: manage && project.status === "active",
+      continuationId: findContinuation(wo, workOrders)?.id,
+    }),
+  );
+  const totalLogged = rows.reduce((s, r) => s + r.loggedHours, 0);
+  const totalAmount = rows.reduce(
+    (s, r) => s + (workOrderAmounts({ budgetedHours: r.budgetedHours, loggedHours: r.loggedHours, hourlyRate: r.hourlyRate }).actualAmount ?? 0),
+    0,
+  );
   const thisMonth = monthStart(todayISO());
 
   return (
@@ -122,42 +119,7 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
               description={manage ? "Creá la primera OT para planificar tareas e imputar horas." : "Cuando se cree una OT, la vas a ver acá."}
             />
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-              {rows.map(({ wo, logged, amounts, taskCount }) => (
-                <Link
-                  key={wo.id}
-                  href={`/app/${orgId}/work-orders/${wo.id}`}
-                  className="grid gap-3 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 md:grid-cols-[1.5fr_1fr_1.2fr_0.8fr_auto] md:items-center"
-                >
-                  <div className="min-w-0">
-                    <p className="text-[12px] text-muted-foreground">
-                      <span className="font-mono">{workOrderCode(wo.number)}</span> · {formatRange(wo.period_start, wo.period_end)}
-                    </p>
-                    <p className="truncate text-[14px] font-medium">{wo.title}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    <WorkOrderStatusBadge status={wo.status} />
-                    <BillingBadge billing={wo.billing_status} status={wo.status} />
-                  </div>
-                  <div>
-                    <div className="mb-1.5 flex justify-between text-[12px] text-muted-foreground">
-                      <span>{taskCount} tareas</span>
-                      <span className="tabular">
-                        {Math.round(logged * 10) / 10}
-                        {wo.budgeted_hours !== null ? ` / ${Number(wo.budgeted_hours)}h` : "h"}
-                      </span>
-                    </div>
-                    <ProgressBar
-                      value={wo.budgeted_hours ? logged : 0}
-                      max={Number(wo.budgeted_hours ?? 1)}
-                      tone={(amounts.consumption ?? 0) > 100 ? "danger" : (amounts.consumption ?? 0) > 85 ? "warning" : "accent"}
-                    />
-                  </div>
-                  <p className="text-right text-[14px] font-semibold tabular">{formatMoney(amounts.actualAmount)}</p>
-                  <div className="flex justify-end">{manage ? <CopyNextButton orgId={orgId} workOrderId={wo.id} /> : null}</div>
-                </Link>
-              ))}
-            </div>
+            <WorkOrderList orgId={orgId} rows={rows} />
           )}
         </div>
 
