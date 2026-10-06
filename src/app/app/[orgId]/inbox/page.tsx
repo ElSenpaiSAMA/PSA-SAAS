@@ -24,7 +24,7 @@ export default async function InboxPage({ params }: PageProps<"/app/[orgId]/inbo
               {pending.length ? `${pending.length}${urgent ? ` · ${urgent} ${urgent === 1 ? "urgente" : "urgentes"}` : ""}` : "al día"}
             </span>
           </h2>
-          <PendingList orgId={orgId} items={pending} />
+          <PendingList items={pending} />
         </section>
         <section aria-labelledby="notificaciones">
           <h2 id="notificaciones" className="mb-3 text-[15px] font-semibold tracking-tight">

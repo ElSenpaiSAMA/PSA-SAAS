@@ -1,6 +1,8 @@
 import { daysBetween, formatRange, type ISODate } from "./periods";
 
-export type PendingKind = "vacation_approval" | "invoice" | "close_work_order" | "approve_work_order" | "overdue_task" | "open_clock";
+// Las solicitudes de vacaciones no son un pendiente de la bandeja: se deciden en
+// Vacaciones → Equipo (con el calendario a la vista) y llegan como notificación.
+export type PendingKind = "invoice" | "close_work_order" | "approve_work_order" | "overdue_task" | "open_clock";
 
 export interface PendingItem {
   /** Único por tipo + entidad */
@@ -18,8 +20,6 @@ export interface PendingItem {
 export interface PendingInput {
   orgId: string;
   today: ISODate;
-  /** Solicitudes pendientes que esta persona puede decidir */
-  vacationsToDecide: { id: string; requester: string; start_date: ISODate; end_date: ISODate; created_at: string; days: number }[];
   /** OT cerradas sin facturar (solo si factura) */
   toInvoice: { id: string; title: string; period_end: ISODate; project: string }[];
   /** OT que gestiona esta persona */
@@ -35,20 +35,6 @@ export function buildPending(input: PendingInput): PendingItem[] {
   const { orgId, today } = input;
   const base = `/app/${orgId}`;
   const items: PendingItem[] = [];
-
-  for (const v of input.vacationsToDecide) {
-    const startsIn = daysBetween(today, v.start_date);
-    items.push({
-      key: `vacation:${v.id}`,
-      kind: "vacation_approval",
-      title: `${v.requester} pidió vacaciones`,
-      detail: `${formatRange(v.start_date, v.end_date)} · ${v.days} ${v.days === 1 ? "día hábil" : "días hábiles"}`,
-      href: `${base}/vacations`,
-      since: v.created_at.slice(0, 10),
-      urgent: startsIn <= 7,
-      entityId: v.id,
-    });
-  }
 
   for (const w of input.toInvoice) {
     items.push({
@@ -121,7 +107,6 @@ export function buildPending(input: PendingInput): PendingItem[] {
 }
 
 export const PENDING_LABEL: Record<PendingKind, string> = {
-  vacation_approval: "Aprobación",
   invoice: "Facturación",
   close_work_order: "Orden de trabajo",
   approve_work_order: "Orden de trabajo",
