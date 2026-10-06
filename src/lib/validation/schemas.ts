@@ -204,3 +204,26 @@ export const taskEditSchema = z
     message: "El vencimiento debe ser posterior al inicio",
     path: ["dueDate"],
   });
+
+/** Zonas horarias que se ofrecen en los ajustes (la base valida cualquier nombre IANA). */
+export const TIMEZONES = [
+  "Europe/Madrid",
+  "Europe/Lisbon",
+  "Europe/London",
+  "Atlantic/Canary",
+  "America/Argentina/Buenos_Aires",
+  "America/Mexico_City",
+  "America/Bogota",
+  "America/Santiago",
+  "America/Lima",
+  "America/Montevideo",
+  "America/New_York",
+  "UTC",
+] as const;
+
+export const orgSettingsSchema = z.object({
+  name: z.string().trim().min(2, "Mínimo 2 caracteres").max(60, "Máximo 60 caracteres"),
+  defaultAnnualVacationDays: z.coerce.number({ error: "Ingresá un número" }).int("Días enteros").min(0).max(60, "Máximo 60"),
+  defaultWeeklyHours: z.coerce.number({ error: "Ingresá un número" }).min(1, "Mínimo 1").max(60, "Máximo 60"),
+  timezone: z.enum(TIMEZONES, "Zona horaria inválida"),
+});

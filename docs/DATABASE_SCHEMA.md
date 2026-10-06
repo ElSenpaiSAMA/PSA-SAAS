@@ -284,6 +284,15 @@ Cubierto por `supabase/tests/time_corrections.test.sql` (12 tests).
 
 Una tarea con horas imputadas no se puede borrar: esas horas pueden estar ya facturadas en una OT, y borrarla las dejaría huérfanas. Se marca como hecha. Las tareas sin horas se borran normalmente (`can_manage_project`). Cubierto por `supabase/tests/task_delete.test.sql`.
 
+## Ajustes de la empresa (`0015_org_settings.sql`)
+
+`organizations` suma `default_annual_vacation_days`, `default_weekly_hours` y `timezone`. Los edita quien tiene `employees.manage`, con validación de nombre y zona horaria y auditoría de los cambios.
+
+- **Valores para quien se suma:** quien entra sin jornada ni días explícitos (por ejemplo, al aceptar una invitación) recibe los de la empresa, mediante un trigger `before insert` en `memberships`.
+- **Zona horaria en las automatizaciones:** `automation_config` pasa a tomar la zona horaria de la empresa para las reglas con horario, salvo que la regla indique otra.
+
+Cubierto por `supabase/tests/org_settings.test.sql` (7 tests).
+
 ## Desarrollo local
 
 ```bash

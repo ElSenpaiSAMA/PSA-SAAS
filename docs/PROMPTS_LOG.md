@@ -371,3 +371,17 @@ Las que cambian datos por su cuenta (cerrar o crear OT, aprobar vacaciones) vien
 - Quien solo tiene la tarea asignada sigue pudiendo moverla de columna, pero no editar sus datos (guard existente).
 
 **Verificado en el navegador:** se editó la estimación de una tarea con horas (se pudo editar, no borrar) y se creó y borró una tarea temporal.
+
+---
+
+## 2026-10-06 Fase 3d: ajustes de la empresa
+
+**Problema:** no había dónde configurar la empresa. Toda persona nueva entraba con 22 días y 40 h, y las automatizaciones usaban siempre la hora de Madrid.
+
+**Resultado:** página **Ajustes** (owner y admin) con:
+- Nombre y **zona horaria** de la empresa. Esta última la usan los recordatorios y resúmenes automáticos.
+- **Valores por defecto** de días de vacaciones y jornada semanal para quien se sume a partir de ahora (la base los aplica al aceptar una invitación).
+- **Qué puede hacer cada rol**: tabla leída de la base (`role_permissions`), así nunca queda desactualizada respecto de lo que realmente permite RLS.
+- Accesos directos a festivos, departamentos y personas, automatizaciones y auditoría.
+
+Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, correcciones de fichaje, edición y borrado de tareas, y ajustes.

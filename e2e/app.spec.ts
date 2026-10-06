@@ -436,3 +436,22 @@ test("quien gestiona el proyecto edita y borra tareas; las que tienen horas no s
   await expect(page.getByText("Tarea borrada")).toBeVisible();
   await expect(page.locator("article").filter({ hasText: "Tarea renombrada" })).toHaveCount(0);
 });
+
+test("una admin ajusta los valores por defecto de la empresa", async ({ page }) => {
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/settings`);
+  await expect(page.getByText("Qué puede hacer cada rol")).toBeVisible();
+  await page.getByLabel("Días de vacaciones al año").fill("23");
+  await page.getByRole("button", { name: "Guardar ajustes" }).click();
+  await expect(page.getByText("Ajustes guardados")).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Días de vacaciones al año")).toHaveValue("23");
+});
+
+test("un empleado no puede abrir los ajustes de la empresa", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await expect(page.getByRole("link", { name: "Ajustes" })).toHaveCount(0);
+  await page.goto(`/app/${NEBULA}/settings`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});
