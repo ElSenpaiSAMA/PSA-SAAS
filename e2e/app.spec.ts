@@ -455,3 +455,22 @@ test("un empleado no puede abrir los ajustes de la empresa", async ({ page }) =>
   await page.goto(`/app/${NEBULA}/settings`);
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
+
+test("la owner ve los tres informes y exporta la facturación a CSV", async ({ page }) => {
+  await login(page, "laura@demo.com");
+  await page.goto(`/app/${NEBULA}/reports`);
+  const tabs = page.getByRole("navigation", { name: "Informes" });
+  await expect(tabs.getByRole("link")).toHaveText(["Facturación", "Horas por persona", "Ausencias"]);
+  await expect(page.getByRole("cell", { name: /Acme Corp/ }).first()).toBeVisible();
+
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Exportar a Excel/ }).click()]);
+  expect(download.suggestedFilename()).toMatch(/^facturacion-\d{4}-\d{2}-nebula-studio\.csv$/);
+});
+
+test("un empleado no ve los informes ni puede exportarlos", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await expect(page.getByRole("link", { name: "Informes" })).toHaveCount(0);
+  const res = await page.request.get(`/app/${NEBULA}/reports/export?type=horas`);
+  expect(res.status()).toBe(403);
+});
