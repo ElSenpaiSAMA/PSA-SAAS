@@ -13,7 +13,8 @@
 src/
   proxy.ts                     # refresca la sesión y redirige rutas protegidas (Next 16: ex-middleware)
   app/
-    (marketing)/page.tsx       # landing pública
+    (marketing)/page.tsx       # web pública de Diplonautic: empresa, servicios y forma de trabajar
+    (marketing)/contacto/      # contacto: datos del taller y formulario (validado en el servidor, no se envía)
     (auth)/                    # login y registro + Server Actions de auth
     auth/callback/route.ts     # confirmación de email (PKCE)
     select-organization/       # selector multi-empresa, invitaciones, crear org

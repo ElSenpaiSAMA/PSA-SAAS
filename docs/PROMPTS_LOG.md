@@ -444,3 +444,18 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** 14 pgTAP (aislamiento entre empresas, sin sesión, autoría, cerrado, moderación, contadores, avisos), unitarios de dominio (orden, filtros, permisos) y E2E del recorrido completo: una empleada abre una incidencia, un compañero responde, la admin cierra el hilo y a la autora le llega el aviso, pero ya no puede responder.
 
+---
+
+## 2026-10-07 Prueba técnica Diplonautic: web pública
+
+**Prompt (resumen):** segunda parte del plan de la prueba: una web corporativa demo para la empresa de reparación náutica, con una home que presente la empresa y sus servicios y una página de contacto con un formulario visual.
+
+**Decisiones:**
+- **Una sola marca:** el PSA genérico ("Kairos") pasa a ser la intranet de **Diplonautic**. La marca y los datos de contacto viven en `src/lib/brand.ts`, y el acento cambia de índigo a azul marino. El asistente de IA pasa a llamarse "Asistente IA".
+- **La home le habla al cliente, no al empleado:** servicios (mecánica, electricidad, electrónica, pintura, jarcia, varadero), la empresa con sus cifras y valores, el proceso en cuatro pasos y una llamada a pedir presupuesto. El acceso de empleados queda visible en la cabecera y en el pie, pero en segundo plano.
+- **Se conserva el fondo "collage"** que se había elegido, ahora con escenas del taller: diagnóstico, antifouling, varadero, presupuesto, avance de la reparación y próxima revisión.
+- **Formulario de contacto "visual" pero serio:** validación con Zod en una Server Action (igual que uno real), un campo trampa para bots, errores accesibles y una confirmación que aclara que es una demo y que el mensaje no se envía. No se guarda nada: la prueba no lo pide, y guardar datos personales de visitantes sin necesidad suma riesgo.
+- **Datos de contacto ficticios** (teléfono `+34 930 000 000`, dominio `.test`) y aviso en el pie, para que nadie los tome por reales.
+
+**Pruebas:** unitarios del esquema de contacto y del de hilos del foro, y E2E en escritorio y móvil: home, CTA al contacto, acceso de empleados al login, validación y envío del formulario, y redirección al login cuando se entra al foro sin sesión.
+
