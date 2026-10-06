@@ -137,7 +137,10 @@ export function effectiveConfig(
 }
 
 /** Valida y normaliza los parámetros editables de una regla. */
-export function parseParams(key: string, raw: Record<string, unknown>): { ok: true; params: Record<string, number> } | { ok: false; errors: Record<string, string> } {
+export function parseParams(
+  key: string,
+  raw: Record<string, unknown>,
+): { ok: true; params: Record<string, number> } | { ok: false; errors: Record<string, string> } {
   const meta = AUTOMATION_BY_KEY.get(key);
   if (!meta) return { ok: false, errors: { _: "Automatización desconocida" } };
   const params: Record<string, number> = {};
