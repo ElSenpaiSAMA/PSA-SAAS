@@ -117,7 +117,9 @@ export function ContactForm() {
 
           <div className="flex flex-col-reverse items-start justify-between gap-3 sm:col-span-2 sm:flex-row sm:items-center">
             <p className="text-[12.5px] text-muted-foreground">Respondemos en menos de 24 horas laborables.</p>
-            <SubmitButton pendingLabel="Enviando…">Enviar consulta</SubmitButton>
+            <SubmitButton pendingLabel="Enviando…" className="bg-blue-600 text-white hover:bg-blue-500">
+              Enviar consulta
+            </SubmitButton>
           </div>
           {state.status === "error" && !errors ? <p className="text-[13px] text-danger sm:col-span-2">{state.message}</p> : null}
         </motion.form>
