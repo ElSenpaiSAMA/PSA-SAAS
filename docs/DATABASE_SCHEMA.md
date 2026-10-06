@@ -165,6 +165,24 @@ Cubierto por `supabase/tests/calendar.test.sql` (9 tests).
 
 Cubierto por `supabase/tests/breaks.test.sql` (9 tests).
 
+## Ficha de empleado (`0008_employee_records.sql`)
+
+### `public.employee_records`
+Datos personales y sensibles **versionados**. Cada fila es una versión vigente desde `effective_from`: DNI/NIE, nacimiento, contacto, domicilio, contacto de emergencia, alta, tipo de contrato, salario bruto anual, IBAN y notas (motivo del cambio).
+
+- "La ficha a una fecha" es la última versión con `effective_from <= fecha`. Así se registran cambios con efecto pasado o futuro (una subida desde el 1 de diciembre) y el perfil puede navegar por meses.
+- `unique (membership_id, effective_from)`: guardar dos veces la misma fecha corrige esa versión.
+- Un guard deduce `org_id` de la membresía (no se confía en el cliente) y no deja reasignar una versión a otra persona.
+- Auditada con `audit.log_change()`. En el historial solo se describe la acción, nunca los valores.
+
+| Quién | Acceso |
+|---|---|
+| Owner / Admin (`people.sensitive`) | Ver y editar todas las fichas |
+| La propia persona | Ver su ficha (solo lectura) |
+| Manager y resto | Sin acceso. Ven datos laborales (horas, vacaciones de su línea), no sensibles |
+
+Cubierto por `supabase/tests/employee_records.test.sql` (10 tests).
+
 ## Desarrollo local
 
 ```bash

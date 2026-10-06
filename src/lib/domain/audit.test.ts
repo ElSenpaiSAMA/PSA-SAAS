@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { auditCategory, changedFields, describeAudit,
-  foldClockSegments, relativeTime, type AuditLike } from "./audit";
+  foldClockSegments,
+  groupConsecutive, relativeTime, type AuditLike } from "./audit";
 
 const entry = (partial: Partial<AuditLike>): AuditLike => ({
   action: "INSERT",
@@ -121,5 +122,22 @@ describe("pausas en el historial", () => {
 
   it("una salida normal se mantiene", () => {
     expect(foldClockSegments([log[0]]).map(describeAudit)).toEqual(["fichó salida"]);
+  });
+});
+
+describe("groupConsecutive", () => {
+  it("agrupa eventos seguidos iguales del mismo autor", () => {
+    const ev = (user_id: string, action: string) => ({ user_id, action, table_name: null, old_data: null, new_data: null });
+    const g = groupConsecutive([ev("a", "auth.login"), ev("a", "auth.login"), ev("b", "auth.login"), ev("a", "auth.logout")]);
+    expect(g.map((x) => x.count)).toEqual([2, 1, 1]);
+  });
+});
+
+describe("miembros de proyecto y ficha", () => {
+  it("describe altas en proyectos y cambios de ficha sin exponer valores", () => {
+    const ev = (table_name: string, action: string) => ({ action, table_name, old_data: null, new_data: { salary_annual: 40000 } });
+    expect(describeAudit(ev("project_members", "INSERT"))).toBe("sumó a una persona a un proyecto");
+    expect(describeAudit(ev("employee_records", "INSERT"))).toBe("registró un cambio en la ficha personal");
+    expect(describeAudit(ev("employee_records", "INSERT"))).not.toMatch(/40/);
   });
 });

@@ -6,6 +6,7 @@ import {
   findOpenEntry,
   formatMinutes,
   isSameDay,
+  periodActivity,
   startOfWeek,
   totalMinutes,
   weekTotals,
@@ -140,5 +141,21 @@ describe("findOpenEntry", () => {
     const open = { started_at: "x", ended_at: null };
     expect(findOpenEntry([{ started_at: "x", ended_at: "y" }, open])).toBe(open);
     expect(findOpenEntry([{ started_at: "x", ended_at: "y" }])).toBeUndefined();
+  });
+});
+
+describe("periodActivity", () => {
+  it("resume fichaje, pausas, días trabajados y horas por tarea", () => {
+    const at = (d: number, h: number) => new Date(2026, 9, d, h).toISOString();
+    const a = periodActivity([
+      { entry_type: "clock", task_id: null, started_at: at(5, 9), ended_at: at(5, 13) },
+      { entry_type: "break", task_id: null, started_at: at(5, 13), ended_at: at(5, 14) },
+      { entry_type: "clock", task_id: null, started_at: at(5, 14), ended_at: at(5, 18) },
+      { entry_type: "clock", task_id: null, started_at: at(6, 9), ended_at: at(6, 11) },
+      { entry_type: "task", task_id: "t1", started_at: at(5, 12), ended_at: at(5, 15) },
+      { entry_type: "task", task_id: "t1", started_at: at(6, 12), ended_at: at(6, 13) },
+    ]);
+    expect(a).toMatchObject({ clockMinutes: 600, breakMinutes: 60, taskMinutes: 240, daysWorked: 2 });
+    expect(a.byTask.get("t1")).toBe(240);
   });
 });

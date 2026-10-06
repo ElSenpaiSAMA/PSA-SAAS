@@ -21,11 +21,13 @@ export type AuditCategory ="auth" | "people" | "time" | "vacations" | "projects"
 
 const TABLE_CATEGORY: Record<string, AuditCategory> = {
   memberships: "people",
+  employee_records: "people",
   invitations: "people",
   time_entries: "time",
   vacation_requests: "vacations",
   projects: "projects",
   tasks: "projects",
+  project_members: "projects",
 };
 
 export function auditCategory(e: AuditLike): AuditCategory {
@@ -78,6 +80,18 @@ export function describeAudit(e: AuditLike): string {
       if (e.action === "UPDATE" && isClock && changedFields(e).includes("ended_at")) return "fichó salida";
       if (e.action === "DELETE") return "eliminó un registro de horas";
       return "modificó un registro de horas";
+    }
+    case "project_members": {
+      if (e.action === "INSERT") return "sumó a una persona a un proyecto";
+      if (e.action === "DELETE") return "quitó a una persona de un proyecto";
+      return "modificó los miembros de un proyecto";
+    }
+    case "employee_records": {
+      // Nunca se describen los valores: el historial de la ficha ya los muestra a quien puede verlos
+      if (e.action === "INSERT") return "registró un cambio en la ficha personal";
+      if (e.action === "UPDATE") return "corrigió una versión de la ficha personal";
+      if (e.action === "DELETE") return "eliminó una versión de la ficha personal";
+      return "modificó la ficha personal";
     }
     case "vacation_requests": {
       if (e.action === "INSERT") return `solicitó vacaciones del ${str(row.start_date)} al ${str(row.end_date)}`;
@@ -144,4 +158,15 @@ export function foldClockSegments<T extends AuditLike>(entries: readonly T[]): T
     if (e.action === "INSERT" && breakEnds.has(key(row.membership_id, row.started_at))) return false;
     return true;
   });
+}
+
+/** Agrupa eventos consecutivos iguales (mismo autor y misma frase) para no inundar el historial. */
+export function groupConsecutive<T extends AuditLike & { user_id: string | null }>(entries: readonly T[]): { entry: T; count: number }[] {
+  const out: { entry: T; count: number }[] = [];
+  for (const e of entries) {
+    const last = out[out.length - 1];
+    if (last && last.entry.user_id === e.user_id && describeAudit(last.entry) === describeAudit(e)) last.count++;
+    else out.push({ entry: e, count: 1 });
+  }
+  return out;
 }

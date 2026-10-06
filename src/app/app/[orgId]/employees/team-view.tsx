@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { Building2, Network, Pencil, Rows3, X } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
@@ -184,7 +185,10 @@ function Directory({
               <Avatar name={p.name} size={44} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
-                  {p.name} {p.isMe ? <span className="text-[12px] font-normal text-muted-foreground">(vos)</span> : null}
+                  <Link href={`/app/${orgId}/staff/${p.id}`} className="transition-colors hover:text-accent hover:underline">
+                    {p.name}
+                  </Link>{" "}
+                  {p.isMe ? <span className="text-[12px] font-normal text-muted-foreground">(vos)</span> : null}
                 </p>
                 <p className="truncate text-[13px] text-muted-foreground">
                   {p.position ?? "Sin puesto"}

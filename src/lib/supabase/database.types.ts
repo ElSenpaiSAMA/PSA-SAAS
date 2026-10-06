@@ -138,6 +138,30 @@ export type Holiday = {
   created_at: Timestamp;
 };
 
+export type ContractType = "indefinido" | "temporal" | "practicas" | "freelance";
+
+/** Versión de la ficha de empleado, vigente desde effective_from. */
+export type EmployeeRecord = {
+  id: string;
+  org_id: string;
+  membership_id: string;
+  effective_from: DateString;
+  national_id: string | null;
+  birth_date: DateString | null;
+  phone: string | null;
+  personal_email: string | null;
+  address: string | null;
+  emergency_contact: string | null;
+  hire_date: DateString | null;
+  contract_type: ContractType | null;
+  salary_annual: number | null;
+  salary_currency: string;
+  iban: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: Timestamp;
+};
+
 export type AbsenceRow = {
   membership_id: string;
   start_date: DateString;
@@ -203,6 +227,7 @@ export type Database = {
       project_members: Table<ProjectMember, "project_id" | "membership_id">;
       work_orders: Table<WorkOrder, "project_id" | "title" | "period_start" | "period_end">;
       holidays: Table<Holiday, "org_id" | "date" | "name">;
+      employee_records: Table<EmployeeRecord, "membership_id" | "effective_from">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;
