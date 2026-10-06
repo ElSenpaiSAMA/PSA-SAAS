@@ -25,6 +25,8 @@ export interface ShellProps {
   organizations: { id: string; name: string; role: string }[];
   /** Contadores de la navegación (pendientes + avisos sin leer) */
   badges?: { inbox?: number };
+  /** La IA está configurada en el servidor (OPENROUTER_API_KEY) */
+  aiEnabled?: boolean;
   children: ReactNode;
 }
 
@@ -260,7 +262,7 @@ export function AppShell(props: ShellProps) {
         </motion.div>
       </main>
 
-      <CommandPalette orgId={props.orgId} permissions={props.permissions} organizations={props.organizations} />
+      <CommandPalette orgId={props.orgId} permissions={props.permissions} organizations={props.organizations} aiEnabled={props.aiEnabled} />
     </div>
   );
 }

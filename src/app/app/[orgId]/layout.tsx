@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app/app-shell";
+import { aiEnabled } from "@/lib/ai/openrouter";
 import { getPending, getUnreadCount } from "@/lib/data/inbox";
 import { getMyMemberships, getOrgContext, getProfile } from "@/lib/data/session";
 import { displayName } from "@/lib/domain/hierarchy";
@@ -28,6 +29,7 @@ export default async function OrgLayout({ children, params }: LayoutProps<"/app/
         position: ctx.membership.position,
       }}
       badges={{ inbox: pending.length + unread }}
+      aiEnabled={aiEnabled()}
       organizations={memberships.map((m) => ({ id: m.org_id, name: m.organization.name, role: m.role_id }))}
     >
       {children}

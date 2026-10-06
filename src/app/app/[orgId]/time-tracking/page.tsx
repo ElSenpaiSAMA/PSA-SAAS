@@ -11,6 +11,8 @@ import { acceptsTimeEntries, workOrderCode } from "@/lib/domain/work-orders";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
 import { clockState, closedMinutes, entryMinutes, formatMinutes, isSameDay, startOfDay, startOfWeek } from "@/lib/domain/time";
 import { MyCorrections, TeamCorrections, type CorrectionView } from "./corrections-list";
+import { aiEnabled } from "@/lib/ai/openrouter";
+import { AiAllocation } from "./ai-allocation";
 import { EntriesList } from "./entries-list";
 import { LogHoursForm } from "./log-hours-form";
 import { TeamWorkload } from "./team-workload";
@@ -127,8 +129,9 @@ export default async function TimeTrackingPage({ params }: PageProps<"/app/[orgI
         />
         <Card>
           <CardHeader title="Imputar horas" description="A una de tus tareas abiertas" />
-          <CardBody>
+          <CardBody className="grid gap-4">
             <LogHoursForm orgId={orgId} tasks={myTasks} />
+            <AiAllocation orgId={orgId} enabled={aiEnabled()} />
           </CardBody>
         </Card>
       </div>

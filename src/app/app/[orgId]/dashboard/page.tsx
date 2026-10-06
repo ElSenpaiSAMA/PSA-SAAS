@@ -18,6 +18,8 @@ import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
 import { clockState, closedMinutes, entryMinutes, isSameDay, startOfWeek, workloadLevel, workloadPercent } from "@/lib/domain/time";
 import { vacationBalance } from "@/lib/domain/vacations";
 import { addDays, todayISO } from "@/lib/domain/periods";
+import { aiEnabled } from "@/lib/ai/openrouter";
+import { TeamSummary } from "./team-summary";
 import { Upcoming, type UpcomingItem } from "./upcoming";
 
 export const metadata: Metadata = { title: "Inicio" };
@@ -149,8 +151,9 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
         </Link>
       ) : null}
 
-      <div className="mt-4">
+      <div className={ctx.can("time.view_team") ? "mt-4 grid gap-4 lg:grid-cols-2 lg:items-start" : "mt-4"}>
         <Upcoming orgId={orgId} today={today} items={upcoming} />
+        {ctx.can("time.view_team") ? <TeamSummary orgId={orgId} enabled={aiEnabled()} /> : null}
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr]">

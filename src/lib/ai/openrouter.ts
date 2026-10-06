@@ -4,7 +4,8 @@ import "server-only";
 // servidor: la clave nunca llega al navegador.
 
 export const AI_MODEL = process.env.OPENROUTER_MODEL || "anthropic/claude-sonnet-4.5";
-const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
+// Configurable para proxies o pruebas locales con un servidor compatible
+const ENDPOINT = `${process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1"}/chat/completions`;
 
 export function aiEnabled(): boolean {
   return !!process.env.OPENROUTER_API_KEY;
