@@ -384,3 +384,29 @@ test("la persona ve el motivo del rechazo", async ({ page }) => {
   await page.goto(`/app/${NEBULA}/vacations`);
   await expect(page.getByText("Respuesta: «Falta el parte médico»")).toBeVisible();
 });
+
+test("un empleado pide corregir un fichaje pasado", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/time-tracking`);
+  const row = page
+    .getByRole("listitem")
+    .filter({ hasText: /^Jornada/ })
+    .filter({ has: page.getByRole("button", { name: "Corregir fichaje" }) })
+    .first();
+  await row.hover();
+  await row.getByRole("button", { name: "Corregir fichaje" }).click();
+  await page.getByLabel("Hora de entrada").fill("08:00");
+  await page.getByLabel("Motivo").fill("Entré a las 8 y fiché tarde");
+  await page.getByRole("button", { name: "Pedir corrección" }).click();
+  await expect(page.getByText(/Corrección enviada/)).toBeVisible();
+  await expect(page.getByText("Corrección pendiente")).toBeVisible();
+});
+
+test("su responsable aprueba la corrección y se aplica", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/time-tracking`);
+  const card = page.locator("#correcciones");
+  await expect(card.getByText("Entré a las 8 y fiché tarde")).toBeVisible();
+  await card.getByRole("button", { name: "Aprobar" }).click();
+  await expect(page.getByText("Corrección aprobada y aplicada al fichaje")).toBeVisible();
+});

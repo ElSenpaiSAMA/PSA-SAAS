@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { startOfWeek } from "@/lib/domain/time";
-import type { TimeEntry } from "@/lib/supabase/database.types";
+import type { TimeCorrection, TimeEntry } from "@/lib/supabase/database.types";
 
 export type TimeEntryWithTask = TimeEntry & {
   task: { id: string; title: string; project: { id: string; name: string } | null } | null;
@@ -58,3 +58,26 @@ export const getTaskEntriesForOrg = cache(async (taskIds: string[]): Promise<Tim
   if (error) throw error;
   return data ?? [];
 });
+
+/** Correcciones visibles (RLS: propias o de la línea de reporte), más recientes primero. */
+export const getCorrections = cache(async (membershipIds: string[]): Promise<TimeCorrection[]> => {
+  if (membershipIds.length === 0) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("time_corrections")
+    .select("*")
+    .in("membership_id", membershipIds)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return data ?? [];
+});
+
+/** Tramos por id (RLS: propios o de la línea de reporte). */
+export async function getTimeEntriesById(ids: string[]): Promise<Map<string, TimeEntry>> {
+  if (ids.length === 0) return new Map();
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("time_entries").select("*").in("id", ids);
+  if (error) throw error;
+  return new Map((data ?? []).map((e) => [e.id, e]));
+}

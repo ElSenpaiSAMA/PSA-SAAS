@@ -40,6 +40,8 @@ const ICON: Record<string, LucideIcon> = {
   "task.due_soon": SquareCheckBig,
   "task.overdue": SquareCheckBig,
   "team.weekly_summary": BarChart3,
+  "time.correction_requested": Clock3,
+  "time.correction_decided": Clock3,
 };
 
 export function NotificationList({ orgId, items }: { orgId: string; items: Notification[] }) {

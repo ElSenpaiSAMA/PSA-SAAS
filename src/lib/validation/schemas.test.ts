@@ -3,6 +3,7 @@ import {
   fieldErrors,
   invitationSchema,
   signUpSchema,
+  timeCorrectionSchema,
   taskHoursSchema,
   vacationRequestSchema,
 } from "./schemas";
@@ -56,5 +57,30 @@ describe("invitationSchema", () => {
 
   it("manager vacío se transforma en undefined", () => {
     expect(invitationSchema.parse({ email: "x@y.com", role: "employee", managerId: "" }).managerId).toBeUndefined();
+  });
+});
+
+describe("corrección de fichaje", () => {
+  const base = { start: "2026-09-01T07:00:00.000Z", end: "2026-09-01T15:00:00.000Z", reason: "Me olvidé de fichar" };
+
+  it("acepta un tramo pasado con motivo", () => {
+    expect(timeCorrectionSchema.safeParse(base).success).toBe(true);
+    expect(timeCorrectionSchema.safeParse({ ...base, entryId: "" }).success).toBe(true);
+  });
+
+  it("rechaza salida antes de la entrada, tramos larguísimos, horas futuras y motivos vacíos", () => {
+    const err = (v: object) => fieldErrors(timeCorrectionSchema.safeParse({ ...base, ...v }).error!);
+    expect(err({ end: "2026-09-01T06:00:00.000Z" }).end).toEqual(["La salida tiene que ser posterior a la entrada"]);
+    expect(err({ end: "2026-09-02T07:00:00.000Z" }).end).toEqual(["Un tramo no puede superar las 16 horas"]);
+    expect(err({ start: "2099-01-01T07:00:00.000Z", end: "2099-01-01T08:00:00.000Z" }).end).toEqual(["No se pueden corregir horas futuras"]);
+    expect(err({ reason: " " }).reason).toEqual(["Contá brevemente qué pasó"]);
+  });
+});
+
+describe("solicitud de ausencia", () => {
+  it("por defecto es de vacaciones y \"otra ausencia\" exige motivo", () => {
+    expect(vacationRequestSchema.parse({ startDate: "2026-11-02", endDate: "2026-11-02" }).kind).toBe("vacation");
+    const other = vacationRequestSchema.safeParse({ kind: "other", startDate: "2026-11-02", endDate: "2026-11-02" });
+    expect(fieldErrors(other.error!).reason).toEqual(["Contá de qué se trata la ausencia"]);
   });
 });

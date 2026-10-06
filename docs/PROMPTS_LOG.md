@@ -343,3 +343,17 @@ Las que cambian datos por su cuenta (cerrar o crear OT, aprobar vacaciones) vien
 - **Privacidad:** el calendario de toda la empresa sigue mostrando solo "ausente"; el tipo (dato de salud en una baja) solo lo ven la persona y quien aprueba.
 
 **Verificado en el navegador:** Diego registró una baja de ayer y pidió un día de vacaciones. Carlos aprobó la baja y rechazó las vacaciones con motivo. El saldo de Diego no se movió por la baja y el motivo le llegó.
+
+---
+
+## 2026-10-06 Fase 3b: correcciones de fichaje
+
+**Problema:** el fichaje es inmodificable a mano, a propósito, porque la hora de entrada la pone la base. Pero no había forma de arreglar un olvido ("no fiché la salida", "entré a las 8 y fiché tarde", "estuve en un cliente"), y el cierre automático de fichajes olvidados le pedía a la persona "revisarlo" sin darle cómo.
+
+**Resultado:**
+- En el historial de fichajes, cada jornada cerrada tiene **"Corregir"**: un formulario con las horas precargadas y un motivo. Además, hay un botón **"Agregar un fichaje olvidado"**. Hasta que se apruebe, el fichaje no cambia y se ve como "Corrección pendiente".
+- Quien supervisa recibe el aviso. Al hacer click, llega a **Fichaje y horas**, donde arriba ve "Correcciones por decidir" con el antes y el después (por ejemplo "11:10–20:03 → 08:00–20:03") y el motivo. Al aprobar, la corrección **se aplica sola**; rechazar exige motivo.
+- La persona ve sus correcciones con estado y respuesta.
+- Igual que con las vacaciones, las decisiones viven en su sección y llegan como notificación, no como pendiente de la bandeja.
+
+**Lección de CI (de la fase 3a):** un test pgTAP pasaba contra la base de desarrollo, que tenía datos de pruebas anteriores, y fallaba en CI, sobre una base limpia. Se agregó a `CLAUDE.md` la regla de tests independientes de los datos, y la de un login por test E2E.

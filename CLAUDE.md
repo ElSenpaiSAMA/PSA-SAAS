@@ -37,6 +37,8 @@ Mini SaaS multi-tenant tipo Factorial. Contexto de producto en `docs/APP_FLOW.md
 - **Hora y zona horaria**: el servidor corre en UTC. Un Client Component que formatee horas, agrupe por día o use `Date.now()` en el render debe esperar a hidratar (`useHydrated` / `useNow` de `src/lib/use-now.ts`).
 - **Carpetas vacías** no se versionan: si algo (Dockerfile, scripts) depende de una carpeta, garantizar que exista.
 - **Migraciones**: nunca editar una ya mergeada; crear `000N_*.sql` nueva + test pgTAP.
+- **Tests pgTAP independientes de los datos**: cada test arma lo que necesita o elige filas por condición, nunca por suposición sobre el estado del seed ni sobre fechas relativas a "hoy". Un test que pasa contra una base con datos de prueba previos puede fallar en CI, sobre una base limpia.
+- **E2E: un login por test**: con sesión iniciada, `/login` redirige. Si un flujo involucra a dos personas, se parte en tests seriales consecutivos.
 
 ## Comandos
 

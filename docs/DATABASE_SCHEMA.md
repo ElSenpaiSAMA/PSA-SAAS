@@ -266,6 +266,20 @@ Las solicitudes de vacaciones se deciden en **Vacaciones → Equipo**, no en la 
 
 Cubierto por `supabase/tests/absence_types.test.sql` (9 tests).
 
+## Correcciones de fichaje (`0013_time_corrections.sql`)
+
+El fichaje no se edita a mano: la hora de entrada la pone la base. Para corregirlo se pide una **corrección**: `time_corrections` guarda el tramo a corregir (`entry_id`, o nulo si es un fichaje olvidado), el horario propuesto, el motivo y el estado (pendiente, aprobada, rechazada o cancelada).
+
+- **Al pedirla**, la base valida:
+  - que no termine en el futuro y dure como mucho 16 h;
+  - que el tramo sea propio y esté cerrado;
+  - que no se superponga con otro fichaje ni con otra corrección pendiente.
+- **Decide** quien supervisa (`time.view_team` en su línea de reporte, o administración). Rechazar exige motivo. El solicitante solo puede cancelar.
+- **Al aprobarse se aplica sola**: actualiza el tramo o inserta el olvidado, con el flag de sistema para que los guards de `time_entries` lo permitan. Queda en `audit_log`.
+- **Avisos**: al aprobador natural cuando se pide; a la persona cuando se decide (con el motivo si se rechaza).
+
+Cubierto por `supabase/tests/time_corrections.test.sql` (12 tests).
+
 ## Desarrollo local
 
 ```bash
