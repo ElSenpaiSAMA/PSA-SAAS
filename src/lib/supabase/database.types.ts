@@ -189,7 +189,43 @@ export type NotificationKind =
   | "vacation.cancelled"
   | "task.assigned"
   | "project.added"
-  | "work_order.to_invoice";
+  | "work_order.to_invoice"
+  | "vacation.escalated"
+  | "clock.auto_closed"
+  | "clock.reminder"
+  | "work_order.budget"
+  | "work_order.auto_closed"
+  | "work_order.created"
+  | "task.due_soon"
+  | "task.overdue"
+  | "team.weekly_summary";
+
+export type AutomationTemplate = {
+  key: string;
+  trigger_kind: "event" | "schedule";
+  default_enabled: boolean;
+  default_params: Record<string, unknown>;
+};
+
+export type AutomationRule = {
+  org_id: string;
+  key: string;
+  enabled: boolean;
+  params: Record<string, unknown>;
+  updated_by: string | null;
+  updated_at: Timestamp;
+};
+
+export type AutomationRun = {
+  id: number;
+  org_id: string;
+  rule_key: string;
+  dedupe_key: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  detail: string | null;
+  created_at: Timestamp;
+};
 
 export type Notification = {
   id: string;
@@ -252,6 +288,9 @@ export type Database = {
       holidays: Table<Holiday, "org_id" | "date" | "name">;
       employee_records: Table<EmployeeRecord, "membership_id" | "effective_from">;
       notifications: Table<Notification, "org_id" | "recipient_id" | "kind" | "title">;
+      automation_templates: Table<AutomationTemplate, "key" | "trigger_kind" | "default_enabled">;
+      automation_rules: Table<AutomationRule, "org_id" | "key" | "enabled">;
+      automation_runs: Table<AutomationRun, "org_id" | "rule_key" | "dedupe_key">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;
@@ -275,6 +314,7 @@ export type Database = {
       org_absences: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: AbsenceRow[] };
       clock_pause: { Args: { p_org_id: string }; Returns: undefined };
       vacation_approvers: { Args: { p_membership_id: string }; Returns: string[] };
+      run_automation_now: { Args: { p_org_id: string; p_key: string }; Returns: number };
       clock_resume: { Args: { p_org_id: string }; Returns: undefined };
       workload_items: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: WorkloadItemRow[] };
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };

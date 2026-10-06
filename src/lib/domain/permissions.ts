@@ -11,6 +11,7 @@ export const PERMISSIONS = [
   "billing.manage",
   "holidays.manage",
   "people.sensitive",
+  "automations.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
