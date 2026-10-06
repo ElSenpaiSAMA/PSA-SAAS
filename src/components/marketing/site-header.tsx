@@ -8,10 +8,12 @@ import { ThemeToggle } from "@/components/theme";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// Rutas absolutas ("/#…"): el header se usa también en /contacto
 const links = [
-  { href: "#producto", label: "Producto" },
-  { href: "#como-funciona", label: "Cómo funciona" },
-  { href: "#seguridad", label: "Seguridad" },
+  { href: "/#servicios", label: "Servicios" },
+  { href: "/#empresa", label: "Empresa" },
+  { href: "/#proceso", label: "Cómo trabajamos" },
+  { href: "/contacto", label: "Contacto" },
 ];
 
 export function SiteHeader({ signedIn }: { signedIn: boolean }) {
@@ -35,30 +37,32 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
         )}
       >
         <Logo />
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Principal">
           {links.map((l) => (
-            <a
+            <Link
               key={l.href}
               href={l.href}
               className="rounded-lg px-3 py-1.5 text-[13.5px] text-muted-foreground transition-colors hover:text-foreground"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
           {signedIn ? (
             <Link href="/select-organization" className={buttonClasses("primary", "sm")}>
-              Ir a la app
+              Ir a la intranet
             </Link>
           ) : (
             <>
-              <Link href="/login" className={cn(buttonClasses("ghost", "sm"), "hidden sm:inline-flex")}>
-                Iniciar sesión
+              <Link href="/login" className={buttonClasses("ghost", "sm")}>
+                <span className="sm:hidden">Acceso</span>
+                <span className="hidden sm:inline">Acceso empleados</span>
               </Link>
-              <Link href="/signup" className={buttonClasses("primary", "sm")}>
-                Empezar
+              <Link href="/contacto" className={buttonClasses("primary", "sm")}>
+                <span className="sm:hidden">Presupuesto</span>
+                <span className="hidden sm:inline">Pedir presupuesto</span>
               </Link>
             </>
           )}

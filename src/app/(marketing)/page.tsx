@@ -1,8 +1,8 @@
+import { Company } from "@/components/marketing/company";
 import { FinalCta, SiteFooter } from "@/components/marketing/final-cta";
-import { Features } from "@/components/marketing/features";
 import { Hero } from "@/components/marketing/hero";
-import { HowItWorks } from "@/components/marketing/how-it-works";
-import { Security } from "@/components/marketing/security";
+import { Process } from "@/components/marketing/process";
+import { Services } from "@/components/marketing/services";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SmoothScroll } from "@/components/marketing/smooth-scroll";
 import { getUser } from "@/lib/data/session";
@@ -16,9 +16,9 @@ export default async function LandingPage() {
       <SiteHeader signedIn={!!user} />
       <main>
         <Hero />
-        <Features />
-        <HowItWorks />
-        <Security />
+        <Services />
+        <Company />
+        <Process />
         <FinalCta />
       </main>
       <SiteFooter />

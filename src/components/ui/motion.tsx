@@ -49,7 +49,7 @@ export function RevealItem({ children, className }: { children: ReactNode; class
 /** Número que cuenta hasta su valor al entrar en pantalla. */
 export function AnimatedNumber({
   value,
-  format = (n) => Math.round(n).toLocaleString("es-ES"),
+  format = (n) => Math.round(n).toLocaleString("es-ES", { useGrouping: "always" }),
   className,
   duration = 1.2,
 }: {

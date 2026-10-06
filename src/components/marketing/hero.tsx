@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock3, ShieldCheck, Wrench } from "lucide-react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { brand } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 import { HeroCollage } from "./hero-collage";
-import { ProductPreview } from "./product-preview";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -22,33 +21,33 @@ const word = {
   }),
 };
 
+const PROMISES = [
+  { icon: Clock3, text: "Diagnóstico en 48 h" },
+  { icon: Wrench, text: "Presupuesto cerrado antes de empezar" },
+  { icon: ShieldCheck, text: "12 meses de garantía" },
+];
+
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  // El preview arranca inclinado en perspectiva y se "asienta" al hacer scroll
-  const rotateX = useTransform(scrollYProgress, [0, 0.35], [14, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.35], [0.94, 1]);
-  const y = useTransform(scrollYProgress, [0, 0.35], [0, -40]);
-  const glowOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0.3]);
+  const glowOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0.3]);
 
-  const headline = ["El", "tiempo", "de", "tu", "equipo,"];
+  const headline = ["Tu", "barco,", "listo"];
 
   return (
-    <section ref={ref} className="relative overflow-hidden pt-36 pb-24 sm:pt-44">
+    <section ref={ref} className="relative overflow-hidden pt-36 pb-28 sm:pt-44 xl:min-h-[820px]">
       <HeroCollage glowOpacity={glowOpacity} />
 
       <div className="mx-auto max-w-6xl px-6 text-center">
-        <motion.a
-          href="#producto"
+        <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="group mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 py-1 pr-3 pl-1 text-[12.5px] text-muted-foreground backdrop-blur transition-colors hover:border-border-strong hover:text-foreground"
+          className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 py-1 pr-3 pl-1 text-[12.5px] text-muted-foreground backdrop-blur"
         >
-          <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">Nuevo</span>
-          Aprobaciones por jerarquía
-          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-        </motion.a>
+          <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">Taller náutico</span>
+          Motor, electrónica, pintura y varadero
+        </motion.p>
 
         <h1 className="mx-auto max-w-4xl text-[clamp(2.6rem,7vw,5.6rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance">
           {headline.map((w, i) => (
@@ -63,7 +62,7 @@ export function Hero() {
             animate="show"
             className="inline-block font-serif font-normal tracking-[-0.02em] italic"
           >
-            en orden.
+            para zarpar.
           </motion.span>
         </h1>
 
@@ -82,34 +81,28 @@ export function Hero() {
           transition={{ delay: 0.85, duration: 0.9, ease: EASE }}
           className="mt-10 flex flex-wrap items-center justify-center gap-3"
         >
-          <Link href="/signup" className={cn(buttonClasses("primary", "lg"), "group")}>
-            Crear mi organización
+          <Link href="/contacto" className={cn(buttonClasses("primary", "lg"), "group")}>
+            Pedir presupuesto
             <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
-          <Link href="/login" className={buttonClasses("secondary", "lg")}>
-            Ver la demo
+          <Link href="/#servicios" className={buttonClasses("secondary", "lg")}>
+            Ver servicios
           </Link>
         </motion.div>
-        <motion.p
+
+        <motion.ul
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1, duration: 1 }}
-          className="mt-4 text-[12.5px] text-muted-foreground"
+          className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-muted-foreground"
         >
-          Sin tarjeta · Configuración en 2 minutos
-        </motion.p>
-      </div>
-
-      <div className="mx-auto mt-20 max-w-6xl px-4 sm:px-6 [perspective:1600px]">
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1.4, ease: EASE }}
-        >
-          <motion.div style={{ rotateX, scale, y }} className="origin-top">
-            <ProductPreview />
-          </motion.div>
-        </motion.div>
+          {PROMISES.map(({ icon: Icon, text }) => (
+            <li key={text} className="inline-flex items-center gap-1.5">
+              <Icon className="size-4 text-accent" strokeWidth={1.75} />
+              {text}
+            </li>
+          ))}
+        </motion.ul>
       </div>
     </section>
   );

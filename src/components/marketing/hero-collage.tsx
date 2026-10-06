@@ -1,11 +1,11 @@
 "use client";
 
 import { motion, useReducedMotion, type MotionValue } from "motion/react";
-import { Coffee, Palmtree, Receipt, TrendingUp, Users } from "lucide-react";
+import { Anchor, CalendarClock, CheckCircle2, Gauge, ReceiptText, Stethoscope } from "lucide-react";
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 
-// Fondo del hero: tarjetas reales de la app flotando a los costados del titular.
+// Fondo del hero: el día a día del taller en tarjetas flotando a los costados del titular.
 // Es decorativo (aria-hidden) y determinista: nada de hora real ni aleatorios en el
 // render, para que el HTML del servidor y del cliente coincidan al hidratar.
 
@@ -30,8 +30,6 @@ function Float({ className, delay, amp = 10, children }: { className: string; de
   );
 }
 
-const TEAM = ["Ana Torres", "Diego Fernández", "Carlos Ruiz", "Sofía Navarro", "Laura Méndez"];
-
 export function HeroCollage({ glowOpacity }: { glowOpacity?: MotionValue<number> }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -41,80 +39,73 @@ export function HeroCollage({ glowOpacity }: { glowOpacity?: MotionValue<number>
         className="absolute top-[-20%] left-1/2 h-[680px] w-[1100px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--accent-soft),transparent)]"
       />
 
+      {/* Olas al pie del hero */}
+      <svg className="absolute inset-x-0 bottom-0 h-40 w-full text-accent" viewBox="0 0 1440 160" preserveAspectRatio="none">
+        <path d="M0 90 C240 50 480 130 720 90 S1200 50 1440 90 V160 H0 Z" fill="currentColor" opacity="0.05" />
+        <path d="M0 115 C260 85 500 150 760 115 S1220 85 1440 118 V160 H0 Z" fill="currentColor" opacity="0.07" />
+      </svg>
+
       {/* Solo en pantallas anchas: en las chicas no hay lugar a los costados del titular */}
       <div className="absolute inset-x-0 top-0 hidden h-[760px] xl:block">
         {/* ── Izquierda ── */}
-        <Float className={`${CARD} top-[150px] left-[max(2%,calc(50%-680px))] w-56 -rotate-3`} delay={0.2}>
+        <Float className={`${CARD} top-[150px] left-[max(2%,calc(50%-680px))] w-60 -rotate-3`} delay={0.2}>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-success" /> Trabajando desde las 09:02
+            <Stethoscope className="size-3.5" /> Diagnóstico listo
           </p>
-          <p className="mt-1 font-mono text-[22px] font-medium tabular">04:21:37</p>
-          <div className="mt-2 flex gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-[11px]">
-              <Coffee className="size-3" /> Pausar
-            </span>
-            <span className="rounded-lg bg-foreground px-2 py-1 text-[11px] text-background">Fichar salida</span>
-          </div>
+          <p className="mt-1 text-[13px] font-medium">Lagoon 42 · plotter se reinicia</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Ruido del alternador en la línea de 12 V</p>
         </Float>
 
-        <Float className={`${CARD} top-[360px] left-[max(5%,calc(50%-640px))] w-60 rotate-2`} delay={0.6}>
+        <Float className={`${CARD} top-[350px] left-[max(5%,calc(50%-640px))] w-60 rotate-2`} delay={0.6}>
           <p className="flex items-center gap-1.5 text-[12px] font-medium">
-            <Palmtree className="size-3.5 text-success" /> Vacaciones aprobadas
+            <CheckCircle2 className="size-3.5 text-success" /> Antifouling aplicado
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Ana Torres · 26 – 30 oct · 5 días</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Beneteau Oceanis 40 · 2 manos</p>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Avatar name="Carlos Ruiz" size={18} /> Aprobó Carlos Ruiz
+            <Avatar name="Ana Torres" size={18} /> Ana Torres · pintura
           </div>
         </Float>
 
         <Float className={`${CARD} top-[560px] left-[max(1%,calc(50%-700px))] w-52 -rotate-2`} delay={1}>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Users className="size-3.5" /> Equipo hoy
+            <Anchor className="size-3.5" /> Varadero hoy
           </p>
-          <div className="mt-2 flex -space-x-2">
-            {TEAM.map((n) => (
-              <Avatar key={n} name={n} size={26} />
+          <div className="mt-2 grid grid-cols-4 gap-1">
+            {[1, 1, 1, 0].map((busy, i) => (
+              <span key={i} className={`h-6 rounded-md ${busy ? "bg-accent/70" : "border border-dashed border-border"}`} />
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] text-muted-foreground">4 trabajando · 1 de vacaciones</p>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">3 barcos en seco · 1 plaza libre</p>
         </Float>
 
         {/* ── Derecha ── */}
         <Float className={`${CARD} top-[130px] right-[max(2%,calc(50%-680px))] w-60 rotate-3`} delay={0.4}>
-          <p className="text-[11px] text-muted-foreground">OT-0042 · Portal clientes</p>
-          <p className="mt-0.5 text-[13px] font-medium">Octubre 2026</p>
+          <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <ReceiptText className="size-3.5" /> Presupuesto cerrado
+          </p>
+          <p className="mt-0.5 text-[13px] font-medium">Revisión motor Volvo D2-40</p>
           <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-            <span>68 h de 90 h</span>
-            <span className="text-foreground tabular">5.780 €</span>
-          </div>
-          <div className="mt-1.5 h-1.5 rounded-full bg-muted">
-            <div className="h-full w-[76%] rounded-full bg-accent" />
+            <span>Mano de obra + piezas</span>
+            <span className="text-foreground tabular">1.840 €</span>
           </div>
         </Float>
 
         <Float className={`${CARD} top-[340px] right-[max(1%,calc(50%-700px))] w-56 -rotate-2`} delay={0.8}>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <TrendingUp className="size-3.5" /> Horas esta semana
+            <Gauge className="size-3.5" /> Avance de la reparación
           </p>
-          <div className="mt-2 flex h-14 items-end gap-1.5">
-            {[62, 80, 74, 92, 55].map((h, i) => (
-              <span key={i} className={`flex-1 rounded-t ${i === 3 ? "bg-accent" : "bg-accent/30"}`} style={{ height: `${h}%` }} />
-            ))}
+          <p className="mt-1 text-[13px] font-medium">Bavaria 46 · refit eléctrico</p>
+          <div className="mt-2 h-1.5 rounded-full bg-muted">
+            <div className="h-full w-[72%] rounded-full bg-accent" />
           </div>
-          <div className="mt-1 flex text-[10px] text-muted-foreground">
-            {["L", "M", "X", "J", "V"].map((d) => (
-              <span key={d} className="flex-1 text-center">
-                {d}
-              </span>
-            ))}
-          </div>
+          <p className="mt-1 text-[11px] text-muted-foreground">Entrega prevista el viernes</p>
         </Float>
 
         <Float className={`${CARD} top-[560px] right-[max(4%,calc(50%-650px))] w-56 rotate-2`} delay={1.2}>
           <p className="flex items-center gap-1.5 text-[12px] font-medium">
-            <Receipt className="size-3.5 text-accent" /> OT-0039 facturada
+            <CalendarClock className="size-3.5 text-accent" /> Próxima revisión
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Septiembre · 4.675 € · Acme Corp</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Motor a las 250 h · aviso al propietario</p>
         </Float>
       </div>
 
