@@ -293,6 +293,40 @@ Una tarea con horas imputadas no se puede borrar: esas horas pueden estar ya fac
 
 Cubierto por `supabase/tests/org_settings.test.sql` (7 tests).
 
+## Foro interno (`0016_forum.sql`)
+
+Espacio para dudas, avisos e incidencias técnicas del equipo. Lo ven y lo escriben solo las personas de la empresa.
+
+### `public.forum_threads`
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | uuid PK | |
+| `org_id` | uuid FK → organizations | lo fija la base desde la membresía del autor |
+| `author_id` | uuid FK → memberships | `on delete set null`: si la persona se va, el hilo queda |
+| `category` | text | `question` (duda), `incident` (incidencia técnica), `notice` (aviso) |
+| `title` / `body` | text | 5–140 / 1–5000 caracteres |
+| `pinned` / `locked` | boolean | fijar arriba / cerrar: solo moderación |
+| `resolved` | boolean | dudas e incidencias: autor o moderación |
+| `reply_count` / `last_activity_at` | int / timestamptz | los mantiene un trigger, no el cliente |
+| `created_at` / `edited_at` | timestamptz | |
+
+### `public.forum_posts`
+
+Respuestas de un hilo (`thread_id` con `on delete cascade`), con `org_id` copiado del hilo, `author_id`, `body` y fechas.
+
+**Permisos:** nuevo permiso `forum.moderate` (owner y admin).
+
+- **Leer:** cualquier persona activa de la empresa (`is_org_member`). Sin sesión u otra empresa: nada.
+- **Escribir:** siempre a nombre propio (`is_own_membership`).
+- **Editar:** el contenido solo su autor; fijar y cerrar, solo moderación (lo controla un trigger `guard_*`, que además vuelve inmutables la empresa, el autor, la fecha y los contadores).
+- **Responder:** no se puede en un hilo cerrado, salvo moderación.
+- **Borrar:** el autor o moderación.
+
+**Avisos:** una respuesta notifica (`forum.reply`) al autor del hilo y a quienes ya participaron; un hilo de categoría *aviso* notifica (`forum.notice`) a toda la empresa. Todo queda en la auditoría.
+
+Cubierto por `supabase/tests/forum.test.sql` (14 tests).
+
 ## Desarrollo local
 
 ```bash
