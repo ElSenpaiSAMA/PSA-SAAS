@@ -6,13 +6,7 @@ import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
 import { getHolidaySet } from "@/lib/data/calendar";
 import { getOrgContext } from "@/lib/data/session";
 import { getVisibleVacationRequests } from "@/lib/data/vacations";
-import {
-  businessDays,
-  canDecide,
-  validateNewRequest,
-  vacationBalance,
-  type RequestValidationError,
-} from "@/lib/domain/vacations";
+import { businessDays, canDecide, validateNewRequest, vacationBalance, type RequestValidationError } from "@/lib/domain/vacations";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors, vacationRequestSchema } from "@/lib/validation/schemas";
 
@@ -77,11 +71,7 @@ export async function cancelVacation(orgId: string, requestId: string): Promise<
   return ok("Solicitud cancelada");
 }
 
-export async function decideVacation(
-  orgId: string,
-  requestId: string,
-  decision: "approved" | "rejected",
-): Promise<ActionState> {
+export async function decideVacation(orgId: string, requestId: string, decision: "approved" | "rejected"): Promise<ActionState> {
   const ctx = await getOrgContext(orgId);
   if (!ctx.can("vacations.approve")) return fail("No tenés permisos para aprobar vacaciones.");
   const id = z.guid().parse(requestId);

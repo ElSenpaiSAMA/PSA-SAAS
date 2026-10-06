@@ -20,8 +20,7 @@ const STATUS: Record<VacationStatus, { label: string; tone: BadgeTone }> = {
 };
 
 function range(r: Pick<VacationRequest, "start_date" | "end_date">) {
-  const fmt = (iso: string) =>
-    new Date(`${iso}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+  const fmt = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
   return r.start_date === r.end_date ? fmt(r.start_date) : `${fmt(r.start_date)} — ${fmt(r.end_date)}`;
 }
 
@@ -78,6 +77,10 @@ export interface PendingApproval extends VacationRequest {
   name: string;
   position: string | null;
   available: number;
+  /** Otras personas del equipo ausentes esos días */
+  overlaps?: string[];
+  /** Si la decisión le corresponde a otra persona (aprobador natural) */
+  approverName?: string | null;
 }
 
 export function Approvals({ orgId, requests, holidays }: { orgId: string; requests: PendingApproval[]; holidays: string[] }) {
@@ -97,13 +100,22 @@ export function Approvals({ orgId, requests, holidays }: { orgId: string; reques
             <Avatar name={r.name} size={38} />
             <div className="min-w-0 flex-1">
               <p className="text-[14px]">
-                <span className="font-medium">{r.name}</span>{" "}
-                <span className="text-muted-foreground">· {range(r)}</span>
+                <span className="font-medium">{r.name}</span> <span className="text-muted-foreground">· {range(r)}</span>
               </p>
               <p className="truncate text-[12.5px] text-muted-foreground">
                 {businessDays(r, off)} días hábiles · le quedan {r.available}
                 {r.reason ? ` · “${r.reason}”` : ""}
               </p>
+              {r.overlaps || r.approverName ? (
+                <p className="mt-1 flex flex-wrap gap-1.5">
+                  {r.overlaps?.length ? (
+                    <Badge tone="warning">Coincide con {r.overlaps.join(", ")}</Badge>
+                  ) : (
+                    <Badge tone="success">Sin coincidencias en el equipo</Badge>
+                  )}
+                  {r.approverName ? <Badge tone="neutral">Le toca a {r.approverName}</Badge> : null}
+                </p>
+              ) : null}
             </div>
             <DecisionButtons orgId={orgId} id={r.id} />
           </motion.li>
