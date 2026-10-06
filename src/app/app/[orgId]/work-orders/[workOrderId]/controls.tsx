@@ -1,36 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Copy, Receipt, Undo2 } from "lucide-react";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { ArrowRight, CalendarRange, Lock, Plus } from "lucide-react";
+import { useActionState, useEffect, useRef, useState, useTransition, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { LifecycleStepper } from "@/components/app/work-order-lifecycle";
+import { Button, buttonClasses } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner, SubmitButton } from "@/components/ui/submit-button";
 import { idle, type ActionState } from "@/lib/actions";
 import {
-  canInvoice,
-  nextStatuses,
-  TRANSITION_LABEL,
+  nextStep,
+  secondarySteps,
   type BillingStatus,
+  type LifecycleStep,
   type WorkOrderStatus,
 } from "@/lib/domain/work-orders";
 import { duplicateWorkOrder, setBillingStatus, setWorkOrderStatus } from "../actions";
 import { CopyNextButton } from "../copy-next-button";
 
-function useRun() {
-  const [pending, start] = useTransition();
-  const run = (fn: () => Promise<ActionState>) =>
-    start(async () => {
-      const r = await fn();
-      if (r.status === "error") toast.error(r.message);
-      else toast.success(r.message);
-    });
-  return [pending, run] as const;
-}
-
-export function WorkOrderControls({
+/** Estado actual + un único "siguiente paso" + retrocesos discretos. */
+export function NextStepPanel({
   orgId,
   workOrderId,
   status,
@@ -45,51 +37,123 @@ export function WorkOrderControls({
   canManage: boolean;
   canBill: boolean;
 }) {
-  const [pending, run] = useRun();
-  const transitions = canManage ? nextStatuses(status, billing) : [];
+  const [pending, start] = useTransition();
+  const can = { manage: canManage, bill: canBill };
+  const step = nextStep(status, billing, can);
+  const back = secondarySteps(status, billing, can);
+
+  const go = (target: LifecycleStep | "unbilled") =>
+    start(async () => {
+      const r: ActionState =
+        target === "invoiced" || target === "unbilled"
+          ? await setBillingStatus(orgId, workOrderId, target)
+          : await setWorkOrderStatus(orgId, workOrderId, target);
+      if (r.status === "error") toast.error(r.message);
+      else toast.success(r.message);
+    });
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {transitions.map((next) => (
-        <Button
-          key={next}
-          variant={next === "approved" || next === "closed" ? "primary" : "secondary"}
-          disabled={pending}
-          onClick={() => run(() => setWorkOrderStatus(orgId, workOrderId, next))}
-        >
-          {pending ? <Spinner /> : null}
-          {TRANSITION_LABEL[next]}
-        </Button>
-      ))}
-      {canBill && canInvoice(status, billing) ? (
-        <Button variant="accent" disabled={pending} onClick={() => run(() => setBillingStatus(orgId, workOrderId, "invoiced"))}>
-          <Receipt className="size-4" /> Marcar facturada
-        </Button>
-      ) : null}
-      {canBill && billing === "invoiced" ? (
-        <Button variant="ghost" disabled={pending} onClick={() => run(() => setBillingStatus(orgId, workOrderId, "unbilled"))}>
-          <Undo2 className="size-4" /> Revertir facturación
-        </Button>
-      ) : null}
-      {canManage ? <CopyNextButton orgId={orgId} workOrderId={workOrderId} variant="full" /> : null}
+    <section className="rounded-2xl border border-border bg-card p-5" aria-label="Estado de la orden de trabajo">
+      <LifecycleStepper status={status} billing={billing} />
+
+      <div className="mt-5 flex flex-col gap-4 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+            {step ? <ArrowRight className="size-4" strokeWidth={1.75} /> : <Lock className="size-4" strokeWidth={1.75} />}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[13.5px] font-medium">{step ? `Siguiente paso: ${step.label}` : "Ciclo completo"}</p>
+            <p className="text-[12.5px] text-muted-foreground">
+              {step
+                ? step.allowed
+                  ? step.description
+                  : step.target === "invoiced"
+                    ? step.description
+                    : "Lo da quien gestiona el proyecto (responsable del departamento o administración)."
+                : "OT facturada: queda bloqueada para cambios y para imputar horas."}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {back.map((b) => (
+            <Button key={b.target} variant="ghost" size="sm" disabled={pending} onClick={() => go(b.target)}>
+              {b.label}
+            </Button>
+          ))}
+          {step?.allowed ? (
+            <Button variant={step.target === "invoiced" ? "accent" : "primary"} disabled={pending} onClick={() => go(step.target)}>
+              {pending ? <Spinner /> : null}
+              {step.label}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/** Bloque plegable con título; se usa para "Agregar tarea" y "Repetir esta OT". */
+export function Collapsible({
+  title,
+  icon,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  icon: "plus" | "repeat";
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const Icon = icon === "plus" ? Plus : CalendarRange;
+  return (
+    <div className="rounded-2xl border border-border bg-card">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2.5 px-5 py-3.5 text-left text-[13.5px] font-medium"
+      >
+        <Icon className={`size-4 text-muted-foreground transition-transform ${open && icon === "plus" ? "rotate-45" : ""}`} strokeWidth={1.75} />
+        {title}
+      </button>
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-border px-5 py-4">{children}</div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
 
-export function DuplicateWorkOrder({
+/** "Repetir esta OT": copia rápida al mes siguiente o a un período a medida. */
+export function RepeatWorkOrder({
   orgId,
   workOrderId,
+  nextLabel,
+  continuationHref,
   defaultTitle,
   defaultStart,
   defaultEnd,
 }: {
   orgId: string;
   workOrderId: string;
+  nextLabel: string;
+  /** Si la OT del período siguiente ya existe, se enlaza en lugar de copiar */
+  continuationHref?: string;
   defaultTitle: string;
   defaultStart: string;
   defaultEnd: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [custom, setCustom] = useState(false);
   const [state, action] = useActionState(duplicateWorkOrder.bind(null, orgId), idle);
   const handled = useRef<number | undefined>(undefined);
 
@@ -100,16 +164,28 @@ export function DuplicateWorkOrder({
   }, [state]);
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <Copy className="size-3.5" /> {open ? "Cancelar duplicado" : "Duplicar a otro período…"}
-      </button>
+    <div className="grid gap-3">
+      <p className="text-[12.5px] text-muted-foreground">
+        Crea una OT nueva con las mismas tareas (en «Por hacer», sin horas) y las fechas corridas al nuevo período. Esta OT no cambia.
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {continuationHref ? (
+          <Link href={continuationHref} className={buttonClasses("secondary")}>
+            Ver la OT de {nextLabel} <ArrowRight className="size-4" />
+          </Link>
+        ) : (
+          <CopyNextButton orgId={orgId} workOrderId={workOrderId} targetLabel={nextLabel} variant="full" />
+        )}
+        <button
+          type="button"
+          onClick={() => setCustom((c) => !c)}
+          className="h-10 px-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {custom ? "Cancelar" : "Otro período…"}
+        </button>
+      </div>
       <AnimatePresence>
-        {open ? (
+        {custom ? (
           <motion.form
             action={action}
             noValidate
@@ -119,7 +195,7 @@ export function DuplicateWorkOrder({
             className="overflow-hidden"
           >
             <input type="hidden" name="workOrderId" value={workOrderId} />
-            <div className="mt-3 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-end">
+            <div className="grid gap-3 sm:grid-cols-[2fr_1fr_1fr_auto] sm:items-end">
               <Field label="Título" error={state.fieldErrors?.title}>
                 <Input name="title" defaultValue={defaultTitle} />
               </Field>
@@ -129,11 +205,8 @@ export function DuplicateWorkOrder({
               <Field label="Hasta" error={state.fieldErrors?.periodEnd}>
                 <Input name="periodEnd" type="date" defaultValue={defaultEnd} />
               </Field>
-              <SubmitButton pendingLabel="Duplicando…">Duplicar</SubmitButton>
+              <SubmitButton pendingLabel="Creando…">Crear copia</SubmitButton>
             </div>
-            <p className="mt-2 text-[12px] text-muted-foreground">
-              Se copian todas las tareas (reiniciadas a &quot;Por hacer&quot;) y sus fechas se corren al nuevo período.
-            </p>
           </motion.form>
         ) : null}
       </AnimatePresence>
