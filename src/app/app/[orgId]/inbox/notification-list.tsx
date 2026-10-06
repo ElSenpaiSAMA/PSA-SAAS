@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import {
   AlarmClock,
+  AtSign,
   BarChart3,
   BellOff,
   CheckCheck,
@@ -46,6 +47,7 @@ const ICON: Record<string, LucideIcon> = {
   "time.correction_decided": Clock3,
   "forum.reply": MessagesSquare,
   "forum.notice": Megaphone,
+  "forum.mention": AtSign,
 };
 
 export function NotificationList({ orgId, items }: { orgId: string; items: Notification[] }) {

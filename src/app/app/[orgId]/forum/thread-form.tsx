@@ -7,18 +7,23 @@ import { Input, Textarea } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { idle, type ActionState } from "@/lib/actions";
 import { FORUM_CATEGORIES } from "@/lib/domain/forum";
+import type { Mentionable } from "@/lib/domain/mentions";
 import type { ForumCategory } from "@/lib/supabase/database.types";
 import { cn } from "@/lib/utils";
+import { MentionTextarea } from "./mention-textarea";
 
 /** Alta y edición de un hilo. La acción ya viene ligada a la org (y al hilo si se edita). */
 export function ThreadForm({
   action,
   initial,
+  people,
   submitLabel,
   onDone,
 }: {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   initial?: { category: ForumCategory; title: string; body: string };
+  /** Con personas, el mensaje admite menciones con @ */
+  people?: Mentionable[];
   submitLabel: string;
   onDone?: () => void;
 }) {
@@ -65,8 +70,12 @@ export function ThreadForm({
       <Field label="Título" error={state.fieldErrors?.title}>
         <Input name="title" defaultValue={initial?.title} placeholder="Ej.: Fallo intermitente en el plotter del Lagoon 42" maxLength={140} />
       </Field>
-      <Field label="Mensaje" error={state.fieldErrors?.body} hint="Contá el contexto: barco, equipo, qué probaste.">
-        <Textarea name="body" defaultValue={initial?.body} rows={8} maxLength={5000} />
+      <Field label="Mensaje" error={state.fieldErrors?.body} hint="Contá el contexto: barco, equipo, qué probaste. Con @ mencionás a un compañero.">
+        {people ? (
+          <MentionTextarea name="body" people={people} defaultValue={initial?.body} rows={8} maxLength={5000} />
+        ) : (
+          <Textarea name="body" defaultValue={initial?.body} rows={8} maxLength={5000} />
+        )}
       </Field>
 
       {state.status === "error" && !state.fieldErrors ? <p className="text-[13px] text-danger">{state.message}</p> : null}

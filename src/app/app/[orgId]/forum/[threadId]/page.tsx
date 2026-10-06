@@ -5,11 +5,12 @@ import { ArrowLeft, CheckCircle2, Lock, Pin } from "lucide-react";
 import { z } from "zod";
 import { Avatar } from "@/components/ui/avatar";
 import { TimeAgo } from "@/components/ui/time-ago";
-import { getThread } from "@/lib/data/forum";
+import { getMentionables, getThread } from "@/lib/data/forum";
 import { getOrgContext } from "@/lib/data/session";
 import { threadAbilities } from "@/lib/domain/forum";
 import { CategoryBadge } from "../category-badge";
 import { DeletePostButton } from "../delete-post-button";
+import { MentionText } from "../mention-text";
 import { ReplyForm } from "../reply-form";
 import { ThreadControls } from "../thread-controls";
 
@@ -24,13 +25,15 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
   const { orgId, threadId } = await params;
   if (!z.guid().safeParse(threadId).success) notFound();
   const ctx = await getOrgContext(orgId);
-  const data = await getThread(orgId, threadId);
+  const [data, mentionables] = await Promise.all([getThread(orgId, threadId), getMentionables(orgId)]);
   if (!data) notFound();
 
   const { thread, posts } = data;
   const me = ctx.membership.id;
   const isModerator = ctx.can("forum.moderate");
   const can = threadAbilities(thread, { isAuthor: thread.author_id === me, isModerator });
+  // Solo se resaltan las menciones reales (las que guardó la base), no cualquier "@Nombre"
+  const mentioned = (ids: string[]) => mentionables.filter((p) => ids.includes(p.id));
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -69,7 +72,9 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
           {thread.edited_at ? <span>(editado)</span> : null}
         </div>
         {/* Texto plano: se respetan los saltos de línea, sin HTML */}
-        <div className="mt-5 text-[15px] leading-relaxed whitespace-pre-line">{thread.body}</div>
+        <div className="mt-5 text-[15px] leading-relaxed whitespace-pre-line">
+          <MentionText body={thread.body} people={mentioned(thread.mentions)} />
+        </div>
       </article>
 
       <div className="mt-4">
@@ -108,7 +113,9 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
                       {p.author_id === me || isModerator ? <DeletePostButton orgId={orgId} postId={p.id} /> : null}
                     </span>
                   </div>
-                  <p className="mt-2.5 text-[14.5px] leading-relaxed whitespace-pre-line">{p.body}</p>
+                  <p className="mt-2.5 text-[14.5px] leading-relaxed whitespace-pre-line">
+                    <MentionText body={p.body} people={mentioned(p.mentions)} />
+                  </p>
                 </li>
               );
             })}
@@ -122,7 +129,7 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
             {thread.locked ? (
               <p className="mb-3 text-[12.5px] text-muted-foreground">El hilo está cerrado: respondés como moderación.</p>
             ) : null}
-            <ReplyForm orgId={orgId} threadId={thread.id} />
+            <ReplyForm orgId={orgId} threadId={thread.id} people={mentionables.filter((p) => p.id !== me)} />
           </>
         ) : (
           <p className="flex items-center gap-2 text-[13.5px] text-muted-foreground">
