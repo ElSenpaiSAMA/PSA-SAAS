@@ -73,7 +73,7 @@ export function ContactForm() {
               ))}
             </Select>
           </Field>
-          <Field label="Modelo y eslora" error={errors?.boatModel} hint="Opcional. Ej.: Beneteau Oceanis 40, 12 m.">
+          <Field label="Modelo y eslora" error={errors?.boatModel} hint="Opcional. Ej.: Princess V58, 18 m.">
             <Input name="boatModel" placeholder="Modelo, eslora o año" />
           </Field>
           <Field label="Servicio" error={errors?.service}>
@@ -87,7 +87,7 @@ export function ContactForm() {
             </Select>
           </Field>
           <Field label="Mensaje" error={errors?.message} className="sm:col-span-2">
-            <Textarea name="message" rows={5} maxLength={2000} placeholder="Contanos qué le pasa al barco, dónde está amarrado y cuándo lo necesitás." />
+            <Textarea name="message" rows={5} maxLength={2000} placeholder="Contanos qué equipo falla, dónde está amarrado el barco y cuándo lo necesitás." />
           </Field>
 
           {/* Campo trampa para bots: invisible y fuera del orden de tabulación */}

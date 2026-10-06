@@ -94,8 +94,8 @@ describe("formulario de contacto", () => {
     phone: "",
     boatType: "Velero",
     boatModel: "",
-    service: "Pintura y antifouling",
-    message: "Quiero hacer el antifouling antes de la temporada.",
+    service: "Generadores",
+    message: "El generador no arranca desde la última salida.",
     privacy: "on",
   };
 

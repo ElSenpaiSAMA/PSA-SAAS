@@ -5,7 +5,7 @@ import { Anchor, CalendarClock, CheckCircle2, Gauge, ReceiptText, Stethoscope } 
 import type { ReactNode } from "react";
 import { Avatar } from "@/components/ui/avatar";
 
-// Fondo del hero: el día a día del taller en tarjetas flotando a los costados del titular.
+// Fondo del hero: el día a día de los técnicos en tarjetas flotando a los costados del titular.
 // Es decorativo (aria-hidden) y determinista: nada de hora real ni aleatorios en el
 // render, para que el HTML del servidor y del cliente coincidan al hidratar.
 
@@ -52,30 +52,30 @@ export function HeroCollage({ glowOpacity }: { glowOpacity?: MotionValue<number>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Stethoscope className="size-3.5" /> Diagnóstico listo
           </p>
-          <p className="mt-1 text-[13px] font-medium">Lagoon 42 · plotter se reinicia</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Ruido del alternador en la línea de 12 V</p>
+          <p className="mt-1 text-[13px] font-medium">Sunseeker 50 · generador no arranca</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Electroválvula de combustible sustituida</p>
         </Float>
 
         <Float className={`${CARD} top-[350px] left-[max(5%,calc(50%-640px))] w-60 rotate-2`} delay={0.6}>
           <p className="flex items-center gap-1.5 text-[12px] font-medium">
-            <CheckCircle2 className="size-3.5 text-success" /> Antifouling aplicado
+            <CheckCircle2 className="size-3.5 text-success" /> Aire acondicionado instalado
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Beneteau Oceanis 40 · 2 manos</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Princess V58 · 3 unidades · 48.000 BTU</p>
           <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <Avatar name="Ana Torres" size={18} /> Ana Torres · pintura
+            <Avatar name="Ana Torres" size={18} /> Ana Torres · climatización
           </div>
         </Float>
 
         <Float className={`${CARD} top-[560px] left-[max(1%,calc(50%-700px))] w-52 -rotate-2`} delay={1}>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Anchor className="size-3.5" /> Varadero hoy
+            <Anchor className="size-3.5" /> Intervenciones hoy
           </p>
           <div className="mt-2 grid grid-cols-4 gap-1">
             {[1, 1, 1, 0].map((busy, i) => (
               <span key={i} className={`h-6 rounded-md ${busy ? "bg-accent/70" : "border border-dashed border-border"}`} />
             ))}
           </div>
-          <p className="mt-1.5 text-[11px] text-muted-foreground">3 barcos en seco · 1 plaza libre</p>
+          <p className="mt-1.5 text-[11px] text-muted-foreground">3 técnicos a bordo · 1 en taller</p>
         </Float>
 
         {/* ── Derecha ── */}
@@ -83,10 +83,10 @@ export function HeroCollage({ glowOpacity }: { glowOpacity?: MotionValue<number>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <ReceiptText className="size-3.5" /> Presupuesto cerrado
           </p>
-          <p className="mt-0.5 text-[13px] font-medium">Revisión motor Volvo D2-40</p>
+          <p className="mt-0.5 text-[13px] font-medium">Potabilizadora 60 l/h</p>
           <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
-            <span>Mano de obra + piezas</span>
-            <span className="text-foreground tabular">1.840 €</span>
+            <span>Equipo + instalación</span>
+            <span className="text-foreground tabular">4.380 €</span>
           </div>
         </Float>
 
@@ -94,7 +94,7 @@ export function HeroCollage({ glowOpacity }: { glowOpacity?: MotionValue<number>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Gauge className="size-3.5" /> Avance de la reparación
           </p>
-          <p className="mt-1 text-[13px] font-medium">Bavaria 46 · refit eléctrico</p>
+          <p className="mt-1 text-[13px] font-medium">Lagoon 46 · baterías de litio</p>
           <div className="mt-2 h-1.5 rounded-full bg-muted">
             <div className="h-full w-[72%] rounded-full bg-accent" />
           </div>
@@ -105,7 +105,7 @@ export function HeroCollage({ glowOpacity }: { glowOpacity?: MotionValue<number>
           <p className="flex items-center gap-1.5 text-[12px] font-medium">
             <CalendarClock className="size-3.5 text-accent" /> Próxima revisión
           </p>
-          <p className="mt-1 text-[11px] text-muted-foreground">Motor a las 250 h · aviso al propietario</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">Generador a las 500 h · aviso al propietario</p>
         </Float>
       </div>
 

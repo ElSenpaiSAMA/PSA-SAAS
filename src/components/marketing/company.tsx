@@ -1,16 +1,15 @@
 import { AnimatedNumber, Reveal, RevealItem } from "@/components/ui/motion";
 
 const STATS = [
-  { value: 15, suffix: "+", label: "años reparando barcos" },
-  { value: 1200, suffix: "+", label: "barcos atendidos" },
-  { value: 9, suffix: "", label: "técnicos especializados" },
-  { value: 48, suffix: " h", label: "para el diagnóstico" },
+  { value: 30, suffix: "+", label: "años en el mercado español" },
+  { value: 6, suffix: "", label: "especialidades a bordo" },
+  { value: 2, suffix: "", label: "talleres: Diplonautic y ElectroMotor" },
 ];
 
 const VALUES = [
-  { title: "Presupuesto cerrado", text: "Antes de tocar nada sabés qué vamos a hacer y cuánto cuesta. Si aparece algo nuevo, te consultamos primero." },
-  { title: "Te mantenemos al tanto", text: "Fotos del avance y un responsable que te atiende de principio a fin: nada de llamar para preguntar cómo va." },
-  { title: "Trabajo documentado", text: "Cada intervención queda registrada: piezas, horas y técnico. El historial de tu barco, siempre disponible." },
+  { title: "Proyectos a medida", text: "Cada barco es distinto: estudiamos la instalación, el consumo y el espacio antes de proponer una solución." },
+  { title: "Tecnología de punta", text: "Trabajamos con equipos actuales y material marino, pensados para durar en un entorno exigente." },
+  { title: "Trabajo documentado", text: "Cada intervención queda registrada: equipos, piezas, horas y técnico. El historial de tu barco, siempre disponible." },
 ];
 
 export function Company() {
@@ -23,17 +22,17 @@ export function Company() {
           </RevealItem>
           <RevealItem>
             <h2 className="mt-3 text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.05] font-semibold tracking-[-0.04em] text-balance">
-              Un taller de puerto, <span className="font-serif font-normal italic">con oficio y método.</span>
+              Más de 30 años <span className="font-serif font-normal italic">a bordo de tu barco.</span>
             </h2>
           </RevealItem>
           <RevealItem>
             <p className="mt-5 text-[16px] leading-relaxed text-muted-foreground">
-              Diplonautic nació en el muelle, arreglando los barcos de los vecinos de amarre. Hoy somos un equipo de mecánicos,
-              electricistas, pintores y riggers que comparte una forma de trabajar: diagnosticar bien, explicar claro y entregar a tiempo.
+              Diplonautic es una empresa de instalaciones y diseños náuticos de Barcelona. Desde Sant Adrià de Besòs instalamos, reparamos y
+              mantenemos los equipos eléctricos de yates y embarcaciones, con un equipo técnico especializado y proyectos personalizados.
             </p>
           </RevealItem>
           <RevealItem>
-            <dl className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+            <dl className="mt-10 grid grid-cols-3 gap-6">
               {STATS.map((s) => (
                 <div key={s.label}>
                   <dt className="sr-only">{s.label}</dt>

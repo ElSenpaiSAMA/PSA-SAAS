@@ -1,16 +1,17 @@
 export const brand = {
   name: "Diplonautic",
-  tagline: "Reparación y mantenimiento náutico.",
+  tagline: "Instalaciones y diseños náuticos.",
   description:
-    "Taller náutico de reparación y mantenimiento: motores, electrónica, pintura y varadero. Diagnóstico claro, presupuesto cerrado y tu barco listo para navegar.",
+    "Instalación, reparación y mantenimiento de equipos eléctricos y de confort para yates y embarcaciones: aire acondicionado, refrigeración, generadores, potabilizadoras y sistemas eléctricos.",
 } as const;
 
-/** Datos de contacto del sitio. Es una web demostrativa: los datos son ficticios. */
+/** Datos de contacto públicos de la empresa (web demostrativa para una prueba técnica). */
 export const company = {
-  phone: "+34 930 000 000",
-  phoneHref: "tel:+34930000000",
-  email: "taller@diplonautic.test",
-  address: "Muelle de Levante, nave 4 · Puerto deportivo",
-  city: "Barcelona",
-  hours: "Lunes a viernes, 8:00 – 18:00 · Sábados con cita",
+  legalName: "Diplonautic SL",
+  phone: "+34 930 247 180",
+  phoneHref: "tel:+34930247180",
+  email: "info@diplonautic.com",
+  address: "Carrer de Neus Català, Local 9",
+  city: "08930 Sant Adrià de Besòs, Barcelona",
+  hours: "Lunes a viernes, 9:00 – 13:00 y 14:30 – 18:00",
 } as const;

@@ -22,9 +22,9 @@ const word = {
 };
 
 const PROMISES = [
-  { icon: Clock3, text: "Diagnóstico en 48 h" },
-  { icon: Wrench, text: "Presupuesto cerrado antes de empezar" },
-  { icon: ShieldCheck, text: "12 meses de garantía" },
+  { icon: Clock3, text: "Más de 30 años de experiencia" },
+  { icon: Wrench, text: "Proyectos a medida" },
+  { icon: ShieldCheck, text: "Presupuesto antes de empezar" },
 ];
 
 export function Hero() {
@@ -45,8 +45,8 @@ export function Hero() {
           transition={{ duration: 0.8, ease: EASE }}
           className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 py-1 pr-3 pl-1 text-[12.5px] text-muted-foreground backdrop-blur"
         >
-          <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">Taller náutico</span>
-          Motor, electrónica, pintura y varadero
+          <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">Instalaciones náuticas</span>
+          Electricidad, clima, energía y agua a bordo
         </motion.p>
 
         <h1 className="mx-auto max-w-4xl text-[clamp(2.6rem,7vw,5.6rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance">

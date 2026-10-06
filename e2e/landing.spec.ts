@@ -7,7 +7,7 @@ test.describe("web pública", () => {
     for (const id of ["servicios", "empresa", "proceso"]) {
       await expect(page.locator(`#${id}`)).toBeAttached();
     }
-    await expect(page.getByRole("heading", { name: "Pintura y antifouling" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Potabilizadoras" })).toBeVisible();
   });
 
   test("el CTA principal lleva al contacto", async ({ page }) => {
@@ -32,8 +32,8 @@ test.describe("web pública", () => {
     await page.getByLabel("Nombre y apellido").fill("Marta Soler");
     await page.getByLabel("Email").fill("marta@correo.com");
     await page.getByLabel("Tipo de barco").selectOption("Velero");
-    await page.getByLabel("Servicio").selectOption("Pintura y antifouling");
-    await page.getByLabel("Mensaje").fill("Quiero hacer el antifouling antes de la temporada.");
+    await page.getByLabel("Servicio").selectOption("Generadores");
+    await page.getByLabel("Mensaje").fill("El generador no arranca desde la última salida.");
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: "Enviar consulta" }).click();
     await expect(page.getByRole("status")).toContainText("Gracias, Marta");

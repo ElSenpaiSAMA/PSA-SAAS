@@ -2,10 +2,10 @@ import { ClipboardCheck, MessageSquareText, Ship, Wrench } from "lucide-react";
 import { Reveal, RevealItem } from "@/components/ui/motion";
 
 const STEPS = [
-  { icon: MessageSquareText, title: "Nos contás qué pasa", text: "Por el formulario o por teléfono. Con el modelo del barco y una foto ya podemos orientarte." },
-  { icon: ClipboardCheck, title: "Diagnóstico y presupuesto", text: "Revisamos el barco en tu amarre o en el varadero y te enviamos un presupuesto cerrado." },
-  { icon: Wrench, title: "Reparación", text: "Un responsable coordina a los técnicos y te va informando del avance, con fotos." },
-  { icon: Ship, title: "Prueba y entrega", text: "Probamos en el agua antes de entregarte el barco, con el detalle de lo que se hizo." },
+  { icon: MessageSquareText, title: "Nos contás qué pasa", text: "Por el formulario o por teléfono. Con el modelo del barco y del equipo ya podemos orientarte." },
+  { icon: ClipboardCheck, title: "Diagnóstico y presupuesto", text: "Revisamos la instalación en tu amarre y te enviamos un presupuesto detallado antes de empezar." },
+  { icon: Wrench, title: "Reparación", text: "Un técnico especializado se encarga del trabajo y te mantiene al tanto del avance." },
+  { icon: Ship, title: "Prueba y entrega", text: "Probamos los equipos en funcionamiento y te entregamos el detalle de lo que se hizo." },
 ];
 
 export function Process() {

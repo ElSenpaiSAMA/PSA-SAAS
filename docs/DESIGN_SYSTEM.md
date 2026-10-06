@@ -31,7 +31,7 @@ Esto es un SaaS de gestión (RRHH/proyectos), así que el reto es lograr ese niv
 
 ## Decisiones tomadas en la implementación
 
-- **Marca**: *Diplonautic*, taller de reparación náutica (antes *Kairos*, nombre genérico del PSA), centralizada en `src/lib/brand.ts` junto con los datos de contacto ficticios. Logo: una vela mayor y un foque en el color de acento sobre una ola.
+- **Marca**: *Diplonautic*, taller de reparación náutica (antes *Kairos*, nombre genérico del PSA), centralizada en `src/lib/brand.ts` junto con los datos de contacto públicos de la empresa. Logo: una vela mayor y un foque en el color de acento sobre una ola.
 - **Color**: grises neutros en OKLCH + un único acento azul marino (`oklch(0.52 0.15 245)` claro / `oklch(0.7 0.13 238)` oscuro), por la marca náutica. Estados semánticos (`success`, `warning`, `danger`) solo para estado, nunca decoración. Tokens en `src/app/globals.css`.
 - **Tipografía**: Geist (UI) + Geist Mono (números, relojes) + **Instrument Serif itálica** como acento editorial en titulares ("El tiempo de tu equipo, *en orden.*"). El contraste sans/serif es el gesto de marca.
 - **Movimiento**: una sola curva (`cubic-bezier(0.16, 1, 0.3, 1)`) para todo; entradas con blur + desplazamiento corto; `prefers-reduced-motion` respetado globalmente.

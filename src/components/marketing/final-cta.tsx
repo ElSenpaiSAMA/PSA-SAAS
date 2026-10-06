@@ -89,7 +89,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-6xl px-6 py-5 text-[12.5px] text-muted-foreground">
-          © {new Date().getFullYear()} {brand.name}. Sitio demostrativo: los datos de contacto son ficticios.
+          © {new Date().getFullYear()} {company.legalName}. Sitio demostrativo realizado para una prueba técnica.
         </p>
       </div>
     </footer>

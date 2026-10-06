@@ -240,12 +240,13 @@ export const forumPostSchema = z.object({
 
 export const BOAT_TYPES = ["Velero", "Lancha / motor", "Catamarán", "Semirrígida", "Otro"] as const;
 export const CONTACT_SERVICES = [
-  "Mecánica y motores",
-  "Electricidad a bordo",
-  "Electrónica y navegación",
-  "Pintura y antifouling",
-  "Jarcia y velas",
-  "Varadero e invernaje",
+  "Aire acondicionado",
+  "Refrigeración",
+  "Generadores",
+  "Potabilizadoras",
+  "Sistemas eléctricos",
+  "Hélices de proa",
+  "ElectroMotor: arranque, alternador o dinamo",
   "Otro / no lo sé",
 ] as const;
 
