@@ -24,6 +24,7 @@ src/
       vacations/               # saldo, solicitudes y aprobaciones
       projects/[projectId]/    # proyectos: sus órdenes de trabajo y miembros
       work-orders/[workOrderId]/ # OT por mes: tareas con fechas, estados, copiar al mes siguiente, facturación
+      calendar/                # calendario general: tareas, OT, ausencias y festivos (mes/semana)
       planning/                # carga de trabajo persona × semana vs. capacidad
       employees/               # personas: directorio, departamentos, organigrama, invitaciones
       audit/                   # auditoría (requiere employees.manage)

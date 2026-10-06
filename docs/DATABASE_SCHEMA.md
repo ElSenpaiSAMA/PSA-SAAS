@@ -132,6 +132,21 @@ Reglas en la base (triggers):
 
 Cubierto por `supabase/tests/work_orders.test.sql` (17 tests).
 
+## Festivos y calendario (`0006_holidays_and_calendar.sql`)
+
+### `public.holidays`
+Festivos por organización (`date`, `name`). Los gestiona quien tiene `holidays.manage` (owner/admin); todos los miembros los ven.
+
+- `business_days(desde, hasta, org)`: lunes a viernes **menos los festivos** de la organización. La vista `vacation_balances` la usa, así un festivo dentro de unas vacaciones no descuenta saldo.
+- En la app, los mismos festivos excluyen días en el contador de vacaciones, en la validación de solicitudes y en la planificación (no se planifica trabajo ni hay capacidad en un festivo).
+
+### `org_absences(org, desde, hasta)`
+Ausencias para el calendario, **sin el motivo**:
+- vacaciones **aprobadas** de cualquier miembro activo de la organización (es información de equipo: quién está fuera);
+- vacaciones **pendientes** solo para el solicitante y para quien puede aprobarlas.
+
+Cubierto por `supabase/tests/calendar.test.sql` (9 tests).
+
 ## Desarrollo local
 
 ```bash
