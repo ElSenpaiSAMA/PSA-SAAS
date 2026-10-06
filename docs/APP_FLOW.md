@@ -17,7 +17,7 @@ src/
     (marketing)/contacto/      # contacto: datos del taller y formulario (validado en el servidor, no se envía)
     (auth)/                    # login y registro + Server Actions de auth
     auth/callback/route.ts     # confirmación de email (PKCE)
-    select-organization/       # selector multi-empresa, invitaciones, crear org
+    select-organization/       # resuelve a qué empresa entrar (con una sola, redirige directo al panel)
     app/[orgId]/               # todo el SaaS, scopeado a una organización
       layout.tsx               # valida membership en servidor (404 si no pertenece) + shell
       dashboard/               # resumen personal y del equipo

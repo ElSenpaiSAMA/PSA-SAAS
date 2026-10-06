@@ -476,3 +476,23 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** unitarios de `isPublicSitePath` y E2E de la web en escritorio y móvil (home, CTA, acceso de empleados y formulario de contacto). Todo se revisó en el navegador: arrastre del barco y del carrusel, tema oscuro del sistema (la web pública queda clara) y móvil sin scroll horizontal.
 
+---
+
+## 2026-10-07 Intranet de una sola empresa y alta de empleados
+
+**Prompt (resumen):** como la web es de Diplonautic, no tiene sentido que la app maneje varias organizaciones: al iniciar sesión hay que entrar directo a la intranet de Diplonautic. Además, la intranet tiene que tener que ver con la web, sin perder formalidad.
+
+**Decisión de alta (la prueba pide justificarla): registro solo con invitación del administrador.**
+- *Por qué no registro abierto:* es una intranet corporativa con datos de clientes y del personal. Cualquiera que se registre no puede ver el foro ni los fichajes del equipo.
+- *Por qué no que el admin cree la cuenta con una contraseña:* el admin conocería la contraseña del empleado, y la app necesitaría la clave maestra de Supabase (`service_role`) en el servidor. Un secreto con acceso total es un riesgo innecesario.
+- *Cómo funciona:* el admin invita desde Personas (email, rol, departamento, responsable y puesto) y copia el **enlace de activación**. La persona elige su contraseña y entra directo a la empresa con ese rol. **La base rechaza cualquier registro sin invitación**, aunque se llame directo a la API de Auth.
+
+**Una sola empresa:**
+- La arquitectura multi-tenant (RLS por `org_id`) se conserva y se sigue testeando. Lo que cambia es la instalación: nadie puede crear organizaciones (permiso revocado en la base), al iniciar sesión se entra directo al panel y el selector de organización desaparece de la barra lateral cuando hay una sola.
+- La empresa de demo pasa a llamarse **Diplonautic**. La segunda organización queda sin miembros de demo, solo para los tests de aislamiento.
+- **Bug encontrado:** el selector buscaba "invitaciones pendientes" sin filtrar por email. Como un admin ve por RLS todas las de su empresa, a Sofía le aparecía como propia la invitación de Marc y no la dejaba entrar. Ahora filtra por el email de quien inició sesión.
+
+**Diseño de la intranet:** barra lateral en azul marino (el de la web), con el logo invertido y "Intranet · rol"; la sección activa con una línea celeste; los botones principales en azul marino; el login y la activación con el panel de foto de la web. El contenido sigue claro y sobrio, y el modo oscuro de la intranet se mantiene.
+
+**Pruebas:** 8 pgTAP (sin organizaciones nuevas, alta con y sin invitación, aceptación automática con rol y puesto, cargas del sistema), E2E de entrada directa, de alta rechazada sin invitación y de alta de un técnico invitado (en un proyecto con confirmación por email, el test verifica el aviso de confirmación). También se probó contra el Supabase real: el registro sin invitación queda bloqueado por la base.
+

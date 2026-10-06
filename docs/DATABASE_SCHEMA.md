@@ -327,6 +327,18 @@ Respuestas de un hilo (`thread_id` con `on delete cascade`), con `org_id` copiad
 
 Cubierto por `supabase/tests/forum.test.sql` (14 tests).
 
+## Una sola empresa (`0017_single_company.sql`)
+
+La plataforma sigue siendo multi-tenant por dentro (todas las tablas llevan `org_id` y RLS), pero esta instalación es la intranet de una sola empresa, Diplonautic:
+
+- **Sin organizaciones nuevas:** se revoca `execute` de `create_organization()` para `anon` y `authenticated`.
+- **Alta solo con invitación:** `signup_allowed(email)` dice si hay una invitación pendiente para ese email, sin importar mayúsculas. Un trigger `before insert` en `auth.users` rechaza el alta sin invitación (`signup requires an invitation`) cuando el alta llega desde Auth (GoTrue). Las cargas del sistema (seed, tests), que corren como `postgres`, no pasan por la regla.
+- **Aceptación automática:** un trigger `after insert` en `auth.users` crea la membresía con el rol, el puesto, el responsable y el departamento de la invitación, y la marca como aceptada.
+
+En el seed, la segunda organización no tiene miembros de demo: solo existe para que los tests comprueben el aislamiento entre empresas. Hay una invitación pendiente para `marc.vidal@demo.com` (técnico), para probar el alta.
+
+Cubierto por `supabase/tests/single_company.test.sql` (8 tests).
+
 ## Desarrollo local
 
 ```bash
