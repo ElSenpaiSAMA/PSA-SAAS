@@ -141,15 +141,28 @@ const monthParam = (offset: number) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 };
 
-test("el responsable copia la OT del mes anterior al mes siguiente", async ({ page }) => {
+test("una OT facturada enlaza su continuación en lugar de ofrecer copiarla", async ({ page }) => {
   await login(page, "carlos@demo.com");
   await page.goto(`/app/${NEBULA}/work-orders?month=${monthParam(-1)}`);
-  await page.getByText(/^Portal clientes · /).first().click();
-  await expect(page.getByText("Facturada", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Copiar al mes siguiente" }).first().click();
-  await expect(page).toHaveURL(/\/work-orders\/(?!ffffffff)[0-9a-f-]{36}$/);
-  await expect(page.getByText("Borrador", { exact: true })).toBeVisible();
-  await expect(page.getByText("Mantenimiento evolutivo")).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Sigue en / })).toBeVisible();
+  await page.getByRole("link", { name: /^Portal clientes · / }).click();
+  await expect(page.getByText("Ciclo completo")).toBeVisible();
+  await page.getByRole("button", { name: "Repetir esta OT en otro período" }).click();
+  await page.getByRole("link", { name: /^Ver la OT de / }).click();
+  await expect(page).toHaveURL(/\/work-orders\/ffffffff-0000-0000-0000-000000000002$/);
+  await expect(page.getByText("Siguiente paso: Cerrar OT")).toBeVisible();
+});
+
+test("el responsable repite el mes: copia en bloque las OT sin continuación", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/work-orders?month=${monthParam(1)}`);
+  await expect(page.getByText(/no tienen? continuación en/)).toBeVisible();
+  await page.getByRole("button", { name: /^Copiar(la| las \d+) a / }).click();
+  await expect(page.getByText(/OT copiadas? con sus tareas/)).toBeVisible();
+  await expect(page.getByText(/no tienen? continuación en/)).toHaveCount(0);
+  // Las copias nacen en borrador
+  await page.getByRole("link", { name: /^Borrador/ }).click();
+  await expect(page.getByRole("link", { name: /^Portal clientes · / })).toBeVisible();
 });
 
 test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo", async ({ page }) => {
@@ -157,8 +170,9 @@ test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo",
   await page.goto(`/app/${NEBULA}/time-tracking`);
   const options = await page.getByLabel("Tarea").locator("option").allTextContents();
   expect(options).toContain("Dashboard de cliente");
-  // La copia del test anterior está en borrador: sus tareas todavía no admiten horas
+  // OT facturada (mes anterior) y copias en borrador (test anterior) no admiten horas
   expect(options).not.toContain("Mantenimiento evolutivo");
+  expect(options.filter((o) => o === "Dashboard de cliente")).toHaveLength(1);
 
   await page.goto(`/app/${NEBULA}/planning`);
   await expect(page.getByRole("heading", { name: "Planificación" })).toBeVisible();
@@ -171,9 +185,10 @@ test("una admin cierra y factura una OT", async ({ page }) => {
   await page.goto(`/app/${NEBULA}/work-orders/ffffffff-0000-0000-0000-000000000003`);
   await page.getByRole("button", { name: "Cerrar OT" }).click();
   await expect(page.getByText("Estado actualizado")).toBeVisible();
-  await page.getByRole("button", { name: "Marcar facturada" }).click();
+  await expect(page.getByText("Siguiente paso: Marcar como facturada")).toBeVisible();
+  await page.getByRole("button", { name: "Marcar como facturada" }).click();
   await expect(page.getByText("OT marcada como facturada")).toBeVisible();
-  await expect(page.getByText("OT facturada: queda bloqueada para cambios.")).toBeVisible();
+  await expect(page.getByText(/OT facturada: queda bloqueada/)).toBeVisible();
 });
 
 const isoDay = (d: Date) =>
