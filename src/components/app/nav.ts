@@ -8,6 +8,7 @@ import {
   IdCard,
   LayoutDashboard,
   Palmtree,
+  Settings,
   ScrollText,
   Users,
   Workflow,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit";
+export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings";
 
 export interface NavItem {
   href: string;
@@ -40,6 +41,7 @@ export const NAV: NavItem[] = [
   { href: "staff", label: "Empleados", icon: "staff", keywords: ["perfil", "ficha", "dni", "sueldo", "contrato", "rrhh"] },
   { href: "employees", label: "Personas", icon: "team", keywords: ["equipo", "departamentos", "organigrama", "invitar"] },
   { href: "automations", label: "Automatizaciones", icon: "automations", permission: "automations.manage", keywords: ["reglas", "workflows", "flujos", "recordatorios", "automático"] },
+  { href: "settings", label: "Ajustes", icon: "settings", permission: "employees.manage", keywords: ["configuración", "empresa", "zona horaria", "roles", "permisos"] },
   { href: "audit", label: "Auditoría", icon: "audit", permission: "employees.manage", keywords: ["log", "historial"] },
 ];
 
@@ -56,4 +58,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   staff: IdCard,
   automations: Workflow,
   audit: ScrollText,
+  settings: Settings,
 };

@@ -26,6 +26,9 @@ export type Profile = {
 export type Organization = {
   id: string;
   name: string;
+  default_annual_vacation_days: number;
+  default_weekly_hours: number;
+  timezone: string;
   created_at: Timestamp;
 };
 
