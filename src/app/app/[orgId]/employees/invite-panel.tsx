@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Mail, X } from "lucide-react";
+import { Link2, Mail, X } from "lucide-react";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Field } from "@/components/ui/field";
@@ -136,7 +136,8 @@ function InviteFields({
         <Mail className="size-4" /> Enviar invitación
       </SubmitButton>
       <p className="text-[12px] leading-relaxed text-muted-foreground">
-        La persona verá la invitación al iniciar sesión con ese email y podrá aceptarla desde el selector de organización.
+        Solo pueden registrarse personas invitadas. Pasale el enlace de activación: al crear su contraseña entra directo a la intranet con este
+        rol.
       </p>
     </>
   );
@@ -161,6 +162,23 @@ function PendingRow({ orgId, invite }: { orgId: string; invite: PendingInvite })
           {invite.position ? ` · ${invite.position}` : ""}
         </p>
       </div>
+      <button
+        type="button"
+        aria-label={`Copiar enlace de activación para ${invite.email}`}
+        title="Copiar enlace de activación"
+        onClick={async () => {
+          const link = `${window.location.origin}/signup?email=${encodeURIComponent(invite.email)}`;
+          try {
+            await navigator.clipboard.writeText(link);
+            toast.success("Enlace de activación copiado");
+          } catch {
+            toast.message(link);
+          }
+        }}
+        className="inline-flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent-soft hover:text-accent"
+      >
+        <Link2 className="size-4" />
+      </button>
       <button
         type="button"
         disabled={pending}
