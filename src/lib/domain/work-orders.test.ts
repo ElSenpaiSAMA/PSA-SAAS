@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   acceptsTimeEntries,
   canInvoice,
+  findContinuation,
   formatMoney,
+  lifecycleIndex,
+  matchesFilter,
+  missingContinuations,
+  nextStep,
+  secondarySteps,
   nextStatuses,
   titleForPeriod,
   workOrderAmounts,
@@ -47,6 +53,46 @@ describe("órdenes de trabajo", () => {
       budgetAmount: null,
       actualAmount: null,
     });
+  });
+
+  it("guía el ciclo de vida con un único siguiente paso", () => {
+    const all = { manage: true, bill: true };
+    expect(nextStep("draft", "unbilled", all)?.target).toBe("approved");
+    expect(nextStep("in_progress", "unbilled", all)?.target).toBe("closed");
+    expect(nextStep("closed", "unbilled", all)).toMatchObject({ target: "invoiced", allowed: true });
+    expect(nextStep("closed", "unbilled", { manage: true, bill: false })?.allowed).toBe(false);
+    expect(nextStep("closed", "invoiced", all)).toBeNull();
+  });
+
+  it("ubica el estado en el ciclo y ofrece retrocesos", () => {
+    expect(lifecycleIndex("draft", "unbilled")).toBe(0);
+    expect(lifecycleIndex("closed", "invoiced")).toBe(4);
+    expect(secondarySteps("closed", "unbilled", { manage: true, bill: false })).toEqual([{ target: "in_progress", label: "Reabrir" }]);
+    expect(secondarySteps("closed", "invoiced", { manage: true, bill: false })).toEqual([]);
+  });
+
+  it("filtra por estado como lo entiende la persona usuaria", () => {
+    expect(matchesFilter("active", "approved", "unbilled")).toBe(true);
+    expect(matchesFilter("to_invoice", "closed", "unbilled")).toBe(true);
+    expect(matchesFilter("to_invoice", "closed", "invoiced")).toBe(false);
+    expect(matchesFilter("invoiced", "closed", "invoiced")).toBe(true);
+  });
+
+  it("detecta OT del mes anterior sin continuación", () => {
+    const prev = [
+      { id: "a", project_id: "p1", period_start: "2026-09-01" },
+      { id: "b", project_id: "p2", period_start: "2026-09-01" },
+    ];
+    const current = [{ project_id: "p1", period_start: "2026-10-01" }, { project_id: "p2", period_start: "2026-09-01" }];
+    expect(missingContinuations(prev, current, "2026-10-01").map((w) => w.id)).toEqual(["b"]);
+  });
+
+  it("encuentra la OT que continúa en el mes siguiente", () => {
+    const sep = { id: "s", project_id: "p1", period_start: "2026-09-01", period_end: "2026-09-30" };
+    const oct = { id: "o", project_id: "p1", period_start: "2026-10-01", period_end: "2026-10-31" };
+    const other = { id: "x", project_id: "p2", period_start: "2026-10-01", period_end: "2026-10-31" };
+    expect(findContinuation(sep, [sep, oct, other])?.id).toBe("o");
+    expect(findContinuation(oct, [sep, oct, other])).toBeUndefined();
   });
 
   it("renombra el título para el nuevo período", () => {

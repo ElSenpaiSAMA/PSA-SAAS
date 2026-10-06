@@ -1,23 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Clock3, Euro, Info, ListChecks, Tag } from "lucide-react";
+import { ArrowLeft, Clock3, Euro, ListChecks, SquareCheckBig } from "lucide-react";
 import { NewTaskForm } from "@/components/app/new-task-form";
 import { PageHeader } from "@/components/app/page-header";
 import { StatCard } from "@/components/app/stat-card";
 import { TaskBoard, type BoardTask } from "@/components/app/task-board";
-import { BillingBadge, WorkOrderStatusBadge } from "@/components/app/work-order-badges";
-import { Card, CardBody } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getDepartments, getHeadedDepartmentId } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
 import { getProject, getProjectMembers, getTaskMinutes, getTasks } from "@/lib/data/projects";
 import { getOrgContext } from "@/lib/data/session";
-import { getWorkOrder } from "@/lib/data/work-orders";
+import { getProjectWorkOrders, getWorkOrder } from "@/lib/data/work-orders";
 import { displayName } from "@/lib/domain/hierarchy";
 import { formatMonth, formatRange, nextPeriod, toMonthParam } from "@/lib/domain/periods";
 import { canManageProject } from "@/lib/domain/projects";
-import { acceptsTimeEntries, formatMoney, titleForPeriod, workOrderAmounts, workOrderCode } from "@/lib/domain/work-orders";
-import { DuplicateWorkOrder, WorkOrderControls } from "./controls";
+import { findContinuation, formatMoney, titleForPeriod, workOrderAmounts, workOrderCode } from "@/lib/domain/work-orders";
+import { Collapsible, NextStepPanel, RepeatWorkOrder } from "./controls";
 
 export const metadata: Metadata = { title: "Orden de trabajo" };
 
@@ -28,8 +27,9 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
   const wo = await getWorkOrder(workOrderId);
   if (!wo || wo.org_id !== orgId) notFound();
 
-  const [project, allTasks, minutes, employees, allMembers, departments, headed] = await Promise.all([
+  const [project, siblings, allTasks, minutes, employees, allMembers, departments, headed] = await Promise.all([
     getProject(wo.project_id),
+    getProjectWorkOrders(wo.project_id),
     getTasks(orgId),
     getTaskMinutes(orgId),
     getEmployees(orgId),
@@ -55,6 +55,7 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
   const department = departments.find((d) => d.id === project.department_id);
   const memberIds = new Set(allMembers.filter((m) => m.project_id === project.id).map((m) => m.membership_id));
   const next = nextPeriod(wo.period_start, wo.period_end);
+  const continuation = findContinuation(wo, siblings);
 
   const board: BoardTask[] = tasks.map((t) => ({
     id: t.id,
@@ -80,40 +81,21 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
       </Link>
 
       <PageHeader
-        eyebrow={`${workOrderCode(wo.number)} · ${project.name}${department ? ` · ${department.name}` : ""}`}
+        eyebrow={[workOrderCode(wo.number), project.name, project.client_name, department?.name].filter(Boolean).join(" · ")}
         title={wo.title}
-        description={
-          <span className="inline-flex flex-wrap items-center gap-2">
-            {formatRange(wo.period_start, wo.period_end)}
-            <WorkOrderStatusBadge status={wo.status} />
-            <BillingBadge billing={wo.billing_status} status={wo.status} />
-          </span>
-        }
+        description={formatRange(wo.period_start, wo.period_end)}
       />
 
-      <div className="-mt-4 mb-6">
-        <WorkOrderControls
-          orgId={orgId}
-          workOrderId={wo.id}
-          status={wo.status}
-          billing={wo.billing_status}
-          canManage={manage}
-          canBill={ctx.can("billing.manage")}
-        />
-      </div>
+      <NextStepPanel
+        orgId={orgId}
+        workOrderId={wo.id}
+        status={wo.status}
+        billing={wo.billing_status}
+        canManage={manage}
+        canBill={ctx.can("billing.manage")}
+      />
 
-      {!acceptsTimeEntries(wo.status) ? (
-        <p className="mb-4 flex items-center gap-2 rounded-xl bg-muted px-4 py-3 text-[13px] text-muted-foreground">
-          <Info className="size-4 shrink-0" />
-          {wo.status === "draft"
-            ? "En borrador: se pueden planificar tareas, pero las horas se imputan cuando la OT esté aprobada."
-            : locked
-              ? "OT facturada: queda bloqueada para cambios."
-              : "OT cerrada: no admite más horas. Reabrila si hace falta imputar algo."}
-        </p>
-      ) : null}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
         <StatCard
           index={0}
           label="Horas imputadas"
@@ -121,16 +103,37 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
           format="minutes"
           icon={Clock3}
           tone={(amounts.consumption ?? 0) > 100 ? "danger" : (amounts.consumption ?? 0) > 85 ? "warning" : undefined}
-          hint={wo.budgeted_hours !== null ? `${amounts.consumption}% de ${Number(wo.budgeted_hours)}h` : "Sin presupuesto"}
+          hint={
+            wo.budgeted_hours !== null
+              ? `${amounts.consumption}% de ${Number(wo.budgeted_hours)} h presupuestadas`
+              : "Sin presupuesto de horas"
+          }
         />
-        <StatCard index={1} label="Importe real" value={amounts.actualAmount ?? 0} format="currency" icon={Euro} hint={`Presupuestado: ${formatMoney(amounts.budgetAmount)}`} />
-        <StatCard index={2} label="Tarifa" value={Number(wo.hourly_rate ?? 0)} format="currency" icon={Tag} hint={wo.hourly_rate === null ? "Sin tarifa definida" : "por hora"} />
-        <StatCard index={3} label="Tareas completadas" value={board.filter((t) => t.status === "done").length} icon={ListChecks} hint={`de ${board.length}`} />
+        <StatCard
+          index={1}
+          label="Importe"
+          value={amounts.actualAmount ?? 0}
+          format="currency"
+          icon={Euro}
+          hint={
+            wo.hourly_rate === null
+              ? "Sin tarifa: no se factura"
+              : `${formatMoney(Number(wo.hourly_rate))}/h · presupuesto ${formatMoney(amounts.budgetAmount)}`
+          }
+        />
+        <StatCard
+          index={2}
+          label="Tareas completadas"
+          value={board.filter((t) => t.status === "done").length}
+          icon={ListChecks}
+          hint={`de ${board.length}`}
+        />
       </div>
 
-      {manage && !locked ? (
-        <Card className="mt-4">
-          <CardBody className="grid gap-4">
+      {manage ? (
+        <div className="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start">
+          {!locked ? (
+          <Collapsible title="Agregar tarea" icon="plus" defaultOpen={tasks.length === 0}>
             <NewTaskForm
               orgId={orgId}
               projectId={project.id}
@@ -141,19 +144,32 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
                 .filter((e) => e.status === "active" && memberIds.has(e.id))
                 .map((e) => ({ id: e.id, name: displayName(e.profile) }))}
             />
-            <DuplicateWorkOrder
+          </Collapsible>
+          ) : null}
+          <Collapsible title="Repetir esta OT en otro período" icon="repeat">
+            <RepeatWorkOrder
               orgId={orgId}
               workOrderId={wo.id}
+              nextLabel={formatMonth(next.start)}
+              continuationHref={continuation ? `/app/${orgId}/work-orders/${continuation.id}` : undefined}
               defaultTitle={titleForPeriod(wo.title, wo.period_start, next.start)}
               defaultStart={next.start}
               defaultEnd={next.end}
             />
-          </CardBody>
-        </Card>
+          </Collapsible>
+        </div>
       ) : null}
 
       <div className="mt-6">
-        <TaskBoard orgId={orgId} tasks={board} />
+        {board.length > 0 ? (
+          <TaskBoard orgId={orgId} tasks={board} />
+        ) : (
+          <EmptyState
+            icon={SquareCheckBig}
+            title="Esta OT todavía no tiene tareas"
+            description={manage && !locked ? "Agregá las tareas del período: el equipo imputa sus horas sobre ellas." : "Cuando se planifiquen tareas, las vas a ver acá."}
+          />
+        )}
       </div>
     </>
   );
