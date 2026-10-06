@@ -1,7 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { BellOff, CheckCheck, FileCheck2, FolderKanban, Palmtree, SquareCheckBig, type LucideIcon } from "lucide-react";
+import {
+  AlarmClock,
+  BarChart3,
+  BellOff,
+  CheckCheck,
+  Clock3,
+  FileCheck2,
+  FolderKanban,
+  Gauge,
+  Palmtree,
+  SquareCheckBig,
+  type LucideIcon,
+} from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,6 +31,15 @@ const ICON: Record<string, LucideIcon> = {
   "task.assigned": SquareCheckBig,
   "project.added": FolderKanban,
   "work_order.to_invoice": FileCheck2,
+  "vacation.escalated": Palmtree,
+  "clock.auto_closed": Clock3,
+  "clock.reminder": AlarmClock,
+  "work_order.budget": Gauge,
+  "work_order.auto_closed": FileCheck2,
+  "work_order.created": FileCheck2,
+  "task.due_soon": SquareCheckBig,
+  "task.overdue": SquareCheckBig,
+  "team.weekly_summary": BarChart3,
 };
 
 export function NotificationList({ orgId, items }: { orgId: string; items: Notification[] }) {
