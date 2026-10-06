@@ -177,3 +177,20 @@ Formato de cada entrada:
 **Verificado con datos reales:** desde la OT de septiembre (cerrada y facturada) "Copiar al mes siguiente" generó la de octubre con sus tareas. La planificación detectó una sobrecarga real: Ana tenía tareas planificadas la semana de sus vacaciones aprobadas.
 
 **Aprendizaje de QA:** dos E2E fallaron por el test y no por la app. Uno porque completaba un formulario antes de que React hidratara, otro por un selector ambiguo. Se corrigieron haciendo los tests más robustos, no relajándolos.
+
+---
+
+## 2026-10-06 Calendario general
+
+**Prompt (resumen):** "Estaría también que haya un calendario y funcione a nivel general en la app." Contenido elegido: todo (tareas, ausencias, órdenes de trabajo y festivos), con acciones rápidas.
+
+**Por qué "a nivel general":** el calendario no es una pantalla aislada. Los festivos que se cargan ahí cambian cálculos en otras secciones: no cuentan como días de vacaciones (también en el saldo calculado en la base) y descuentan capacidad en Planificación. Además, el dashboard muestra una agenda de los próximos 7 días.
+
+**Resultado:**
+- Migración `0006`: festivos por organización y `org_absences`, que muestra las vacaciones aprobadas de todo el equipo sin el motivo; las pendientes solo las ve quien aprueba.
+- Calendario mes/semana con filtros por tipo y "solo lo mío". **Arrastrar una tarea** la reprograma conservando su duración, si el usuario gestiona el proyecto. **Seleccionar días** abre la solicitud de vacaciones con el conteo de días hábiles.
+- 9 tests pgTAP y 2 E2E nuevos.
+
+**Ajuste por revisión visual:** en la vista mes, las franjas de OT (que duran todo el mes) tapaban las tareas. Se priorizó el orden de los carriles (ausencias y tareas arriba, OT abajo), y el test nuevo de esa prioridad destapó un bug del algoritmo de carriles, que se corrigió.
+
+**Verificado con datos reales:** arrastrar "Accesibilidad AA" la movió un día y se guardó en la base (después se restauró la fecha original).

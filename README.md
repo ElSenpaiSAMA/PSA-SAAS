@@ -14,6 +14,7 @@ PSA (*Professional Services Automation*) multi-tenant de gestión de personas, p
 | **Fichaje y horas** | Entrada/salida en un clic, imputación de horas a tareas, gráfico semanal, carga del equipo |
 | **Vacaciones** | Saldo en días hábiles, solicitud con validación en vivo, aprobación por la línea de reporte |
 | **Órdenes de trabajo** | Trabajo de cada proyecto por período: presupuesto, tarifa, estados, facturación, copiar al mes siguiente y duplicar tareas |
+| **Calendario** | Tareas, órdenes de trabajo, ausencias del equipo y festivos en vista mes/semana. Arrastrar para reprogramar, seleccionar días para pedir vacaciones |
 | **Planificación** | Carga persona × semana: horas planificadas contra capacidad, descontando vacaciones |
 | **Proyectos** | Por departamento, con miembros: cada persona ve solo los suyos y el responsable los de su área. Presupuesto vs. horas reales y tablero kanban |
 | **Personas** | Directorio, departamentos con responsable, organigrama, invitaciones con departamento y rol |
