@@ -6,6 +6,7 @@ import { StatCard } from "@/components/app/stat-card";
 import { Avatar } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getHolidays } from "@/lib/data/calendar";
 import { getDepartments } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
 import { getOrgContext } from "@/lib/data/session";
@@ -42,11 +43,13 @@ export default async function PlanningPage({ params, searchParams }: PageProps<"
   const to = monthEnd(month);
 
   const ctx = await getOrgContext(orgId);
-  const [employees, departments, items] = await Promise.all([
+  const [employees, departments, items, holidayRows] = await Promise.all([
     getEmployees(orgId),
     getDepartments(orgId),
     getWorkloadItems(orgId, from, to),
+    getHolidays(orgId, from, to),
   ]);
+  const holidays = new Set(holidayRows.map((h) => h.date));
 
   // Uno mismo + a quien supervisa (toda la org si es admin)
   const visible = ctx.can("time.view_team")
@@ -58,10 +61,12 @@ export default async function PlanningPage({ params, searchParams }: PageProps<"
   );
 
   const weeks = weeksOfMonth(month);
-  const load = weeklyLoad(items, weeks);
+  const load = weeklyLoad(items, weeks, holidays);
 
   const rows = people.map((p) => {
     const off = daysOffFrom(vacations.filter((v) => v.membership_id === p.id));
+    const vacationDays = off.size;
+    for (const h of holidays) off.add(h);
     const capacity = weeks.map((w) => weekCapacity(Number(p.weekly_hours), w, from, to, off));
     const planned = load.get(p.id) ?? weeks.map(() => 0);
     const totalPlanned = planned.reduce((s, h) => s + h, 0);
@@ -74,7 +79,7 @@ export default async function PlanningPage({ params, searchParams }: PageProps<"
       totalPlanned,
       totalCapacity,
       overWeeks: planned.filter((h, i) => loadLevel(h, capacity[i]) === "over").length,
-      daysOff: off.size,
+      daysOff: vacationDays,
     };
   });
 
@@ -93,7 +98,7 @@ export default async function PlanningPage({ params, searchParams }: PageProps<"
         title="Planificación"
         description={
           ctx.can("time.view_team")
-            ? "Horas planificadas en tareas contra la capacidad de cada persona, semana a semana. Las vacaciones aprobadas descuentan capacidad."
+            ? "Horas planificadas en tareas contra la capacidad de cada persona, semana a semana. Vacaciones aprobadas y festivos descuentan capacidad."
             : "Tus horas planificadas en tareas contra tu capacidad, semana a semana."
         }
         actions={<MonthNav month={month} basePath={`/app/${orgId}/planning`} />}

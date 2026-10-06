@@ -16,7 +16,7 @@ function isoToday() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function RequestForm({ orgId, available }: { orgId: string; available: number }) {
+export function RequestForm({ orgId, available, holidays }: { orgId: string; available: number; holidays: string[] }) {
   const [state, action] = useActionState(requestVacation.bind(null, orgId), idle);
 
   useEffect(() => {
@@ -28,16 +28,16 @@ export function RequestForm({ orgId, available }: { orgId: string; available: nu
 
   return (
     <form action={action} className="grid gap-4" noValidate>
-      <RequestFields key={resetKey} state={state} available={available} />
+      <RequestFields key={resetKey} state={state} available={available} holidays={holidays} />
     </form>
   );
 }
 
-function RequestFields({ state, available }: { state: ActionState; available: number }) {
+function RequestFields({ state, available, holidays }: { state: ActionState; available: number; holidays: string[] }) {
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
 
-  const days = start && end && end >= start ? businessDays({ start_date: start, end_date: end }) : 0;
+  const days = start && end && end >= start ? businessDays({ start_date: start, end_date: end }, new Set(holidays)) : 0;
   const exceeds = days > available;
 
   return (

@@ -5,6 +5,7 @@ import { StatCard } from "@/components/app/stat-card";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getHolidaySet } from "@/lib/data/calendar";
 import { getEmployees } from "@/lib/data/employees";
 import { getOrgContext } from "@/lib/data/session";
 import { getVisibleVacationRequests } from "@/lib/data/vacations";
@@ -29,7 +30,10 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
 
   const requests = await getVisibleVacationRequests([me.id, ...supervised]);
   const mine = requests.filter((r) => r.membership_id === me.id);
-  const balance = vacationBalance(me.annual_vacation_days, mine, year);
+  // Los festivos no cuentan como días de vacaciones
+  const holidays = await getHolidaySet(orgId, `${year - 1}-01-01`, `${year + 1}-12-31`);
+  const holidayList = [...holidays];
+  const balance = vacationBalance(me.annual_vacation_days, mine, year, holidays);
 
   const byId = new Map(employees.map((e) => [e.id, e]));
   const pending: PendingApproval[] = requests
@@ -41,7 +45,7 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
         ...r,
         name: displayName(emp?.profile ?? null),
         position: emp?.position ?? null,
-        available: vacationBalance(emp?.annual_vacation_days ?? 0, own, year).available,
+        available: vacationBalance(emp?.annual_vacation_days ?? 0, own, year, holidays).available,
       };
     })
     .sort((a, b) => a.start_date.localeCompare(b.start_date));
@@ -73,7 +77,7 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
             description="Solicitudes de tu equipo esperando tu decisión"
           />
           <CardBody>
-            <Approvals orgId={orgId} requests={pending} />
+            <Approvals orgId={orgId} requests={pending} holidays={holidayList} />
           </CardBody>
         </Card>
       ) : null}
@@ -82,7 +86,7 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
         <Card>
           <CardHeader title="Nueva solicitud" description="Llega a tu manager para aprobar" />
           <CardBody>
-            <RequestForm orgId={orgId} available={balance.available} />
+            <RequestForm orgId={orgId} available={balance.available} holidays={holidayList} />
           </CardBody>
         </Card>
 
@@ -90,7 +94,7 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
           <CardHeader title="Mis solicitudes" />
           <CardBody className="pt-2">
             {mine.length ? (
-              <MyRequests orgId={orgId} requests={mine} />
+              <MyRequests orgId={orgId} requests={mine} holidays={holidayList} />
             ) : (
               <EmptyState icon={Palmtree} title="Todavía no pediste vacaciones" description="Cuando lo hagas, vas a ver acá su estado." />
             )}
@@ -114,7 +118,7 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
                       <p className="text-[12.5px] text-muted-foreground">
                         {new Date(`${r.start_date}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
                         {" · "}
-                        {businessDays(r)} días
+                        {businessDays(r, holidays)} días
                       </p>
                     </div>
                   </li>

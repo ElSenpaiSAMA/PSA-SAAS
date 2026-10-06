@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getAbsences, getHolidays, getHolidaySet } from "@/lib/data/calendar";
 import { getEmployees } from "@/lib/data/employees";
 import { getProjects, getTaskMinutes, getTasks } from "@/lib/data/projects";
 import { getOrgContext } from "@/lib/data/session";
@@ -16,6 +17,8 @@ import { getVisibleVacationRequests } from "@/lib/data/vacations";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
 import { entryMinutes, isSameDay, startOfWeek, workloadLevel, workloadPercent } from "@/lib/domain/time";
 import { vacationBalance } from "@/lib/domain/vacations";
+import { addDays, todayISO } from "@/lib/domain/periods";
+import { Upcoming, type UpcomingItem } from "./upcoming";
 
 export const metadata: Metadata = { title: "Inicio" };
 
@@ -56,6 +59,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
     me.annual_vacation_days,
     requests.filter((r) => r.membership_id === me.id),
     now.getFullYear(),
+    await getHolidaySet(orgId, `${now.getFullYear()}-01-01`, `${now.getFullYear()}-12-31`),
   );
   const pendingApprovals = ctx.can("vacations.approve")
     ? requests.filter((r) => r.status === "pending" && supervised.has(r.membership_id)).length
@@ -73,6 +77,29 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
     .filter((e) => e !== undefined);
 
   const firstName = displayName(employees.find((e) => e.id === me.id)?.profile ?? null).split(" ")[0];
+
+  // Agenda de la semana: mis vencimientos, ausencias del equipo y festivos
+  const today = todayISO(now);
+  const weekEnd = addDays(today, 6);
+  const [absencesSoon, holidaysSoon] = await Promise.all([getAbsences(orgId, today, weekEnd), getHolidays(orgId, today, weekEnd)]);
+  const upcoming: UpcomingItem[] = [
+    ...tasks
+      .filter((t) => t.assigned_to === me.id && t.status !== "done" && t.due_date && t.due_date >= today && t.due_date <= weekEnd)
+      .map((t) => ({
+        date: t.due_date!,
+        kind: "task" as const,
+        title: `Vence: ${t.title}`,
+        href: t.work_order_id ? `/app/${orgId}/work-orders/${t.work_order_id}` : `/app/${orgId}/projects/${t.project_id}`,
+      })),
+    ...absencesSoon
+      .filter((a) => a.status === "approved")
+      .flatMap((a) => {
+        const name = displayName(byId.get(a.membership_id)?.profile ?? null);
+        const start = a.start_date < today ? today : a.start_date;
+        return [{ date: start, kind: "absence" as const, title: `${name} de vacaciones hasta el ${Number(a.end_date.slice(8))}/${Number(a.end_date.slice(5, 7))}`, href: `/app/${orgId}/calendar` }];
+      }),
+    ...holidaysSoon.map((h) => ({ date: h.date, kind: "holiday" as const, title: `Festivo: ${h.name}` })),
+  ];
 
   return (
     <>
@@ -116,6 +143,10 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
           <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
         </Link>
       ) : null}
+
+      <div className="mt-4">
+        <Upcoming orgId={orgId} today={today} items={upcoming} />
+      </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.5fr_1fr]">
         <Card>

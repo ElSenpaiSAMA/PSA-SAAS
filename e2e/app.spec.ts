@@ -176,6 +176,45 @@ test("una admin cierra y factura una OT", async ({ page }) => {
   await expect(page.getByText("OT facturada: queda bloqueada para cambios.")).toBeVisible();
 });
 
+const isoDay = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+test("el calendario muestra festivos y las vacaciones aprobadas del equipo", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  const year = new Date().getFullYear();
+  await page.goto(`/app/${NEBULA}/calendar?month=${year}-10`);
+  await expect(page.getByText("Fiesta Nacional")).toBeVisible();
+
+  // Vacaciones aprobadas de Ana en el seed: 1 de enero + 60 días
+  const ana = new Date(year, 0, 1);
+  ana.setDate(ana.getDate() + 61);
+  await page.goto(`/app/${NEBULA}/calendar?month=${isoDay(ana).slice(0, 7)}`);
+  await expect(page.getByRole("link", { name: /Ana Torres/ }).first()).toBeVisible();
+});
+
+test("se piden vacaciones seleccionando un día en el calendario", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  const target = new Date();
+  target.setDate(target.getDate() + 100);
+  const holidays = ["1-1", "1-6", "5-1", "8-15", "10-12", "11-1", "12-6", "12-8", "12-25"];
+  while (target.getDay() === 0 || target.getDay() === 6 || holidays.includes(`${target.getMonth() + 1}-${target.getDate()}`)) {
+    target.setDate(target.getDate() + 1);
+  }
+  const monday = new Date(target);
+  monday.setDate(target.getDate() - ((target.getDay() + 6) % 7));
+
+  await page.goto(`/app/${NEBULA}/calendar?view=week&week=${isoDay(monday)}`);
+  const dayLink = page.getByRole("link", { name: String(target.getDate()), exact: true });
+  await expect(async () => {
+    const box = (await dayLink.boundingBox())!;
+    await page.mouse.click(box.x + box.width / 2, box.y + 200);
+    await expect(page.getByRole("button", { name: "Pedir vacaciones" })).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+  await expect(page.getByText("1 día hábil")).toBeVisible();
+  await page.getByRole("button", { name: "Pedir vacaciones" }).click();
+  await expect(page.getByText(/Solicitud enviada/)).toBeVisible();
+});
+
 test("una invitación pendiente se acepta desde el selector", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto("/select-organization?new=1");
