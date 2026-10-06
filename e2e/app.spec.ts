@@ -478,7 +478,7 @@ test("la owner ve los tres informes y exporta la facturación a CSV", async ({ p
   await expect(page.getByRole("cell", { name: /Acme Corp/ }).first()).toBeVisible();
 
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Exportar a Excel/ }).click()]);
-  expect(download.suggestedFilename()).toMatch(/^facturacion-\d{4}-\d{2}-nebula-studio\.csv$/);
+  expect(download.suggestedFilename()).toMatch(/^facturacion-\d{4}-\d{2}-diplonautic\.csv$/);
 });
 
 test("un empleado no ve los informes ni puede exportarlos", async ({ page }) => {
