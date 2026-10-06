@@ -12,9 +12,9 @@ PSA (*Professional Services Automation*) multi-tenant de gestión de personas, p
 | **Auth** | Registro, login, confirmación por email (PKCE), sesión refrescada en `proxy.ts` |
 | **Organizaciones** | Selector multi-empresa, creación de organización, invitaciones por email |
 | **Fichaje y horas** | Entrada/salida en un clic, imputación de horas a tareas, gráfico semanal, carga del equipo |
-| **Vacaciones** | Saldo en días hábiles, solicitud con validación en vivo, aprobación por la línea de reporte |
+| **Vacaciones** | Saldo en días hábiles y solicitud con validación en vivo, indicando quién la aprueba. Quien aprueba tiene la pestaña **Equipo**: solicitudes por decidir (con coincidencias en el equipo), calendario mensual de ausencias y saldos |
 | **Órdenes de trabajo** | Trabajo de cada proyecto por período: presupuesto, tarifa, estados, facturación, copiar al mes siguiente y duplicar tareas |
-| **Bandeja** | Pendientes que esperan tu acción (aprobar vacaciones, cerrar o facturar OT, tareas vencidas, fichaje olvidado) y notificaciones automáticas, con contador en el menú |
+| **Bandeja** | Pendientes que esperan tu acción (cerrar o facturar OT, aprobar borradores, tareas vencidas, fichaje olvidado) y notificaciones automáticas, con contador en el menú |
 | **Automatizaciones** | 9 reglas configurables que trabajan solas: aprobar ausencias cortas, escalar solicitudes sin respuesta, cerrar fichajes olvidados, recordar la salida, alertas de presupuesto de OT, cierre y creación mensual de OT, recordatorios de vencimiento y resumen semanal |
 | **Calendario** | Tareas, órdenes de trabajo, ausencias del equipo y festivos en vista mes/semana. Arrastrar para reprogramar, seleccionar días para pedir vacaciones |
 | **Planificación** | Carga persona × semana: horas planificadas contra capacidad, descontando vacaciones |
