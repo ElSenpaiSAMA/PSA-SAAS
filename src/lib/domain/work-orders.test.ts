@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   acceptsTimeEntries,
   canInvoice,
+  findContinuation,
   formatMoney,
   lifecycleIndex,
   matchesFilter,
@@ -84,6 +85,14 @@ describe("órdenes de trabajo", () => {
     ];
     const current = [{ project_id: "p1", period_start: "2026-10-01" }, { project_id: "p2", period_start: "2026-09-01" }];
     expect(missingContinuations(prev, current, "2026-10-01").map((w) => w.id)).toEqual(["b"]);
+  });
+
+  it("encuentra la OT que continúa en el mes siguiente", () => {
+    const sep = { id: "s", project_id: "p1", period_start: "2026-09-01", period_end: "2026-09-30" };
+    const oct = { id: "o", project_id: "p1", period_start: "2026-10-01", period_end: "2026-10-31" };
+    const other = { id: "x", project_id: "p2", period_start: "2026-10-01", period_end: "2026-10-31" };
+    expect(findContinuation(sep, [sep, oct, other])?.id).toBe("o");
+    expect(findContinuation(oct, [sep, oct, other])).toBeUndefined();
   });
 
   it("renombra el título para el nuevo período", () => {

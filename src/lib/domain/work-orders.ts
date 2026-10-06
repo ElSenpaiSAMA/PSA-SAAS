@@ -1,4 +1,4 @@
-import { formatMonth, type ISODate } from "./periods";
+import { formatMonth, nextPeriod, type ISODate } from "./periods";
 
 export const WORK_ORDER_STATUSES = ["draft", "approved", "in_progress", "closed"] as const;
 export type WorkOrderStatus = (typeof WORK_ORDER_STATUSES)[number];
@@ -199,4 +199,13 @@ export function missingContinuations<T extends { project_id: string; period_star
 ): T[] {
   const covered = new Set(current.filter((w) => w.period_start.slice(0, 7) === month.slice(0, 7)).map((w) => w.project_id));
   return previous.filter((w) => !covered.has(w.project_id));
+}
+
+/** La OT del mismo proyecto que empieza en el período siguiente a `wo`, si existe. */
+export function findContinuation<T extends { id: string; project_id: string; period_start: ISODate; period_end: ISODate }>(
+  wo: T,
+  candidates: T[],
+): T | undefined {
+  const nextMonth = nextPeriod(wo.period_start, wo.period_end).start.slice(0, 7);
+  return candidates.find((c) => c.id !== wo.id && c.project_id === wo.project_id && c.period_start.slice(0, 7) === nextMonth);
 }

@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
-import { nextPeriod } from "@/lib/domain/periods";
-import { titleForPeriod } from "@/lib/domain/work-orders";
+import { addMonths, monthEnd, monthStart, nextPeriod, parseMonthParam } from "@/lib/domain/periods";
+import { missingContinuations, titleForPeriod } from "@/lib/domain/work-orders";
 import { createClient } from "@/lib/supabase/server";
 import {
   billingStatusSchema,
@@ -116,6 +116,45 @@ export async function copyToNextPeriod(orgId: string, workOrderId: string): Prom
   if (error || !newId) return fail(dbErrorMessage(error));
   refresh(orgId);
   redirect(`/app/${orgId}/work-orders/${newId}`);
+}
+
+/**
+ * Repite el mes anterior: copia al mes indicado cada OT del mes previo cuyo
+ * proyecto todavía no tiene OT en ese mes. La base valida permisos por OT.
+ */
+export async function copyPreviousMonth(orgId: string, month: string): Promise<ActionState> {
+  await getOrgContext(orgId);
+  const target = parseMonthParam(month);
+  if (!target) return fail("Mes inválido.");
+  const previous = addMonths(target, -1);
+
+  const supabase = await createClient();
+  const [prev, current] = await Promise.all([
+    supabase.from("work_orders").select("*").eq("org_id", orgId).gte("period_start", previous).lte("period_start", monthEnd(previous)),
+    supabase.from("work_orders").select("project_id, period_start").eq("org_id", orgId).gte("period_start", target).lte("period_start", monthEnd(target)),
+  ]);
+  if (prev.error || current.error) return fail(dbErrorMessage(prev.error ?? current.error));
+
+  const pending = missingContinuations(prev.data ?? [], current.data ?? [], monthStart(target));
+  if (!pending.length) return ok("No hay OT pendientes de copiar.");
+
+  let copied = 0;
+  for (const source of pending) {
+    const next = nextPeriod(source.period_start, source.period_end);
+    const { error } = await supabase.rpc("duplicate_work_order", {
+      p_work_order_id: source.id,
+      p_title: titleForPeriod(source.title, source.period_start, next.start),
+      p_period_start: next.start,
+      p_period_end: next.end,
+    });
+    if (!error) copied++;
+  }
+  if (!copied) return fail("No se pudo copiar ninguna OT. Revisá tus permisos sobre esos proyectos.");
+  refresh(orgId);
+  const skipped = pending.length - copied;
+  return ok(
+    `${copied} ${copied === 1 ? "OT copiada" : "OT copiadas"} con sus tareas${skipped ? ` (${skipped} sin permisos)` : ""}`,
+  );
 }
 
 export async function duplicateTask(orgId: string, taskId: string): Promise<ActionState> {
