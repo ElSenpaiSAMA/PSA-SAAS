@@ -237,3 +237,32 @@ export const forumThreadSchema = z.object({
 export const forumPostSchema = z.object({
   body: z.string().trim().min(1, "Escribí una respuesta").max(5000, "Máximo 5000 caracteres"),
 });
+
+export const BOAT_TYPES = ["Velero", "Lancha / motor", "Catamarán", "Semirrígida", "Otro"] as const;
+export const CONTACT_SERVICES = [
+  "Mecánica y motores",
+  "Electricidad a bordo",
+  "Electrónica y navegación",
+  "Pintura y antifouling",
+  "Jarcia y velas",
+  "Varadero e invernaje",
+  "Otro / no lo sé",
+] as const;
+
+/** Formulario de contacto de la web pública. */
+export const contactSchema = z.object({
+  name: z.string().trim().min(2, "Contanos tu nombre").max(80),
+  email,
+  phone: z
+    .string()
+    .trim()
+    .max(20)
+    .refine((v) => v === "" || /^\+?[\d\s()-]{7,20}$/.test(v), "Teléfono inválido")
+    .optional()
+    .transform((v) => v || null),
+  boatType: z.enum(BOAT_TYPES, "Elegí el tipo de barco"),
+  boatModel: optionalText(80),
+  service: z.enum(CONTACT_SERVICES, "Elegí un servicio"),
+  message: z.string().trim().min(10, "Contanos un poco más (mínimo 10 caracteres)").max(2000, "Máximo 2000 caracteres"),
+  privacy: z.literal("on", "Necesitamos tu conformidad para responderte"),
+});
