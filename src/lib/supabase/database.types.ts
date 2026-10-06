@@ -222,7 +222,8 @@ export type NotificationKind =
   | "time.correction_requested"
   | "time.correction_decided"
   | "forum.reply"
-  | "forum.notice";
+  | "forum.notice"
+  | "forum.mention";
 
 export type ForumCategory = "question" | "notice" | "incident";
 
@@ -238,6 +239,8 @@ export type ForumThread = {
   resolved: boolean;
   reply_count: number;
   last_activity_at: Timestamp;
+  last_author_id: string | null;
+  mentions: string[];
   created_at: Timestamp;
   edited_at: Timestamp | null;
 };
@@ -248,8 +251,15 @@ export type ForumPost = {
   org_id: string;
   author_id: string | null;
   body: string;
+  mentions: string[];
   created_at: Timestamp;
   edited_at: Timestamp | null;
+};
+
+export type ForumRead = {
+  membership_id: string;
+  org_id: string;
+  seen_at: Timestamp;
 };
 
 export type AutomationTemplate = {
@@ -346,6 +356,7 @@ export type Database = {
       automation_runs: Table<AutomationRun, "org_id" | "rule_key" | "dedupe_key">;
       forum_threads: Table<ForumThread, "author_id" | "category" | "title" | "body">;
       forum_posts: Table<ForumPost, "thread_id" | "author_id" | "body">;
+      forum_reads: Table<ForumRead, "membership_id">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;
@@ -374,6 +385,7 @@ export type Database = {
       workload_items: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: WorkloadItemRow[] };
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
+      forum_unread_count: { Args: { p_org_id: string }; Returns: number };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
