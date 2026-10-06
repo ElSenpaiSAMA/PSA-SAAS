@@ -385,3 +385,24 @@ Las que cambian datos por su cuenta (cerrar o crear OT, aprobar vacaciones) vien
 - Accesos directos a festivos, departamentos y personas, automatizaciones y auditoría.
 
 Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, correcciones de fichaje, edición y borrado de tareas, y ajustes.
+
+---
+
+## 2026-10-06 Informes y exportación
+
+**Prompt (resumen):** "Ve haciendo lo de la IA y los informes y exportación." Los informes van primero porque no dependen de servicios externos (la IA necesita la clave de OpenRouter).
+
+**Resultado:** sección **Informes**, por mes. Cada persona ve solo los informes que le corresponden:
+
+| Informe | Quién lo ve | Qué muestra |
+|---|---|---|
+| **Facturación** | `billing.manage` | Cliente, proyecto y OT con horas, tarifa e importe. Separa facturado, por facturar (cerradas) y en curso, con totales |
+| **Horas por persona** | `time.view_team`, sobre su línea de reporte (administración, toda la empresa) | Fichadas, imputadas, desglose por proyecto y **dedicación** contra la capacidad |
+| **Ausencias** | `vacations.approve` | Días del mes por tipo y saldo anual de vacaciones |
+
+**Decisiones:**
+- **Lo que se ve es lo que se exporta.** La página y `/reports/export` usan las mismas funciones de datos y el mismo control de permisos. Sin permiso, la exportación devuelve 403.
+- **CSV pensado para Excel en español:** separador `;`, coma decimal y BOM UTF-8, para que se abra con doble click sin problemas de tildes ni de columnas. Se evitó una librería de .xlsx.
+- **Dedicación honesta:** en el mes en curso se mide contra la capacidad **hasta hoy**. Contra el mes completo, el 6 de octubre daba un 4 % engañoso.
+
+**Verificado en el navegador:** la owner vio los tres informes y descargó los tres CSV (revisados por dentro). Un manager no ve Facturación (403 al forzar la descarga) y un empleado no ve la sección.
