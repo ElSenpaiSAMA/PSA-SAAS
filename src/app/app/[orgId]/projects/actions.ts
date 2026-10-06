@@ -10,6 +10,7 @@ import {
   fieldErrors,
   projectMemberSchema,
   projectSchema,
+  taskEditSchema,
   taskSchema,
   taskStatusSchema,
 } from "@/lib/validation/schemas";
@@ -136,4 +137,46 @@ export async function updateTaskStatus(orgId: string, taskId: string, status: st
   if (!data?.length) return fail("Solo podés mover tus propias tareas.");
   refresh(orgId);
   return ok("Tarea actualizada");
+}
+
+export async function updateTask(orgId: string, taskId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  await getOrgContext(orgId);
+  const parsed = taskEditSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return fail("Revisá los campos marcados.", fieldErrors(parsed.error));
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({
+      title: parsed.data.title,
+      assigned_to: parsed.data.assignedTo ?? null,
+      estimated_hours: parsed.data.estimatedHours ?? null,
+      start_date: parsed.data.startDate ?? null,
+      due_date: parsed.data.dueDate ?? null,
+    })
+    .eq("id", z.guid().parse(taskId))
+    .eq("org_id", orgId)
+    .select("id");
+  if (error) {
+    if (error.message.includes("only status can be changed")) return fail("Solo quien gestiona el proyecto puede editar la tarea.");
+    return fail(dbErrorMessage(error));
+  }
+  if (!data?.length) return fail("No tenés permisos para editar esta tarea.");
+  refresh(orgId);
+  return ok("Tarea actualizada");
+}
+
+export async function deleteTask(orgId: string, taskId: string): Promise<ActionState> {
+  await getOrgContext(orgId);
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("tasks").delete().eq("id", z.guid().parse(taskId)).eq("org_id", orgId).select("id");
+  if (error) {
+    if (error.message.includes("task has logged hours")) {
+      return fail("Tiene horas imputadas: no se puede borrar. Marcala como hecha.");
+    }
+    return fail(dbErrorMessage(error));
+  }
+  if (!data?.length) return fail("No tenés permisos para borrar esta tarea.");
+  refresh(orgId);
+  return ok("Tarea borrada");
 }

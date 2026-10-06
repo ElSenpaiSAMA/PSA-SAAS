@@ -1,8 +1,8 @@
 "use client";
 
 import { LayoutGroup, motion } from "motion/react";
-import { CalendarClock, ChevronLeft, ChevronRight, Copy, Lock } from "lucide-react";
-import { useOptimistic, useTransition } from "react";
+import { CalendarClock, ChevronLeft, ChevronRight, Copy, Lock, Pencil } from "lucide-react";
+import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { updateTaskStatus } from "@/app/app/[orgId]/projects/actions";
@@ -11,6 +11,7 @@ import { formatRange, todayISO } from "@/lib/domain/periods";
 import type { TaskStatus } from "@/lib/supabase/database.types";
 import { useHydrated } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
+import { TaskEditor } from "./task-editor";
 
 const COLUMNS: { status: TaskStatus; label: string; dot: string }[] = [
   { status: "todo", label: "Por hacer", dot: "bg-border-strong" },
@@ -27,8 +28,12 @@ export interface BoardTask {
   loggedHours: number;
   startDate: string | null;
   dueDate: string | null;
+  /** Puede moverla de columna (quien la tiene asignada o quien gestiona) */
   canEdit: boolean;
   canDuplicate: boolean;
+  /** Puede editar sus datos y borrarla (quien gestiona el proyecto, OT no facturada) */
+  canManage?: boolean;
+  assignedTo?: string | null;
   mine: boolean;
 }
 
@@ -51,7 +56,9 @@ function DueDate({ task }: { task: BoardTask }) {
   );
 }
 
-export function TaskBoard({ orgId, tasks }: { orgId: string; tasks: BoardTask[] }) {
+export function TaskBoard({ orgId, tasks, people = [] }: { orgId: string; tasks: BoardTask[]; people?: { id: string; name: string }[] }) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const closeEditor = useCallback(() => setEditingId(null), []);
   const [optimistic, setOptimistic] = useOptimistic(tasks, (state, move: { id: string; status: TaskStatus }) =>
     state.map((t) => (t.id === move.id ? { ...t, status: move.status } : t)),
   );
@@ -101,84 +108,99 @@ export function TaskBoard({ orgId, tasks }: { orgId: string; tasks: BoardTask[] 
                         t.mine ? "border-accent/30" : "border-border",
                       )}
                     >
-                      <div className="flex items-start gap-2">
-                        <p
-                          className={cn(
-                            "flex-1 text-[13.5px] leading-snug font-medium",
-                            t.status === "done" && "text-muted-foreground line-through decoration-border-strong",
-                          )}
-                        >
-                          {t.title}
-                        </p>
-                        {t.canDuplicate ? (
-                          <button
-                            type="button"
-                            onClick={() => duplicate(t)}
-                            disabled={duplicating}
-                            aria-label={`Duplicar "${t.title}"`}
-                            title="Duplicar tarea"
-                            className="-mt-1 -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 disabled:opacity-40"
-                          >
-                            <Copy className="size-3.5" strokeWidth={1.75} />
-                          </button>
-                        ) : null}
-                      </div>
-                      <DueDate task={t} />
-                      <div className="mt-3 flex items-center gap-2">
-                        {t.assigneeName ? (
-                          <>
-                            <Avatar name={t.assigneeName} size={22} className="ring-0" />
-                            <span className="truncate text-[12px] text-muted-foreground">{t.mine ? "Vos" : t.assigneeName}</span>
-                          </>
-                        ) : (
-                          <span className="text-[12px] text-muted-foreground">Sin asignar</span>
-                        )}
-                        <span className={cn("ml-auto text-[12px] tabular", over ? "font-medium text-danger" : "text-muted-foreground")}>
-                          {Math.round(t.loggedHours * 10) / 10}
-                          {t.estimatedHours ? `/${t.estimatedHours}h` : "h"}
-                        </span>
-                      </div>
-                      {t.estimatedHours ? (
-                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className={cn("h-full rounded-full transition-all duration-700", over ? "bg-danger" : "bg-accent")}
-                            style={{ width: `${Math.min(100, (t.loggedHours / t.estimatedHours) * 100)}%` }}
-                          />
-                        </div>
-                      ) : null}
-                      {t.canEdit ? (
-                        <div className="mt-3 flex justify-between opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
-                          <button
-                            type="button"
-                            onClick={() => move(t, -1)}
-                            disabled={ci === 0}
-                            aria-label={`Mover "${t.title}" a ${COLUMNS[ci - 1]?.label ?? ""}`}
-                            className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:invisible"
-                          >
-                            <ChevronLeft className="size-3.5" /> {COLUMNS[ci - 1]?.label}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => move(t, 1)}
-                            disabled={ci === COLUMNS.length - 1}
-                            aria-label={`Mover "${t.title}" a ${COLUMNS[ci + 1]?.label ?? ""}`}
-                            className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:invisible"
-                          >
-                            {COLUMNS[ci + 1]?.label} <ChevronRight className="size-3.5" />
-                          </button>
-                        </div>
+                      {editingId === t.id ? (
+                        <TaskEditor orgId={orgId} task={{ ...t, assignedTo: t.assignedTo ?? null }} people={people} onClose={closeEditor} />
                       ) : (
-                        <p className="mt-3 flex items-center gap-1 text-[11.5px] text-muted-foreground/70">
-                          <Lock className="size-3" /> Solo lectura
-                        </p>
+                        <>
+                          <div className="flex items-start gap-2">
+                            <p
+                              className={cn(
+                                "flex-1 text-[13.5px] leading-snug font-medium",
+                                t.status === "done" && "text-muted-foreground line-through decoration-border-strong",
+                              )}
+                            >
+                              {t.title}
+                            </p>
+                            {t.canDuplicate ? (
+                              <button
+                                type="button"
+                                onClick={() => duplicate(t)}
+                                disabled={duplicating}
+                                aria-label={`Duplicar "${t.title}"`}
+                                title="Duplicar tarea"
+                                className="-mt-1 -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100 disabled:opacity-40"
+                              >
+                                <Copy className="size-3.5" strokeWidth={1.75} />
+                              </button>
+                            ) : null}
+                            {t.canManage ? (
+                              <button
+                                type="button"
+                                onClick={() => setEditingId(t.id)}
+                                aria-label={`Editar "${t.title}"`}
+                                title="Editar tarea"
+                                className="-mt-1 -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground focus-visible:opacity-100"
+                              >
+                                <Pencil className="size-3.5" strokeWidth={1.75} />
+                              </button>
+                            ) : null}
+                          </div>
+                          <DueDate task={t} />
+                          <div className="mt-3 flex items-center gap-2">
+                            {t.assigneeName ? (
+                              <>
+                                <Avatar name={t.assigneeName} size={22} className="ring-0" />
+                                <span className="truncate text-[12px] text-muted-foreground">{t.mine ? "Vos" : t.assigneeName}</span>
+                              </>
+                            ) : (
+                              <span className="text-[12px] text-muted-foreground">Sin asignar</span>
+                            )}
+                            <span className={cn("ml-auto text-[12px] tabular", over ? "font-medium text-danger" : "text-muted-foreground")}>
+                              {Math.round(t.loggedHours * 10) / 10}
+                              {t.estimatedHours ? `/${t.estimatedHours}h` : "h"}
+                            </span>
+                          </div>
+                          {t.estimatedHours ? (
+                            <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className={cn("h-full rounded-full transition-all duration-700", over ? "bg-danger" : "bg-accent")}
+                                style={{ width: `${Math.min(100, (t.loggedHours / t.estimatedHours) * 100)}%` }}
+                              />
+                            </div>
+                          ) : null}
+                          {t.canEdit ? (
+                            <div className="mt-3 flex justify-between opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
+                              <button
+                                type="button"
+                                onClick={() => move(t, -1)}
+                                disabled={ci === 0}
+                                aria-label={`Mover "${t.title}" a ${COLUMNS[ci - 1]?.label ?? ""}`}
+                                className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:invisible"
+                              >
+                                <ChevronLeft className="size-3.5" /> {COLUMNS[ci - 1]?.label}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => move(t, 1)}
+                                disabled={ci === COLUMNS.length - 1}
+                                aria-label={`Mover "${t.title}" a ${COLUMNS[ci + 1]?.label ?? ""}`}
+                                className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:invisible"
+                              >
+                                {COLUMNS[ci + 1]?.label} <ChevronRight className="size-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="mt-3 flex items-center gap-1 text-[11.5px] text-muted-foreground/70">
+                              <Lock className="size-3" /> Solo lectura
+                            </p>
+                          )}
+                        </>
                       )}
                     </motion.article>
                   );
                 })}
                 {items.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border py-6 text-center text-[12px] text-muted-foreground">
-                    Vacío
-                  </p>
+                  <p className="rounded-xl border border-dashed border-border py-6 text-center text-[12px] text-muted-foreground">Vacío</p>
                 ) : null}
               </div>
             </section>

@@ -410,3 +410,29 @@ test("su responsable aprueba la corrección y se aplica", async ({ page }) => {
   await card.getByRole("button", { name: "Aprobar" }).click();
   await expect(page.getByText("Corrección aprobada y aplicada al fichaje")).toBeVisible();
 });
+
+test("quien gestiona el proyecto edita y borra tareas; las que tienen horas no se borran", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/work-orders/ffffffff-0000-0000-0000-000000000002`);
+  // Crear una tarea sin horas para borrarla
+  await page.getByRole("button", { name: "Agregar tarea" }).click();
+  await page.getByLabel("Nueva tarea").fill("Tarea para borrar");
+  await page.getByRole("button", { name: "Agregar", exact: true }).click();
+  await expect(page.getByText("Tarea creada")).toBeVisible();
+
+  const editor = page.locator("article").filter({ has: page.getByLabel(/Horas est/) });
+  const temp = page.locator("article").filter({ hasText: "Tarea para borrar" });
+  await temp.hover();
+  await temp.getByRole("button", { name: /Editar "Tarea para borrar"/ }).click();
+  await editor.getByLabel("Título").fill("Tarea renombrada");
+  await editor.getByRole("button", { name: "Guardar" }).click();
+  await expect(page.getByText("Tarea actualizada")).toBeVisible();
+
+  const renamed = page.locator("article").filter({ hasText: "Tarea renombrada" });
+  await renamed.hover();
+  await renamed.getByRole("button", { name: /Editar "Tarea renombrada"/ }).click();
+  await editor.getByRole("button", { name: "Borrar" }).click();
+  await editor.getByRole("button", { name: "Sí, borrar" }).click();
+  await expect(page.getByText("Tarea borrada")).toBeVisible();
+  await expect(page.locator("article").filter({ hasText: "Tarea renombrada" })).toHaveCount(0);
+});
