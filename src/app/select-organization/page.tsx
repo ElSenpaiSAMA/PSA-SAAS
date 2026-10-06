@@ -20,7 +20,9 @@ export default async function SelectOrganizationPage({ searchParams }: PageProps
   const { data: invitations } = await supabase
     .from("invitations")
     .select("id, role_id, position, organization:organizations(id, name)")
-    .is("accepted_at", null);
+    .is("accepted_at", null)
+    // Solo las invitaciones a mi email: un admin ve por RLS todas las de su empresa
+    .ilike("email", (user.email ?? "").replace(/[%_\\]/g, "\\$&"));
 
   const pending = (invitations ?? []) as unknown as PendingInvitation[];
 

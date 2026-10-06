@@ -41,6 +41,15 @@ export async function signUp(_prev: ActionState, formData: FormData): Promise<Ac
     if (error.message.toLowerCase().includes("already")) {
       return fail("Ya existe una cuenta con ese email.", { email: ["Ya registrado"] });
     }
+    if (error.status === 429 || error.message.toLowerCase().includes("rate limit")) {
+      return fail("Hubo demasiados intentos seguidos. Esperá unos minutos y probá de nuevo.");
+    }
+    // La base rechaza el alta sin invitación (0017_single_company); Auth lo informa como error de base
+    if (error.message.toLowerCase().includes("database error")) {
+      return fail("Este email no tiene una invitación de Diplonautic. Pedile acceso a la administración.", {
+        email: ["Sin invitación pendiente"],
+      });
+    }
     return fail("No pudimos crear la cuenta. Probá de nuevo.");
   }
 
