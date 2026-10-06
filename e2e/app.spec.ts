@@ -468,7 +468,8 @@ test("la owner ve los tres informes y exporta la facturación a CSV", async ({ p
 });
 
 test("un empleado no ve los informes ni puede exportarlos", async ({ page }) => {
-  await login(page, "diego@demo.com");
+  // Ana: Diego ya no sirve acá, porque un test anterior lo hace responsable de departamento (y eso lo asciende a manager)
+  await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/dashboard`);
   await expect(page.getByRole("link", { name: "Informes" })).toHaveCount(0);
   const res = await page.request.get(`/app/${NEBULA}/reports/export?type=horas`);
