@@ -98,7 +98,7 @@ select is(
 select pg_temp.login_as('44444444-4444-4444-4444-444444444444', 'diego@demo.com');
 select is(
   (select title from public.notifications where kind = 'vacation.decided' order by created_at desc limit 1),
-  'Tus vacaciones fueron aprobadas',
+  'Aprobaron tu solicitud de vacaciones',
   'Diego recibe la decisión'
 );
 

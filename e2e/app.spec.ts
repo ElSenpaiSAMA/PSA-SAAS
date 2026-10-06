@@ -105,7 +105,7 @@ test("el aviso de la bandeja lleva a decidir en Vacaciones → Equipo", async ({
 test("el solicitante recibe la decisión en su bandeja y ve quién aprueba", async ({ page }) => {
   await login(page, "diego@demo.com");
   await page.goto(`/app/${NEBULA}/inbox`);
-  await expect(page.getByText("Tus vacaciones fueron aprobadas")).toBeVisible();
+  await expect(page.getByText("Aprobaron tu solicitud de vacaciones")).toBeVisible();
   await page.goto(`/app/${NEBULA}/vacations`);
   await expect(page.getByText(/^La aprueba Carlos Ruiz/)).toBeVisible();
 });
