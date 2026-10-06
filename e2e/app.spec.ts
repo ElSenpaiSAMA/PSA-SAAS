@@ -35,12 +35,20 @@ test("un usuario en dos empresas elige con cuál trabajar", async ({ page }) => 
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Hola, Carlos");
 });
 
-test("empleada ficha entrada y salida", async ({ page }) => {
+test("empleada ficha entrada, pausa para almorzar, reanuda y ficha salida", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
   await page.getByRole("button", { name: "Fichar entrada" }).click();
   await expect(page.getByText("Entrada registrada")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Fichar salida" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Pausar" }).click();
+  await expect(page.getByText(/En pausa desde las/)).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fichar entrada" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Reanudar" }).click();
+  await expect(page.getByText("Jornada reanudada")).toBeVisible();
+  await expect(page.getByText(/Trabajando desde las/)).toBeVisible();
+  await expect(page.getByText(/^Pausa \d/)).toBeVisible();
+
   await page.getByRole("button", { name: "Fichar salida" }).click();
   await expect(page.getByText("Salida registrada")).toBeVisible();
   await expect(page.getByRole("button", { name: "Fichar entrada" })).toBeVisible();

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { Clock3, FolderKanban, Trash2 } from "lucide-react";
+import { Clock3, Coffee, FolderKanban, Trash2 } from "lucide-react";
 import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -72,11 +72,12 @@ export function EntriesList({ orgId, entries }: { orgId: string; entries: TimeEn
       {groups.map(([day, items]) => {
         const clock = items.filter((e) => e.entry_type === "clock");
         const total = clock.reduce((s, e) => s + entryMinutes(e), 0);
+        const pauses = items.filter((e) => e.entry_type === "break").reduce((s, e) => s + entryMinutes(e), 0);
         return (
           <section key={day}>
             <div className="mb-2 flex items-baseline justify-between">
               <h3 className="text-[13px] font-medium capitalize">{dayLabel(new Date(day))}</h3>
-              <span className="text-[12px] text-muted-foreground tabular">{formatMinutes(total)} fichadas</span>
+              <span className="text-[12px] text-muted-foreground tabular">{formatMinutes(total)} fichadas{pauses ? ` · ${formatMinutes(pauses)} de pausa` : ""}</span>
             </div>
             <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
               <AnimatePresence initial={false}>
@@ -93,19 +94,23 @@ export function EntriesList({ orgId, entries }: { orgId: string; entries: TimeEn
                       className={
                         e.entry_type === "clock"
                           ? "flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted"
-                          : "flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent"
+                          : e.entry_type === "break"
+                            ? "flex size-8 shrink-0 items-center justify-center rounded-lg bg-warning/15 text-warning"
+                            : "flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent"
                       }
                     >
                       {e.entry_type === "clock" ? (
                         <Clock3 className="size-4" strokeWidth={1.75} />
+                      ) : e.entry_type === "break" ? (
+                        <Coffee className="size-4" strokeWidth={1.75} />
                       ) : (
                         <FolderKanban className="size-4" strokeWidth={1.75} />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      {e.entry_type === "clock" ? (
+                      {e.entry_type !== "task" ? (
                         <p className="text-[13.5px]">
-                          Jornada <span className="text-muted-foreground tabular">{time(e.started_at)} — {e.ended_at ? time(e.ended_at) : "en curso"}</span>
+                          {e.entry_type === "break" ? "Pausa" : "Jornada"} <span className="text-muted-foreground tabular">{time(e.started_at)} — {e.ended_at ? time(e.ended_at) : "en curso"}</span>
                         </p>
                       ) : (
                         <p className="truncate text-[13.5px]">
@@ -115,7 +120,11 @@ export function EntriesList({ orgId, entries }: { orgId: string; entries: TimeEn
                       )}
                     </div>
                     <span className="text-[13px] font-medium tabular">
-                      {e.ended_at ? formatMinutes(entryMinutes(e)) : <span className="text-success">En curso</span>}
+                      {e.ended_at ? (
+                        formatMinutes(entryMinutes(e))
+                      ) : (
+                        <span className={e.entry_type === "break" ? "text-warning" : "text-success"}>En curso</span>
+                      )}
                     </span>
                     {e.entry_type === "task" ? <DeleteButton orgId={orgId} id={e.id} /> : <span className="size-8" />}
                   </motion.li>

@@ -147,6 +147,24 @@ Ausencias para el calendario, **sin el motivo**:
 
 Cubierto por `supabase/tests/calendar.test.sql` (9 tests).
 
+## Pausas en el fichaje (`0007_clock_breaks.sql`)
+
+`time_entries.entry_type` admite ahora `break`. Una jornada es una secuencia de tramos:
+
+| Tramo | Significado |
+|---|---|
+| `clock` | trabajando |
+| `break` | en pausa (almuerzo, descanso) |
+
+- `clock_pause(org)`: cierra el tramo `clock` abierto y abre un `break` en la misma transacción.
+- `clock_resume(org)`: cierra el `break` y abre un `clock` nuevo.
+- Ambas corren como el usuario (`security invoker`), así que aplican RLS y los mismos guards que un fichaje manual.
+- Guards: la hora de inicio de una pausa la pone la base (`now()`) y no se puede reescribir. Solo puede haber una pausa abierta por persona, y no se puede tener un `clock` y un `break` abiertos a la vez.
+- El tiempo trabajado sigue siendo la suma de tramos `clock`, así que los cálculos existentes (semana, carga, dashboard) no cambian. Fichar salida estando en pausa cierra la pausa.
+- En la auditoría, el cierre/apertura técnica de tramos que acompaña a una pausa se pliega (`foldClockSegments`) y el historial muestra "pausó la jornada" / "reanudó la jornada".
+
+Cubierto por `supabase/tests/breaks.test.sql` (9 tests).
+
 ## Desarrollo local
 
 ```bash

@@ -194,3 +194,30 @@ Formato de cada entrada:
 **Ajuste por revisión visual:** en la vista mes, las franjas de OT (que duran todo el mes) tapaban las tareas. Se priorizó el orden de los carriles (ausencias y tareas arriba, OT abajo), y el test nuevo de esa prioridad destapó un bug del algoritmo de carriles, que se corrigió.
 
 **Verificado con datos reales:** arrastrar "Accesibilidad AA" la movió un día y se guardó en la base (después se restauró la fecha original).
+
+---
+
+## 2026-10-06 Órdenes de trabajo más claras
+
+**Prompt (resumen):** "Puedes mejorar lo de las órdenes de trabajo, parece confuso."
+
+**Diagnóstico:** el estado se repartía en dos badges (estado + facturación), las transiciones aparecían como una fila de botones sin contexto ("Aprobar", "Reabrir", "Marcar facturada"…), la recurrencia mensual estaba escondida en un icono sin texto y había dos listados de OT casi iguales (órdenes y detalle de proyecto), con un botón anidado dentro de un enlace.
+
+**Resultado:**
+- **Ciclo de vida visible:** Borrador → Aprobada → En curso → Cerrada → Facturada, como stepper en el detalle y en versión compacta en los listados.
+- **"Siguiente paso":** una sola acción principal con una explicación de qué pasa al darla. Los retrocesos (volver a borrador, reabrir, revertir facturación) quedan como acciones secundarias.
+- **Recurrencia explícita:** un aviso "N OT de <mes anterior> no tienen continuación en <mes>" copia todas en bloque. Cada fila dice "Copiar a <mes>", y si ese mes ya existe muestra "Sigue en <mes> →" en lugar de ofrecer un duplicado.
+- **Una sola fila de OT** reutilizada en ambos listados, que se adapta al ancho de su contenedor con container queries. Filtros por estado (Todas, Borrador, En curso, Por facturar, Facturadas) y una explicación plegable de cómo funciona una OT.
+- Lógica nueva en el dominio, con tests: `nextStep`, `secondarySteps`, `lifecycleIndex`, `matchesFilter`, `missingContinuations` y `findContinuation`.
+
+---
+
+## 2026-10-06 Pausas en el fichaje
+
+**Prompt (resumen):** "Al momento de fichar estaría bueno que el usuario pueda parar el tiempo para almorzar y después reanudar."
+
+**Decisión:** modelar la pausa como un tramo más (`break`) en lugar de un campo "minutos de pausa". Así queda registrado cuándo empezó y terminó cada pausa, es auditable, y el tiempo trabajado sigue siendo la suma de tramos `clock`, sin tocar los cálculos existentes. Pausar y reanudar son funciones atómicas en la base.
+
+**Detalle encontrado al hacerlo:** `weekTotals` contaba como "horas de tarea" todo lo que no fuera `clock`, así que una pausa habría inflado las horas imputadas. Se corrigió y se cubrió con un test.
+
+**Verificado con datos reales:** entrada → pausa → reanudar → salida como empleado, en el navegador. Después se borraron los registros de prueba.

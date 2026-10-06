@@ -9,7 +9,7 @@ import { getMyEntriesSince, getWeekEntriesFor } from "@/lib/data/time";
 import { getAllWorkOrders } from "@/lib/data/work-orders";
 import { acceptsTimeEntries, workOrderCode } from "@/lib/domain/work-orders";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
-import { entryMinutes, formatMinutes, isSameDay, startOfDay, startOfWeek } from "@/lib/domain/time";
+import { clockState, closedMinutes, entryMinutes, formatMinutes, isSameDay, startOfDay, startOfWeek } from "@/lib/domain/time";
 import { EntriesList } from "./entries-list";
 import { LogHoursForm } from "./log-hours-form";
 import { TeamWorkload } from "./team-workload";
@@ -51,11 +51,9 @@ export default async function TimeTrackingPage({ params }: PageProps<"/app/[orgI
       };
     });
 
-  const open = entries.find((e) => e.entry_type === "clock" && e.ended_at === null) ?? null;
   const now = new Date();
-  const todayMinutes = entries
-    .filter((e) => e.entry_type === "clock" && isSameDay(new Date(e.started_at), now))
-    .reduce((s, e) => s + entryMinutes(e, now), 0);
+  const state = clockState(entries);
+  const today = entries.filter((e) => isSameDay(new Date(e.started_at), now));
   const weekStart = startOfWeek(now);
   const thisWeek = entries.filter((e) => new Date(e.started_at) >= weekStart);
   const weekClock = thisWeek.filter((e) => e.entry_type === "clock").reduce((s, e) => s + entryMinutes(e, now), 0);
@@ -80,7 +78,13 @@ export default async function TimeTrackingPage({ params }: PageProps<"/app/[orgI
       />
 
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-        <ClockWidget orgId={orgId} openSince={open?.started_at ?? null} todayMinutes={todayMinutes} size="lg" />
+        <ClockWidget
+          orgId={orgId}
+          state={state}
+          workedMinutes={closedMinutes(today, "clock")}
+          breakMinutes={closedMinutes(today, "break")}
+          size="lg"
+        />
         <Card>
           <CardHeader title="Imputar horas" description="A una de tus tareas abiertas" />
           <CardBody>

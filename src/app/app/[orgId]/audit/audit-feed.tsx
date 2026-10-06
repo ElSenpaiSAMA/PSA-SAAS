@@ -5,7 +5,7 @@ import { CalendarDays, Clock3, FolderKanban, KeyRound, ScrollText, Users, type L
 import { useMemo, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
-import { auditCategory, changedFields, describeAudit, relativeTime, type AuditCategory } from "@/lib/domain/audit";
+import { auditCategory, changedFields, describeAudit, foldClockSegments, relativeTime, type AuditCategory } from "@/lib/domain/audit";
 import { useNow } from "@/lib/use-now";
 import type { AuditLog } from "@/lib/supabase/database.types";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,8 @@ const CATEGORIES: { id: AuditCategory | "all"; label: string; icon: LucideIcon }
   { id: "auth", label: "Accesos", icon: KeyRound },
 ];
 
-export function AuditFeed({ entries, names }: { entries: AuditLog[]; names: Record<string, string> }) {
+export function AuditFeed({ entries: raw, names }: { entries: AuditLog[]; names: Record<string, string> }) {
+  const entries = useMemo(() => foldClockSegments(raw), [raw]);
   // Tiempo relativo y fecha local solo tras hidratar (servidor en UTC, cliente en hora local)
   const now = useNow();
   const [filter, setFilter] = useState<AuditCategory | "all">("all");

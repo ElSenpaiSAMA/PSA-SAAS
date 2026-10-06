@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  clockState,
+  closedMinutes,
   entryMinutes,
   findOpenEntry,
   formatMinutes,
@@ -97,6 +99,32 @@ describe("weekTotals", () => {
     expect(totals[0]).toMatchObject({ clockMinutes: 480, taskMinutes: 150 });
     expect(totals[2]).toMatchObject({ clockMinutes: 240, taskMinutes: 0 });
     expect(totals.reduce((s, d) => s + d.clockMinutes, 0)).toBe(720);
+  });
+});
+
+describe("pausas", () => {
+  const at = (h: number, m = 0) => new Date(2026, 9, 5, h, m).toISOString();
+
+  it("una jornada con almuerzo: el trabajo y la pausa se suman aparte", () => {
+    const day = [
+      { entry_type: "clock" as const, started_at: at(9), ended_at: at(13) },
+      { entry_type: "break" as const, started_at: at(13), ended_at: at(14) },
+      { entry_type: "clock" as const, started_at: at(14), ended_at: at(18) },
+    ];
+    const [monday] = weekTotals(day, new Date(2026, 9, 5));
+    expect(monday).toMatchObject({ clockMinutes: 480, breakMinutes: 60, taskMinutes: 0 });
+    expect(closedMinutes(day, "clock")).toBe(480);
+  });
+
+  it("deduce el estado del fichaje del tramo abierto", () => {
+    expect(clockState([{ entry_type: "clock", started_at: at(9), ended_at: at(13) }])).toEqual({ status: "off" });
+    expect(clockState([{ entry_type: "break", started_at: at(13), ended_at: null }])).toEqual({ status: "paused", since: at(13) });
+    expect(
+      clockState([
+        { entry_type: "task", started_at: at(10), ended_at: null },
+        { entry_type: "clock", started_at: at(14), ended_at: null },
+      ]),
+    ).toEqual({ status: "working", since: at(14) });
   });
 });
 

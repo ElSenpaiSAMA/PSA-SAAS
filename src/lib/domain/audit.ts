@@ -69,6 +69,10 @@ export function describeAudit(e: AuditLike): string {
 
   switch (e.table_name) {
     case "time_entries": {
+      if (row.entry_type === "break") {
+        if (e.action === "INSERT") return "pausó la jornada";
+        if (e.action === "UPDATE" && changedFields(e).includes("ended_at")) return "reanudó la jornada";
+      }
       const isClock = row.entry_type === "clock";
       if (e.action === "INSERT") return isClock ? "fichó entrada" : "imputó horas a una tarea";
       if (e.action === "UPDATE" && isClock && changedFields(e).includes("ended_at")) return "fichó salida";
@@ -114,4 +118,30 @@ export function describeAudit(e: AuditLike): string {
     }
   }
   return e.action.toLowerCase();
+}
+
+/**
+ * Pausar cierra el tramo de trabajo y abre una pausa en la misma transacción
+ * (mismo instante); reanudar, al revés. Esos cierres/aperturas de tramo son
+ * detalle técnico: se ocultan para que el historial diga "pausó" / "reanudó"
+ * y no "fichó salida" / "fichó entrada".
+ */
+export function foldClockSegments<T extends AuditLike>(entries: readonly T[]): T[] {
+  const key = (membership: unknown, at: unknown) => `${String(membership)}@${String(at)}`;
+  const breakStarts = new Set<string>();
+  const breakEnds = new Set<string>();
+  for (const e of entries) {
+    const row = e.new_data;
+    if (e.table_name !== "time_entries" || row?.entry_type !== "break") continue;
+    if (e.action === "INSERT") breakStarts.add(key(row.membership_id, row.started_at));
+    if (e.action === "UPDATE" && row.ended_at) breakEnds.add(key(row.membership_id, row.ended_at));
+  }
+  if (!breakStarts.size && !breakEnds.size) return [...entries];
+  return entries.filter((e) => {
+    const row = e.new_data;
+    if (e.table_name !== "time_entries" || row?.entry_type !== "clock") return true;
+    if (e.action === "UPDATE" && breakStarts.has(key(row.membership_id, row.ended_at))) return false;
+    if (e.action === "INSERT" && breakEnds.has(key(row.membership_id, row.started_at))) return false;
+    return true;
+  });
 }

@@ -15,7 +15,7 @@ import { getOrgContext } from "@/lib/data/session";
 import { getMyEntriesSince, getWeekEntriesFor } from "@/lib/data/time";
 import { getVisibleVacationRequests } from "@/lib/data/vacations";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
-import { entryMinutes, isSameDay, startOfWeek, workloadLevel, workloadPercent } from "@/lib/domain/time";
+import { clockState, closedMinutes, entryMinutes, isSameDay, startOfWeek, workloadLevel, workloadPercent } from "@/lib/domain/time";
 import { vacationBalance } from "@/lib/domain/vacations";
 import { addDays, todayISO } from "@/lib/domain/periods";
 import { Upcoming, type UpcomingItem } from "./upcoming";
@@ -49,9 +49,9 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
   ]);
 
   const clock = entries.filter((e) => e.entry_type === "clock");
-  const open = clock.find((e) => e.ended_at === null) ?? null;
+  const clockNow = clockState(entries);
+  const todayEntries = entries.filter((e) => isSameDay(new Date(e.started_at), now));
   const weekMinutes = clock.reduce((s, e) => s + entryMinutes(e, now), 0);
-  const todayMinutes = clock.filter((e) => isSameDay(new Date(e.started_at), now)).reduce((s, e) => s + entryMinutes(e, now), 0);
   const load = workloadPercent(weekMinutes, me.weekly_hours);
   const level = workloadLevel(load);
 
@@ -106,10 +106,15 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
       <PageHeader
         eyebrow={now.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" })}
         title={`Hola, ${firstName}.`}
-        accent={open ? "Buen ritmo hoy." : "¿Arrancamos?"}
+        accent={clockNow.status === "paused" ? "Buen provecho." : clockNow.status === "working" ? "Buen ritmo hoy." : "¿Arrancamos?"}
       />
 
-      <ClockWidget orgId={orgId} openSince={open?.started_at ?? null} todayMinutes={todayMinutes} />
+      <ClockWidget
+        orgId={orgId}
+        state={clockNow}
+        workedMinutes={closedMinutes(todayEntries, "clock")}
+        breakMinutes={closedMinutes(todayEntries, "break")}
+      />
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard index={0} label="Horas esta semana" value={weekMinutes} format="minutes" icon={Clock3} hint={`de ${me.weekly_hours}h contratadas`} />
