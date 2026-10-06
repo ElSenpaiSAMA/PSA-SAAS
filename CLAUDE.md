@@ -38,6 +38,7 @@ Mini SaaS multi-tenant tipo Factorial. Contexto de producto en `docs/APP_FLOW.md
 - **Carpetas vacías** no se versionan: si algo (Dockerfile, scripts) depende de una carpeta, garantizar que exista.
 - **Migraciones**: nunca editar una ya mergeada; crear `000N_*.sql` nueva + test pgTAP.
 - **Tests pgTAP independientes de los datos**: cada test arma lo que necesita o elige filas por condición, nunca por suposición sobre el estado del seed ni sobre fechas relativas a "hoy". Un test que pasa contra una base con datos de prueba previos puede fallar en CI, sobre una base limpia.
+- **E2E: los roles cambian a lo largo de la suite**: Diego pasa a ser responsable de departamento (y eso lo asciende a manager). Para comprobar "un empleado no ve X", usar a Ana, que es empleada en toda la suite.
 - **E2E: un login por test**: con sesión iniciada, `/login` redirige. Si un flujo involucra a dos personas, se parte en tests seriales consecutivos.
 
 ## Comandos
