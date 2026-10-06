@@ -130,6 +130,21 @@ export type WorkOrder = {
   created_at: Timestamp;
 };
 
+export type Holiday = {
+  id: string;
+  org_id: string;
+  date: DateString;
+  name: string;
+  created_at: Timestamp;
+};
+
+export type AbsenceRow = {
+  membership_id: string;
+  start_date: DateString;
+  end_date: DateString;
+  status: "approved" | "pending";
+};
+
 export type WorkloadItemRow = {
   membership_id: string;
   task_id: string;
@@ -187,6 +202,7 @@ export type Database = {
       departments: Table<Department, "org_id" | "name">;
       project_members: Table<ProjectMember, "project_id" | "membership_id">;
       work_orders: Table<WorkOrder, "project_id" | "title" | "period_start" | "period_end">;
+      holidays: Table<Holiday, "org_id" | "date" | "name">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;
@@ -207,6 +223,7 @@ export type Database = {
         Args: { p_work_order_id: string; p_title: string; p_period_start: string; p_period_end: string };
         Returns: string;
       };
+      org_absences: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: AbsenceRow[] };
       workload_items: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: WorkloadItemRow[] };
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };

@@ -15,15 +15,17 @@ function parseDate(iso: string): Date {
   return new Date(Date.UTC(y, m - 1, d));
 }
 
-/** Días hábiles (lunes a viernes) entre dos fechas, ambas inclusive. */
-export function businessDays(range: VacationRange): number {
+const NO_HOLIDAYS: ReadonlySet<string> = new Set();
+
+/** Días hábiles (lunes a viernes, sin festivos) entre dos fechas, ambas inclusive. */
+export function businessDays(range: VacationRange, holidays: ReadonlySet<string> = NO_HOLIDAYS): number {
   const start = parseDate(range.start_date);
   const end = parseDate(range.end_date);
   if (end < start) return 0;
   let count = 0;
   for (let d = start; d <= end; d = new Date(d.getTime() + 86_400_000)) {
     const day = d.getUTCDay();
-    if (day !== 0 && day !== 6) count++;
+    if (day !== 0 && day !== 6 && !holidays.has(d.toISOString().slice(0, 10))) count++;
   }
   return count;
 }
@@ -43,10 +45,11 @@ export function vacationBalance(
   allowance: number,
   requests: readonly VacationRequestLike[],
   year: number,
+  holidays: ReadonlySet<string> = NO_HOLIDAYS,
 ): VacationBalance {
   const inYear = requests.filter((r) => r.start_date.startsWith(`${year}-`));
   const sum = (status: VacationStatus) =>
-    inYear.filter((r) => r.status === status).reduce((acc, r) => acc + businessDays(r), 0);
+    inYear.filter((r) => r.status === status).reduce((acc, r) => acc + businessDays(r, holidays), 0);
   const used = sum("approved");
   const pending = sum("pending");
   return { allowance, used, pending, available: allowance - used - pending };
@@ -64,10 +67,11 @@ export function validateNewRequest(
   existing: readonly VacationRequestLike[],
   balance: VacationBalance,
   today: string,
+  holidays: ReadonlySet<string> = NO_HOLIDAYS,
 ): RequestValidationError | null {
   if (range.end_date < range.start_date) return "invalid_range";
   if (range.start_date < today) return "starts_in_past";
-  const days = businessDays(range);
+  const days = businessDays(range, holidays);
   if (days === 0) return "no_business_days";
   const active = existing.filter((r) => r.status === "pending" || r.status === "approved");
   if (active.some((r) => rangesOverlap(r, range))) return "overlaps_existing";
