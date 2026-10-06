@@ -7,7 +7,6 @@ import { useRef } from "react";
 import { buttonClasses } from "@/components/ui/button";
 import { brand } from "@/lib/brand";
 import { cn } from "@/lib/utils";
-import { HeroGlobe } from "./hero-globe";
 import { ProductPreview } from "./product-preview";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -35,7 +34,11 @@ export function Hero() {
 
   return (
     <section ref={ref} className="relative overflow-hidden pt-36 pb-24 sm:pt-44">
-      <HeroGlobe opacity={glowOpacity} />
+      <div className="bg-grid pointer-events-none absolute inset-0 -z-10" />
+      <motion.div
+        style={{ opacity: glowOpacity }}
+        className="pointer-events-none absolute top-[-20%] left-1/2 -z-10 h-[680px] w-[1100px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,var(--accent-soft),transparent)]"
+      />
 
       <div className="mx-auto max-w-6xl px-6 text-center">
         <motion.a
