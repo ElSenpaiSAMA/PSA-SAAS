@@ -346,3 +346,39 @@ test("un empleado no ve ni puede abrir las automatizaciones", async ({ page }) =
   await page.goto(`/app/${NEBULA}/automations`);
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
+
+const prevWeekday = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+test("un empleado registra una baja médica con fecha pasada", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/vacations`);
+  await page.getByRole("radio", { name: "Baja médica" }).click();
+  const day = prevWeekday();
+  await expect(async () => {
+    await page.getByLabel("Desde").fill(day);
+    await page.getByLabel("Hasta").fill(day);
+    await expect(page.getByText("No descuenta vacaciones", { exact: true })).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
+  await page.getByRole("button", { name: "Registrar baja médica" }).click();
+  await expect(page.getByText(/Solicitud enviada · Baja médica/)).toBeVisible();
+});
+
+test("rechazar exige motivo y la persona lo ve", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/vacations?tab=equipo`);
+  const row = page.getByRole("listitem").filter({ hasText: "Baja médica" });
+  await row.getByRole("button", { name: "Rechazar" }).click();
+  await expect(row.getByRole("button", { name: "Confirmar rechazo" })).toBeDisabled();
+  await row.getByLabel("Motivo del rechazo").fill("Falta el parte médico");
+  await row.getByRole("button", { name: "Confirmar rechazo" }).click();
+  await expect(page.getByText("Solicitud rechazada")).toBeVisible();
+
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/vacations`);
+  await expect(page.getByText("Respuesta: «Falta el parte médico»")).toBeVisible();
+});
