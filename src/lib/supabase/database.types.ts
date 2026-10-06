@@ -10,7 +10,7 @@ type Timestamp = string;
 type DateString = string;
 
 export type TaskStatus = "todo" | "in_progress" | "done";
-export type EntryType = "clock" | "task";
+export type EntryType = "clock" | "break" | "task";
 export type MembershipStatus = "active" | "inactive";
 export type ProjectStatus = "active" | "archived";
 
@@ -224,6 +224,8 @@ export type Database = {
         Returns: string;
       };
       org_absences: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: AbsenceRow[] };
+      clock_pause: { Args: { p_org_id: string }; Returns: undefined };
+      clock_resume: { Args: { p_org_id: string }; Returns: undefined };
       workload_items: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: WorkloadItemRow[] };
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
