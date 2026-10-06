@@ -33,12 +33,14 @@ select pg_temp.demo_user('33333333-3333-3333-3333-333333333333', 'ana@demo.com',
 select pg_temp.demo_user('44444444-4444-4444-4444-444444444444', 'diego@demo.com', 'Diego Fernández');
 select pg_temp.demo_user('55555555-5555-5555-5555-555555555555', 'sofia@demo.com', 'Sofía Navarro');
 
--- Dos organizaciones: Laura y Carlos pertenecen a ambas (prueba el selector de org)
+-- La empresa: Diplonautic. La plataforma es multi-tenant por dentro (RLS por
+-- organización): la segunda organización no tiene miembros de demo y solo existe
+-- para que los tests comprueben el aislamiento entre empresas.
 insert into public.organizations (id, name) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', 'Nébula Studio'),
-  ('aaaaaaaa-0000-0000-0000-000000000002', 'Orbital Labs');
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'Diplonautic'),
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'Otra empresa (pruebas de aislamiento)');
 
--- Nébula Studio: Laura (owner) → Carlos (manager) → Ana, Diego ; Sofía (admin)
+-- Diplonautic: Laura (owner) → Carlos (manager) → Ana, Diego ; Sofía (admin)
 insert into public.memberships (id, org_id, user_id, role_id, manager_id, position, weekly_hours) values
   ('bbbbbbbb-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'owner',    null,                                   'CEO',                40),
   ('bbbbbbbb-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', '55555555-5555-5555-5555-555555555555', 'admin',    'bbbbbbbb-0000-0000-0000-000000000001', 'People Ops',         40),
@@ -46,12 +48,8 @@ insert into public.memberships (id, org_id, user_id, role_id, manager_id, positi
   ('bbbbbbbb-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Frontend Engineer',  40),
   ('bbbbbbbb-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444444', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Backend Engineer',   32);
 
--- Orbital Labs: Carlos (owner), Laura (employee) — mismo usuario, distinto rol según la empresa
-insert into public.memberships (id, org_id, user_id, role_id, manager_id, position) values
-  ('bbbbbbbb-0000-0000-0000-000000000011', 'aaaaaaaa-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', 'owner',    null,                                   'Founder'),
-  ('bbbbbbbb-0000-0000-0000-000000000012', 'aaaaaaaa-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111', 'employee', 'bbbbbbbb-0000-0000-0000-000000000011', 'Advisor');
 
--- Departamentos de Nébula Studio: el responsable pasa a ser el manager de sus miembros
+-- Departamentos de Diplonautic: el responsable pasa a ser el manager de sus miembros
 insert into public.departments (id, org_id, name, head_id) values
   ('eeeeeeee-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Dirección',  'bbbbbbbb-0000-0000-0000-000000000001'),
   ('eeeeeeee-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Ingeniería', 'bbbbbbbb-0000-0000-0000-000000000002'),
@@ -145,11 +143,12 @@ insert into public.vacation_requests (membership_id, start_date, end_date, statu
   ('bbbbbbbb-0000-0000-0000-000000000003', current_date + 21, current_date + 25, 'pending', 'Escapada a la montaña', null, null),
   ('bbbbbbbb-0000-0000-0000-000000000004', current_date + 35, current_date + 39, 'pending', 'Boda de un amigo', null, null);
 
--- Invitación pendiente para probar el alta de empleados
+-- Invitación pendiente para probar el alta: Marc puede registrarse en /signup
+-- y entra directo a Diplonautic como técnico (sin invitación, el registro se rechaza)
 insert into public.invitations (org_id, email, role_id, manager_id, position) values
-  ('aaaaaaaa-0000-0000-0000-000000000002', 'ana@demo.com', 'employee', 'bbbbbbbb-0000-0000-0000-000000000011', 'Designer');
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'marc.vidal@demo.com', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Técnico electricista');
 
--- Festivos nacionales (año actual y siguiente) para Nébula Studio
+-- Festivos nacionales (año actual y siguiente) para Diplonautic
 insert into public.holidays (org_id, date, name)
 select 'aaaaaaaa-0000-0000-0000-000000000001', make_date(y, h.m, h.d), h.name
 from generate_series(extract(year from current_date)::int, extract(year from current_date)::int + 1) y
