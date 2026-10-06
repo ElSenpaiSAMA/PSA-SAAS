@@ -305,3 +305,31 @@ test("un empleado ve su propia ficha pero no los datos sensibles de otros", asyn
   await expect(page.getByText("34567890V")).toHaveCount(0);
   await expect(page.getByText(/solo las ven la propia persona/)).toBeVisible();
 });
+
+test("una admin configura y ejecuta una automatización", async ({ page }) => {
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/automations`);
+  const card = page.locator("article").filter({ hasText: "Resumen semanal del equipo" });
+  const toggle = card.getByRole("switch");
+  await expect(toggle).toHaveAttribute("aria-checked", "true");
+  await toggle.click();
+  await expect(page.getByText("Automatización desactivada")).toBeVisible();
+  await expect(card.getByRole("button", { name: "Ejecutar ahora" })).toBeDisabled();
+  await toggle.click();
+  await expect(page.getByText("Automatización activada")).toBeVisible();
+
+  await card.getByLabel(/Hora/).fill("30");
+  await card.getByRole("button", { name: "Guardar" }).click();
+  await expect(card.getByText("Entre 6 y 12")).toBeVisible();
+
+  await card.getByRole("button", { name: "Ejecutar ahora" }).click();
+  await expect(page.getByText(/^Ejecutada/)).toBeVisible();
+});
+
+test("un empleado no ve ni puede abrir las automatizaciones", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await expect(page.getByRole("link", { name: "Automatizaciones" })).toHaveCount(0);
+  await page.goto(`/app/${NEBULA}/automations`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});
