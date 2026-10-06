@@ -475,3 +475,15 @@ test("un empleado no ve los informes ni puede exportarlos", async ({ page }) => 
   const res = await page.request.get(`/app/${NEBULA}/reports/export?type=horas`);
   expect(res.status()).toBe(403);
 });
+
+test("sin clave de IA, la app explica cómo activarla y no rompe nada", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await expect(page.getByText("Con la IA activada, acá vas a tener un resumen redactado de tu equipo en un click.")).toBeVisible();
+  await page.keyboard.press("Control+k");
+  await page.getByPlaceholder("Buscá una página o acción…").fill("¿quién está de vacaciones?");
+  await expect(page.getByText("Kairos IA no está activada (falta OPENROUTER_API_KEY)")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.goto(`/app/${NEBULA}/time-tracking`);
+  await expect(page.getByText(/Con la IA activada, Kairos te propone cómo repartir/)).toBeVisible();
+});

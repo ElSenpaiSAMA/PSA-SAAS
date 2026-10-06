@@ -406,3 +406,24 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Dedicación honesta:** en el mes en curso se mide contra la capacidad **hasta hoy**. Contra el mes completo, el 6 de octubre daba un 4 % engañoso.
 
 **Verificado en el navegador:** la owner vio los tres informes y descargó los tres CSV (revisados por dentro). Un manager no ve Facturación (403 al forzar la descarga) y un empleado no ve la sección.
+
+---
+
+## 2026-10-06 Kairos IA (OpenRouter)
+
+**Prompt (resumen):** retomar la IA con OpenRouter que había quedado pendiente: asistente con ⌘K, reparto de horas al fichar y resumen semanal.
+
+**Arquitectura:**
+- **Cliente de OpenRouter solo en el servidor** (`src/lib/ai/openrouter.ts`): la clave nunca llega al navegador. El modelo se configura con `OPENROUTER_MODEL` y `OPENROUTER_BASE_URL` permite apuntar a un proxy o a un servidor de prueba. Los errores se traducen a mensajes claros (clave inválida, sin saldo, límite de uso, modelo inexistente).
+- **Sin clave, todo funciona igual**: cada función de IA explica cómo activarse. CI corre sin clave.
+- **Asistente con herramientas de solo lectura** (ausencias, órdenes de trabajo, mis tareas, horas del equipo, pendientes, personas). Cada herramienta usa las funciones de datos de la app **con la sesión de quien pregunta**, así que RLS decide qué ve la IA. No hay herramientas sobre fichas personales ni sueldos. Hace hasta 4 rondas de consultas por pregunta.
+- **Nunca se confía en la salida del modelo**: `src/lib/domain/ai.ts` extrae el JSON aunque venga con texto alrededor y valida el reparto (solo tareas reales y abiertas, cuartos de hora, sin superar lo fichado). La persona **revisa antes de imputar**.
+
+**Funciones:**
+1. **⌘K → "Preguntarle a Kairos"**: conversación dentro de la paleta.
+2. **Fichaje → "Repartir lo fichado hoy con IA"**: propuesta editable (casillas y horas) y luego "Imputar".
+3. **Inicio (responsables) → "Resumen del equipo"**: cómo viene el mes, quién estará fuera y qué atender. Se genera bajo demanda, para no gastar créditos.
+
+**Cómo se probó sin clave real:** un servidor local compatible con OpenRouter que responde con llamadas a herramientas y JSON. Se ejercitó el circuito completo: el asistente pidió la herramienta "personas", recibió los datos y respondió; el reparto propuso horas (una de ellas inválida, que se corrigió sola) y se imputó; el resumen salió con los datos del equipo. Aparecieron y se corrigieron dos bugs: un efecto de React que devolvía un valor, y `Escape` que no cerraba el asistente.
+
+**Lección de CI (Informes):** un E2E asumía que Diego seguía siendo empleado, pero un test anterior lo hace responsable de departamento y eso lo asciende a manager. Quedó anotado en `CLAUDE.md`.
