@@ -49,13 +49,16 @@ jobs:
     timeout-minutes: 15
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
-      url: ${{ steps.deploy.outputs.url }}
+      url: ${{ steps.alias.outputs.url || steps.deploy.outputs.url }}
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       VERCEL_ENV: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
       PROD_FLAG: ${{ github.ref_name == 'main' && '--prod' || '' }}
+      # Variable (no secreto) del environment staging: dominio fijo para staging,
+      # p. ej. kairos-staging.vercel.app. Sin ella, cada deploy queda en su URL única.
+      STAGING_DOMAIN: ${{ vars.STAGING_DOMAIN }}
     steps:
       - uses: actions/checkout@v4
       - name: Skip if Vercel is not configured
@@ -78,3 +81,9 @@ jobs:
       - id: deploy
         if: steps.check.outputs.skip != 'true'
         run: echo "url=$(vercel deploy --prebuilt $PROD_FLAG --token=$VERCEL_TOKEN)" >> "$GITHUB_OUTPUT"
+      # Staging con URL fija: el login de Supabase necesita conocer la URL de antemano
+      - id: alias
+        if: steps.check.outputs.skip != 'true' && github.ref_name == 'dev' && env.STAGING_DOMAIN != ''
+        run: |
+          vercel alias set "${{ steps.deploy.outputs.url }}" "$STAGING_DOMAIN" --token=$VERCEL_TOKEN
+          echo "url=https://$STAGING_DOMAIN" >> "$GITHUB_OUTPUT"
