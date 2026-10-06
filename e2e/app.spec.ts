@@ -482,10 +482,10 @@ test("sin clave de IA, la app explica cómo activarla y no rompe nada", async ({
   await expect(page.getByText("Con la IA activada, acá vas a tener un resumen redactado de tu equipo en un click.")).toBeVisible();
   await page.keyboard.press("Control+k");
   await page.getByPlaceholder("Buscá una página o acción…").fill("¿quién está de vacaciones?");
-  await expect(page.getByText("Kairos IA no está activada (falta OPENROUTER_API_KEY)")).toBeVisible();
+  await expect(page.getByText("El asistente IA no está activado (falta OPENROUTER_API_KEY)")).toBeVisible();
   await page.keyboard.press("Escape");
   await page.goto(`/app/${NEBULA}/time-tracking`);
-  await expect(page.getByText(/Con la IA activada, Kairos te propone cómo repartir/)).toBeVisible();
+  await expect(page.getByText(/Con la IA activada, el asistente te propone cómo repartir/)).toBeVisible();
 });
 
 // ── Foro interno ─────────────────────────────────────────────

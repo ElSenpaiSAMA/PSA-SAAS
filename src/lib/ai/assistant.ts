@@ -14,7 +14,7 @@ import { ROLE_LABEL, isRole } from "@/lib/domain/permissions";
 import { workOrderCode } from "@/lib/domain/work-orders";
 import { chat, type ChatMessage, type ToolDefinition } from "./openrouter";
 
-// Asistente de Kairos: responde preguntas con datos reales usando herramientas de
+// Asistente de la intranet: responde preguntas con datos reales usando herramientas de
 // SOLO LECTURA. Cada herramienta usa las funciones de datos de la app, con la sesión
 // de quien pregunta: RLS decide qué puede ver. No hay herramientas sobre datos
 // sensibles (fichas personales, sueldos, DNI).
@@ -184,7 +184,7 @@ export async function answerQuestion(orgId: string, question: string): Promise<s
     {
       role: "system",
       content: [
-        `Sos el asistente de Kairos, una app de gestión de equipos y proyectos de la empresa ${ctx.organization.name}.`,
+        `Sos el asistente de la intranet de ${ctx.organization.name}: fichajes, vacaciones, proyectos, órdenes de trabajo y foro del equipo.`,
         `Hoy es ${weekday} ${today}. Quien pregunta tiene el rol ${ROLE_LABEL[ctx.role]}.`,
         "Respondé en español, en 2 a 6 frases o una lista corta. Usá las herramientas para obtener datos; nunca inventes cifras, nombres ni fechas.",
         "Si los datos no alcanzan o quien pregunta no tiene acceso, decilo con claridad y sugerí en qué sección de la app mirarlo.",
