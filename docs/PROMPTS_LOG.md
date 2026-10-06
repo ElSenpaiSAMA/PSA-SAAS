@@ -238,12 +238,12 @@ Formato de cada entrada:
 
 ---
 
-## 2026-10-06 Fondo del hero: globo de meridianos
+## 2026-10-06 Fondo del hero: exploración (se mantiene el original)
 
 **Prompt (resumen):** "En la pantalla de bienvenida me gusta todo, menos el fondo. ¿Alguna otra idea?" Después: "dame más ideas, enfocate en las de tiempo y planificación".
 
-**Proceso:** se prototiparon 13 fondos en una ruta de preview local, comparados en claro, oscuro y móvil: aurora, esfera de reloj, Gantt, puntos, arco de la jornada, regla de horas, calendario, pulso, engranajes, jornadas en vivo, reloj gigante, carga de trabajo y meridianos. Se descartaron los que competían con el titular o no se leían bien (por ejemplo, una espiral que parecía puntos al azar).
+**Proceso:** se prototiparon 13 fondos en una ruta de preview local, comparados en claro, oscuro y móvil: aurora, esfera de reloj, Gantt, puntos, arco de la jornada, regla de horas, calendario, pulso, engranajes, jornadas en vivo, reloj gigante, carga de trabajo y meridianos. Se eligió el globo de meridianos y se implementó.
 
-**Elegido:** un globo de líneas que gira lento, con un meridiano en el color de acento. Remite a equipos en distintos husos horarios y a varias empresas en una misma plataforma. Cada meridiano se abre y cierra siguiendo la proyección real de una esfera (|sen θ|), no un vaivén lineal. Es más chico en móvil y queda quieto con "reducir movimiento".
+**Resultado final:** al verlo integrado, el usuario prefirió volver al fondo original (cuadrícula con brillo de acento). Se revirtió antes de mergear. Los prototipos no se versionaron; queda este registro de lo explorado.
 
-**Arreglo de paso:** con "reducir movimiento" activado, `AnimatedNumber` provocaba un error de hidratación (el servidor pintaba 0 y el cliente el valor final). Ahora arranca en 0 en ambos y salta al valor al montar.
+**Arreglo que sí quedó:** con "reducir movimiento" activado, `AnimatedNumber` provocaba un error de hidratación (el servidor pintaba 0 y el cliente el valor final). Ahora arranca en 0 en ambos y salta al valor al montar.
