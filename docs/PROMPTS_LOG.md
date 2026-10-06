@@ -459,3 +459,20 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** unitarios del esquema de contacto y del de hilos del foro, y E2E en escritorio y móvil: home, CTA al contacto, acceso de empleados al login, validación y envío del formulario, y redirección al login cuando se entra al foro sin sesión.
 
+---
+
+## 2026-10-07 Web pública: diseño definitivo (foto, barco 3D y azules)
+
+**Prompt (resumen):** iterar el diseño de la home con la referencia de la web real de Diplonautic (foto a pantalla completa con velo azul) y de una web con efectos 3D. Lo primero fue un fondo de carta náutica. Después, un barco 3D que se maneja con el mouse, sin secuestrar el scroll. Después se integraron las fotos que aportó el usuario en `public/barcos`. Por último, ajustes de tono: solo tema claro, más azul, sin grises cálidos y botones de acción en azul.
+
+**Decisiones:**
+- **Hero con foto y velo azul**, como la web actual de la empresa pero con parallax suave y una ola de transición. El texto largo se reemplazó por una frase corta y una píldora animada ("Especialistas en …") que rota las especialidades: se lee menos de golpe.
+- **"Dentro de tu barco": yate de cristal en 3D** (three.js con React Three Fiber) sobre la carta náutica. Con mouse se puede girar (sin zoom, para que la rueda siga bajando la página) y, al pasar por un equipo, se ilumina y lo explica una ficha. En pantallas táctiles gira solo y no captura el scroll. Las etiquetas se proyectan a mano en HTML, en lugar de usar el `Html` de drei: el de drei dejaba una etiqueta sin mostrar y generaba avisos de React. El modelo está hecho con formas simples, sin archivos 3D externos. La librería solo se carga en esa sección (`next/dynamic`, sin SSR).
+- **Nada de herramientas internas en la web pública:** se quitaron las tarjetas de presupuestos, avances y técnicos. La web le habla al cliente y la intranet queda detrás de "Acceso empleados".
+- **Solo tema claro en la web pública** (`/` y `/contacto`): `next-themes` fuerza el tema claro según la ruta (`src/lib/public-site.ts`), y la intranet sigue respetando la preferencia de cada persona.
+- **Más azul y sin "crema":** los grises neutros de la app, al lado de tanto azul, se leían cálidos. En la web pública se usan grises fríos (slate), celestes y azul marino. La cabecera sobre la foto va en blanco y, al bajar, en vidrio azul marino. Los botones de acción son azules.
+- **Fotos optimizadas:** se convirtieron a JPG con nombres descriptivos (de 1,5 MB a 155 KB la más pesada) y se sirven con `next/image`. La galería es un carrusel que avanza solo hasta la última foto y se puede arrastrar, sin flechas, a pedido del usuario.
+- **Contacto con el mismo lenguaje visual:** encabezado con foto, ola, carta náutica y el formulario en una tarjeta que sube sobre la foto.
+
+**Pruebas:** unitarios de `isPublicSitePath` y E2E de la web en escritorio y móvil (home, CTA, acceso de empleados y formulario de contacto). Todo se revisó en el navegador: arrastre del barco y del carrusel, tema oscuro del sistema (la web pública queda clara) y móvil sin scroll horizontal.
+

@@ -44,3 +44,11 @@ Esto es un SaaS de gestión (RRHH/proyectos), así que el reto es lograr ese niv
 - Animaciones con rebote/easing juguetón (bounce) — el tono es serio/premium, easings tipo `ease-out` suaves, nunca spring agresivo.
 - Sombras duras o bordes muy marcados — preferir bordes sutiles (1px, baja opacidad) y sombras muy suaves.
 - Saturar el dashboard con color: el acento se reserva para acciones primarias y estados (éxito/alerta), no para decorar.
+
+## Web pública (`/`, `/contacto`)
+
+- **Siempre en tema claro** (sin selector). La intranet mantiene claro u oscuro.
+- **Paleta:** azul marino `#0b1f3a` (secciones oscuras, pie y cabecera al hacer scroll), azul de acción `blue-600` (botones "Pedir presupuesto"), celestes `blue-50`/`#eef5ff` para fondos suaves y `sky-300` para acentos sobre oscuro. Textos en `slate`, no en los grises neutros de la app.
+- **Fondos:** foto con velo azul (hero, empresa, contacto), carta náutica (`ChartBackground`) y duotono azul (llamada final). Las transiciones entre foto y fondo claro se hacen con una ola SVG del mismo color que el fondo siguiente.
+- **3D:** el yate de `boat-model.tsx` es la única pieza 3D. Se gira con el mouse y nunca intercepta el scroll ni la rueda.
+
