@@ -221,3 +221,17 @@ Formato de cada entrada:
 **Detalle encontrado al hacerlo:** `weekTotals` contaba como "horas de tarea" todo lo que no fuera `clock`, así que una pausa habría inflado las horas imputadas. Se corrigió y se cubrió con un test.
 
 **Verificado con datos reales:** entrada → pausa → reanudar → salida como empleado, en el navegador. Después se borraron los registros de prueba.
+
+---
+
+## 2026-10-06 Empleados: perfil con ficha versionada
+
+**Prompt (resumen):** "Falta la parte de empleados donde estén todas las personas; al hacer click se abre su perfil y se puede editar su información personal y sensible (DNI, cuándo se unió, sueldo…), con calendario para avanzar o retroceder en el tiempo y ver si hubo cambios. Que se vean sus proyectos y tareas, a qué equipo pertenece, si tiene gente a cargo, cuántas horas dedicó, las vacaciones que pidió, y una sección de auditoría."
+
+**Decisiones:**
+- **Sección nueva "Empleados"** (`/staff`), separada de "Personas", que sigue siendo la estructura del equipo (departamentos, organigrama, invitaciones). Los nombres del directorio enlazan al perfil.
+- **Ficha versionada con fecha de vigencia** en lugar de un registro que se sobrescribe. Es lo que hace posible "avanzar o retroceder en el tiempo": cada mes muestra la ficha como estaba entonces, resalta lo que cambió ese mes y lista las versiones con qué cambió en cada una. Los cambios futuros aparecen como "Programado".
+- **Privacidad por defecto:** permiso nuevo `people.sensitive` (owner/admin) para ver y editar. Cada persona ve su propia ficha. Los managers ven horas y vacaciones de su línea de reporte, no los datos sensibles. El IBAN se muestra enmascarado. Todo lo aplica la base (RLS), no solo la UI.
+- **Actividad del mes:** horas fichadas contra capacidad (días hábiles × jornada, sin festivos), pausas, horas por tarea, vacaciones del año y una auditoría de lo que hizo y lo que cambió sobre la persona. Los eventos repetidos se agrupan (×N).
+
+**Verificado con datos reales:** como admin se registró una subida con vigencia futura (apareció como programada) y se validó un IBAN inválido. Como empleado, se comprobó que no ve la ficha de otra persona. Los datos de prueba se borraron.

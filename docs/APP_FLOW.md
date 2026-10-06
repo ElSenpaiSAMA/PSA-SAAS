@@ -26,6 +26,7 @@ src/
       work-orders/[workOrderId]/ # OT por mes: tareas con fechas, estados, copiar al mes siguiente, facturación
       calendar/                # calendario general: tareas, OT, ausencias y festivos (mes/semana)
       planning/                # carga de trabajo persona × semana vs. capacidad
+      staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada
       employees/               # personas: directorio, departamentos, organigrama, invitaciones
       audit/                   # auditoría (requiere employees.manage)
 ```
