@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { auditCategory, changedFields, describeAudit, relativeTime, type AuditLike } from "./audit";
+import { auditCategory, changedFields, describeAudit,
+  foldClockSegments, relativeTime, type AuditLike } from "./audit";
 
 const entry = (partial: Partial<AuditLike>): AuditLike => ({
   action: "INSERT",
@@ -95,5 +96,30 @@ describe("auditCategory", () => {
     expect(auditCategory(entry({ table_name: "tasks" }))).toBe("projects");
     expect(auditCategory(entry({ table_name: "memberships" }))).toBe("people");
     expect(auditCategory(entry({ table_name: "unknown" }))).toBe("other");
+  });
+});
+
+describe("pausas en el historial", () => {
+  const T1 = "2026-10-06T13:00:00.000Z";
+  const T2 = "2026-10-06T14:00:00.000Z";
+  const m = "m1";
+  const log = [
+    { action: "UPDATE", table_name: "time_entries", old_data: { entry_type: "clock", membership_id: m, ended_at: null }, new_data: { entry_type: "clock", membership_id: m, started_at: "2026-10-06T09:00:00.000Z", ended_at: T1 } },
+    { action: "INSERT", table_name: "time_entries", old_data: null, new_data: { entry_type: "break", membership_id: m, started_at: T1, ended_at: null } },
+    { action: "UPDATE", table_name: "time_entries", old_data: { entry_type: "break", membership_id: m, ended_at: null }, new_data: { entry_type: "break", membership_id: m, started_at: T1, ended_at: T2 } },
+    { action: "INSERT", table_name: "time_entries", old_data: null, new_data: { entry_type: "clock", membership_id: m, started_at: T2, ended_at: null } },
+  ];
+
+  it("describe pausar y reanudar", () => {
+    expect(describeAudit(log[1])).toBe("pausó la jornada");
+    expect(describeAudit(log[2])).toBe("reanudó la jornada");
+  });
+
+  it("oculta el cierre y la apertura de tramo que acompañan a la pausa", () => {
+    expect(foldClockSegments(log).map(describeAudit)).toEqual(["pausó la jornada", "reanudó la jornada"]);
+  });
+
+  it("una salida normal se mantiene", () => {
+    expect(foldClockSegments([log[0]]).map(describeAudit)).toEqual(["fichó salida"]);
   });
 });

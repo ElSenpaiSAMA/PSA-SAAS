@@ -15,9 +15,31 @@ export async function clockIn(orgId: string): Promise<ActionState> {
   const { membership } = await getOrgContext(orgId);
   const supabase = await createClient();
   const { error } = await supabase.from("time_entries").insert({ membership_id: membership.id, entry_type: "clock" });
-  if (error) return fail(error.code === "23505" ? "Ya tenés un fichaje abierto." : dbErrorMessage(error));
+  if (error) {
+    if (error.code === "23505") return fail("Ya tenés un fichaje abierto.");
+    if (error.message.includes("cannot be open at the same time")) return fail("Estás en pausa: reanudá la jornada.");
+    return fail(dbErrorMessage(error));
+  }
   refresh(orgId);
   return ok("Entrada registrada");
+}
+
+export async function pauseClock(orgId: string): Promise<ActionState> {
+  await getOrgContext(orgId);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("clock_pause", { p_org_id: orgId });
+  if (error) return fail(error.message.includes("not clocked in") ? "No tenés un fichaje abierto." : dbErrorMessage(error));
+  refresh(orgId);
+  return ok("Pausa iniciada");
+}
+
+export async function resumeClock(orgId: string): Promise<ActionState> {
+  await getOrgContext(orgId);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("clock_resume", { p_org_id: orgId });
+  if (error) return fail(error.message.includes("not on break") ? "No estás en pausa." : dbErrorMessage(error));
+  refresh(orgId);
+  return ok("Jornada reanudada");
 }
 
 export async function clockOut(orgId: string): Promise<ActionState> {
@@ -27,7 +49,7 @@ export async function clockOut(orgId: string): Promise<ActionState> {
     .from("time_entries")
     .update({ ended_at: new Date().toISOString() })
     .eq("membership_id", membership.id)
-    .eq("entry_type", "clock")
+    .in("entry_type", ["clock", "break"])
     .is("ended_at", null)
     .select("id");
   if (error) return fail(dbErrorMessage(error));
