@@ -30,6 +30,7 @@ src/
       staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada
       employees/               # personas: directorio, departamentos, organigrama, invitaciones
       automations/             # automatizaciones: activar, parámetros, ejecutar ahora, historial (automations.manage)
+      settings/                # ajustes de la empresa (employees.manage)
       audit/                   # auditoría (requiere employees.manage)
 ```
 
