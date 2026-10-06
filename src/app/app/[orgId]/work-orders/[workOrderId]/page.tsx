@@ -68,6 +68,8 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
     dueDate: t.due_date,
     canEdit: !locked && (manage || t.assigned_to === ctx.membership.id),
     canDuplicate: !locked && manage,
+    canManage: !locked && manage,
+    assignedTo: t.assigned_to,
     mine: t.assigned_to === ctx.membership.id,
   }));
 
@@ -162,7 +164,11 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
 
       <div className="mt-6">
         {board.length > 0 ? (
-          <TaskBoard orgId={orgId} tasks={board} />
+          <TaskBoard
+            orgId={orgId}
+            tasks={board}
+            people={employees.filter((e) => e.status === "active" && memberIds.has(e.id)).map((e) => ({ id: e.id, name: displayName(e.profile) }))}
+          />
         ) : (
           <EmptyState
             icon={SquareCheckBig}

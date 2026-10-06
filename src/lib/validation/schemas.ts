@@ -190,3 +190,17 @@ export const timeCorrectionSchema = z
     path: ["end"],
   })
   .refine((v) => new Date(v.end).getTime() <= Date.now(), { message: "No se pueden corregir horas futuras", path: ["end"] });
+
+/** Edición de una tarea existente (el proyecto y la OT no cambian). */
+export const taskEditSchema = z
+  .object({
+    title: z.string().trim().min(2, "Mínimo 2 caracteres").max(120),
+    assignedTo: emptyToUndefined.or(id).optional(),
+    estimatedHours: emptyToUndefined.or(z.coerce.number().min(0).max(1000)).optional(),
+    startDate: emptyToUndefined.or(isoDate).optional(),
+    dueDate: emptyToUndefined.or(isoDate).optional(),
+  })
+  .refine((v) => !v.startDate || !v.dueDate || v.dueDate >= v.startDate, {
+    message: "El vencimiento debe ser posterior al inicio",
+    path: ["dueDate"],
+  });
