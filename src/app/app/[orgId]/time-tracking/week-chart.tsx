@@ -30,9 +30,7 @@ export function WeekChart({ entries, dailyTargetMinutes }: { entries: TimeEntry[
           className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border-strong"
           style={{ bottom: `${targetPct}%` }}
         >
-          <span className="absolute -top-5 right-0 text-[11px] text-muted-foreground">
-            Objetivo {formatMinutes(dailyTargetMinutes)}
-          </span>
+          <span className="absolute -top-5 right-0 text-[11px] text-muted-foreground">Objetivo {formatMinutes(dailyTargetMinutes)}</span>
         </div>
         {days.map((d, i) => {
           const isToday = today !== null && isSameDay(d.date, today);

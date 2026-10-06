@@ -58,7 +58,10 @@ export function TeamWorkload({ members, entries }: { members: TeamMember[]; entr
                   <div className="relative">
                     <Avatar name={r.name} size={32} />
                     {r.working ? (
-                      <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-card bg-success" title="Trabajando ahora" />
+                      <span
+                        className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-card bg-success"
+                        title="Trabajando ahora"
+                      />
                     ) : null}
                   </div>
                   <div className="min-w-0">

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
-import { fieldErrors, taskHoursSchema } from "@/lib/validation/schemas";
+import { decisionNoteSchema, fieldErrors, taskHoursSchema, timeCorrectionSchema } from "@/lib/validation/schemas";
 
 function refresh(orgId: string) {
   revalidatePath(`/app/${orgId}`, "layout");
@@ -92,4 +92,74 @@ export async function deleteTaskEntry(orgId: string, entryId: string): Promise<A
   if (error) return fail(dbErrorMessage(error));
   refresh(orgId);
   return ok("Registro eliminado");
+}
+
+const CORRECTION_ERRORS: Record<string, string> = {
+  "corrections cannot end in the future": "No se pueden corregir horas que todavía no pasaron.",
+  "only your own closed clock entries can be corrected": "Solo podés corregir tus propios fichajes ya cerrados.",
+  "correction overlaps another clock entry": "Se superpone con otro fichaje tuyo de ese día.",
+  "there is already a pending correction for that time": "Ya tenés una corrección pendiente para ese horario.",
+  "a rejection requires a reason": "Contale a la persona por qué la rechazás.",
+};
+
+function correctionError(message: string | undefined) {
+  const key = Object.keys(CORRECTION_ERRORS).find((k) => message?.includes(k));
+  return key ? CORRECTION_ERRORS[key] : null;
+}
+
+/** Pide corregir un tramo de fichaje (entryId) o agregar uno olvidado. */
+export async function requestCorrection(orgId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  const { membership } = await getOrgContext(orgId);
+  const parsed = timeCorrectionSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return fail("Revisá los campos marcados.", fieldErrors(parsed.error));
+
+  const { entryId, start, end, reason } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.from("time_corrections").insert({
+    membership_id: membership.id,
+    entry_id: entryId ?? null,
+    proposed_start: start,
+    proposed_end: end,
+    reason,
+  });
+  if (error) return fail(correctionError(error.message) ?? dbErrorMessage(error));
+  refresh(orgId);
+  return ok("Corrección enviada. Te avisamos cuando la revisen.");
+}
+
+export async function cancelCorrection(orgId: string, id: string): Promise<ActionState> {
+  const { membership } = await getOrgContext(orgId);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("time_corrections")
+    .update({ status: "cancelled" })
+    .eq("id", z.guid().parse(id))
+    .eq("membership_id", membership.id)
+    .eq("status", "pending")
+    .select("id");
+  if (error) return fail(dbErrorMessage(error));
+  if (!data?.length) return fail("La corrección ya no está pendiente.");
+  refresh(orgId);
+  return ok("Corrección cancelada");
+}
+
+export async function decideCorrection(orgId: string, id: string, decision: "approved" | "rejected", note?: string): Promise<ActionState> {
+  const ctx = await getOrgContext(orgId);
+  if (!ctx.can("time.view_team")) return fail("No tenés permisos para revisar fichajes del equipo.");
+  const status = z.enum(["approved", "rejected"]).parse(decision);
+  const parsedNote = decisionNoteSchema.safeParse(note ?? "");
+  if (!parsedNote.success) return fail(parsedNote.error.issues[0].message);
+  if (status === "rejected" && !parsedNote.data) return fail(CORRECTION_ERRORS["a rejection requires a reason"]);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("time_corrections")
+    .update({ status, decision_note: parsedNote.data || null })
+    .eq("id", z.guid().parse(id))
+    .eq("status", "pending")
+    .select("id");
+  if (error) return fail(correctionError(error.message) ?? dbErrorMessage(error));
+  if (!data?.length) return fail("La corrección ya no está pendiente o no podés decidirla.");
+  refresh(orgId);
+  return ok(status === "approved" ? "Corrección aprobada y aplicada al fichaje" : "Corrección rechazada");
 }
