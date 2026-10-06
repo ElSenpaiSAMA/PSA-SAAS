@@ -496,3 +496,18 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** 8 pgTAP (sin organizaciones nuevas, alta con y sin invitación, aceptación automática con rol y puesto, cargas del sistema), E2E de entrada directa, de alta rechazada sin invitación y de alta de un técnico invitado (en un proyecto con confirmación por email, el test verifica el aviso de confirmación). También se probó contra el Supabase real: el registro sin invitación queda bloqueado por la base.
 
+---
+
+## 2026-10-07 Foro: menciones y aviso de novedades
+
+**Prompt (resumen):** poder mencionar gente en el foro y que le llegue la notificación, y una señal en la barra lateral cuando hay novedades.
+
+**Decisiones:**
+- **El texto se guarda tal cual** ("@Ana Torres ¿lo ves?") y aparte la lista de personas mencionadas. Avisar depende de esa lista, que valida la base, no de interpretar el texto: así nadie puede "mencionar" a alguien de otra empresa, y escribir un @ a mano no dispara avisos. Al leer, solo se resaltan las menciones reales.
+- **Sin avisos duplicados:** si la autora del hilo además está mencionada en una respuesta, recibe solo la mención.
+- **Las menciones no cambian al editar**, para no avisar dos veces ni "desmencionar" a alguien que ya fue avisado.
+- **Novedades por persona:** se guarda cuándo vio cada uno el foro. El aviso del menú cuenta los hilos con actividad de otras personas desde entonces (la actividad propia no cuenta). Al abrir el foro se marca como visto, pero las marcas "Nuevo" de la lista se mantienen mientras la persona está ahí.
+- **Autocompletado accesible:** combobox con listbox, flechas, Enter, Tab y Escape. Se corrigió un bug en el que, al escribir rápido después de elegir a alguien, el cursor saltaba: ahora se ubica en el mismo render, antes de pintar.
+
+**Pruebas:** 10 pgTAP (filtrado de menciones, aviso al mencionado, sin duplicados, menciones inmutables, contador de novedades), unitarios del parser de menciones y del autocompletado, y E2E del recorrido: Ana menciona a Diego, a Diego le aparece el aviso en "Foro" y la mención en la Bandeja, y el contador vuelve a cero al ver el foro.
+
