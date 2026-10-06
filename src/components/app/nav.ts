@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CalendarDays,
   CalendarRange,
   ClipboardList,
@@ -16,7 +17,7 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings";
+export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports";
 
 export interface NavItem {
   href: string;
@@ -40,6 +41,7 @@ export const NAV: NavItem[] = [
   { href: "vacations", label: "Vacaciones", icon: "vacations", keywords: ["ausencias", "días libres"] },
   { href: "staff", label: "Empleados", icon: "staff", keywords: ["perfil", "ficha", "dni", "sueldo", "contrato", "rrhh"] },
   { href: "employees", label: "Personas", icon: "team", keywords: ["equipo", "departamentos", "organigrama", "invitar"] },
+  { href: "reports", label: "Informes", icon: "reports", permission: "time.view_team", keywords: ["excel", "csv", "exportar", "facturación", "horas", "ausencias"] },
   { href: "automations", label: "Automatizaciones", icon: "automations", permission: "automations.manage", keywords: ["reglas", "workflows", "flujos", "recordatorios", "automático"] },
   { href: "settings", label: "Ajustes", icon: "settings", permission: "employees.manage", keywords: ["configuración", "empresa", "zona horaria", "roles", "permisos"] },
   { href: "audit", label: "Auditoría", icon: "audit", permission: "employees.manage", keywords: ["log", "historial"] },
@@ -59,4 +61,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   automations: Workflow,
   audit: ScrollText,
   settings: Settings,
+  reports: BarChart3,
 };
