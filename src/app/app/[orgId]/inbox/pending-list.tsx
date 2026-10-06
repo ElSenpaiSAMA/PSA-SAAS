@@ -2,19 +2,13 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Check, CheckCheck, Clock3, FileCheck2, Palmtree, Receipt, SquareCheckBig, X } from "lucide-react";
-import { useTransition } from "react";
-import { toast } from "sonner";
+import { ArrowRight, CheckCheck, Clock3, FileCheck2, Receipt, SquareCheckBig, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Spinner } from "@/components/ui/submit-button";
 import { PENDING_LABEL, type PendingItem, type PendingKind } from "@/lib/domain/inbox";
 import { cn } from "@/lib/utils";
-import { decideVacation } from "../vacations/actions";
 
-const ICON: Record<PendingKind, typeof Palmtree> = {
-  vacation_approval: Palmtree,
+const ICON: Record<PendingKind, LucideIcon> = {
   invoice: Receipt,
   close_work_order: FileCheck2,
   approve_work_order: FileCheck2,
@@ -23,7 +17,6 @@ const ICON: Record<PendingKind, typeof Palmtree> = {
 };
 
 const TONE: Record<PendingKind, string> = {
-  vacation_approval: "bg-success/12 text-success",
   invoice: "bg-accent-soft text-accent",
   close_work_order: "bg-accent-soft text-accent",
   approve_work_order: "bg-accent-soft text-accent",
@@ -31,33 +24,13 @@ const TONE: Record<PendingKind, string> = {
   open_clock: "bg-warning/15 text-warning",
 };
 
-function VacationActions({ orgId, id }: { orgId: string; id: string }) {
-  const [pending, start] = useTransition();
-  const decide = (decision: "approved" | "rejected") =>
-    start(async () => {
-      const r = await decideVacation(orgId, id, decision);
-      if (r.status === "error") toast.error(r.message);
-      else toast.success(r.message);
-    });
-  return (
-    <div className="flex shrink-0 gap-1.5">
-      <Button size="sm" variant="ghost" disabled={pending} onClick={() => decide("rejected")} aria-label="Rechazar">
-        <X className="size-3.5" /> Rechazar
-      </Button>
-      <Button size="sm" variant="primary" disabled={pending} onClick={() => decide("approved")}>
-        {pending ? <Spinner /> : <Check className="size-3.5" />} Aprobar
-      </Button>
-    </div>
-  );
-}
-
-export function PendingList({ orgId, items }: { orgId: string; items: PendingItem[] }) {
+export function PendingList({ items }: { items: PendingItem[] }) {
   if (items.length === 0) {
     return (
       <EmptyState
         icon={CheckCheck}
         title="Nada pendiente"
-        description="Cuando algo necesite tu acción (una aprobación, una OT por cerrar o facturar), aparece acá."
+        description="Cuando algo necesite tu acción (una OT por cerrar o facturar, una tarea vencida, un fichaje olvidado), aparece acá."
       />
     );
   }
@@ -86,16 +59,12 @@ export function PendingList({ orgId, items }: { orgId: string; items: PendingIte
                   <span className="text-foreground/70">{PENDING_LABEL[item.kind]}</span> · {item.detail}
                 </p>
               </div>
-              {item.kind === "vacation_approval" ? (
-                <VacationActions orgId={orgId} id={item.entityId} />
-              ) : (
-                <Link
+              <Link
                   href={item.href}
                   className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   Resolver <ArrowRight className="size-3.5" />
                 </Link>
-              )}
             </motion.li>
           );
         })}

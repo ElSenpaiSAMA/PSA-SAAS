@@ -240,6 +240,10 @@ Reglas "cuando pasa X → si se cumple Y → hacer Z" que trabajan solas.
 
 Cubierto por `supabase/tests/automations.test.sql` (14 tests).
 
+## Enlaces de vacaciones (`0011_vacation_links.sql`)
+
+Las solicitudes de vacaciones se deciden en **Vacaciones → Equipo**, no en la bandeja. Esta migración redefine `notify_vacation_change` y `automation_vacations_escalate` para que los avisos de solicitud, cancelación y escalado enlacen a `/vacations?tab=equipo`, y corrige el enlace de los avisos ya enviados. Suspende el guard de notificaciones solo durante ese `update`.
+
 ## Desarrollo local
 
 ```bash

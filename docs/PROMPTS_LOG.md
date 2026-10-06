@@ -309,3 +309,23 @@ Las que cambian datos por su cuenta (cerrar o crear OT, aprobar vacaciones) vien
 - Los títulos de las OT creadas solas usan los meses en español (Postgres los pone en inglés por defecto).
 
 **Verificado:** 14 tests pgTAP y una corrida forzada de todas las reglas sobre los datos reales (en una transacción revertida). En el navegador, una admin activó una regla, cambió un parámetro (con validación) y ejecutó el resumen semanal: 2 avisos. Un empleado no ve la sección. La configuración de prueba se volvió a los valores por defecto.
+
+---
+
+## 2026-10-06 Vacaciones: las aprobaciones viven en la pestaña Equipo
+
+**Prompt (resumen):** "Lo de aprobar vacaciones no tiene que estar en la bandeja. Que llegue la notificación de que tal pidió vacaciones y, si hace click, que lo lleve a donde se aprueban. Eso debería estar en Vacaciones: la gente que se encarga de aprobar debería ver una pestaña donde reciben las solicitudes, ven las vacaciones de todo su equipo, un calendario, y deciden."
+
+**Por qué tiene sentido:** decidir unas vacaciones requiere contexto (quién más está fuera esos días, cuántos días le quedan). Un botón "Aprobar" suelto en la bandeja invitaba a decidir sin mirar.
+
+**Resultado:**
+- La **bandeja** ya no muestra las vacaciones como pendiente. Llega solo la notificación, que enlaza a `/vacations?tab=equipo` (migración `0011`, que también corrige los avisos ya enviados).
+- **Vacaciones** tiene dos pestañas. "Mis vacaciones" es para todos. **"Equipo"** solo la ven quienes pueden aprobar y tienen gente a cargo, con un contador de solicitudes por decidir. Incluye:
+  - Resumen: por decidir, quién está fuera hoy y personas a cargo.
+  - Solicitudes por decidir, con aviso de coincidencias ("Coincide con Ana" o "Sin coincidencias en el equipo"), el saldo restante y, si le corresponde a otra persona, "Le toca a X". Primero van las propias.
+  - **Calendario del equipo**: grilla persona × día del mes, con aprobadas (verde), pendientes (ámbar rayado), fines de semana y festivos sombreados y la columna de hoy resaltada. Se navega por meses.
+  - Próximas ausencias.
+- En "Mis vacaciones", quien tiene solicitudes por decidir ve un acceso directo a la pestaña Equipo.
+- Lógica nueva en el dominio, con tests: `absenceGrid` y `overlappingPeople`.
+
+**Verificado:** Diego pidió dos días. A Carlos le llegó la notificación (sin botón de aprobar en la bandeja); el click lo llevó a la pestaña Equipo, vio la solicitud en el calendario y la aprobó. Diego no ve la pestaña.

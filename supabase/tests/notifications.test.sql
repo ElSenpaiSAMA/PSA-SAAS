@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(13);
+select plan(14);
 
 create or replace function pg_temp.login_as(p_user uuid, p_email text)
 returns void
@@ -52,6 +52,12 @@ select is(
    where n.kind = 'vacation.requested' and v.reason = 'Test'),
   array['bbbbbbbb-0000-0000-0000-000000000002'::uuid],
   'solo Carlos recibe el aviso: administración no, porque Diego ya tiene responsable'
+);
+select is(
+  (select n.link from public.notifications n join public.vacation_requests v on v.id = n.entity_id
+   where n.kind = 'vacation.requested' and v.reason = 'Test'),
+  '/app/aaaaaaaa-0000-0000-0000-000000000001/vacations?tab=equipo',
+  'el aviso lleva a Vacaciones → Equipo, donde se decide'
 );
 select is(
   (select array_agg(x) from public.vacation_approvers('bbbbbbbb-0000-0000-0000-000000000003') x),

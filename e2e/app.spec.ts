@@ -71,19 +71,32 @@ test("empleada solicita vacaciones y quedan pendientes", async ({ page }) => {
   await expect(page.getByText(/Solicitud enviada/)).toBeVisible();
 });
 
-test("el manager aprueba vacaciones de su equipo", async ({ page }) => {
+test("el manager decide en Vacaciones → Equipo, con el calendario del equipo", async ({ page }) => {
   await login(page, "carlos@demo.com");
   await page.goto(`/app/${NEBULA}/vacations`);
-  await expect(page.getByText(/Por aprobar/)).toBeVisible();
+  await page.getByRole("link", { name: /Ir a Equipo/ }).click();
+  await expect(page).toHaveURL(/tab=equipo/);
+  await expect(page.getByText(/^Solicitudes por decidir/)).toBeVisible();
+  await expect(page.getByText("Calendario del equipo")).toBeVisible();
   await page.getByRole("button", { name: "Aprobar" }).first().click();
   await expect(page.getByText("Vacaciones aprobadas")).toBeVisible();
 });
 
-test("el aprobador resuelve desde la bandeja y el solicitante recibe el aviso", async ({ page }) => {
+test("un empleado sin equipo a cargo no ve la pestaña Equipo", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/vacations?tab=equipo`);
+  await expect(page.getByRole("link", { name: "Equipo" })).toHaveCount(0);
+  await expect(page.getByText("Nueva solicitud")).toBeVisible();
+});
+
+test("el aviso de la bandeja lleva a decidir en Vacaciones → Equipo", async ({ page }) => {
   await login(page, "carlos@demo.com");
   await page.goto(`/app/${NEBULA}/inbox`);
-  const request = page.getByRole("listitem").filter({ hasText: "Diego Fernández pidió vacaciones" }).filter({ has: page.getByRole("button", { name: "Aprobar" }) });
-  await expect(request).toBeVisible();
+  // Las vacaciones ya no son un pendiente de la bandeja: llegan como notificación
+  await expect(page.getByRole("button", { name: "Aprobar" })).toHaveCount(0);
+  await page.getByRole("button", { name: /Diego Fernández pidió vacaciones/ }).first().click();
+  await expect(page).toHaveURL(/vacations\?tab=equipo/);
+  const request = page.getByRole("listitem").filter({ hasText: "Diego Fernández" }).filter({ has: page.getByRole("button", { name: "Aprobar" }) });
   await request.getByRole("button", { name: "Aprobar" }).click();
   await expect(page.getByText("Vacaciones aprobadas")).toBeVisible();
   await expect(request).toHaveCount(0);

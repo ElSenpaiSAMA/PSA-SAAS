@@ -4,7 +4,6 @@ import { buildPending, type PendingInput } from "./inbox";
 const empty: PendingInput = {
   orgId: "o1",
   today: "2026-10-06",
-  vacationsToDecide: [],
   toInvoice: [],
   managedWorkOrders: [],
   myTasks: [],
@@ -14,21 +13,6 @@ const empty: PendingInput = {
 describe("bandeja de pendientes", () => {
   it("sin nada que hacer, la bandeja está vacía", () => {
     expect(buildPending(empty)).toEqual([]);
-  });
-
-  it("una solicitud que empieza en menos de una semana es urgente", () => {
-    const items = buildPending({
-      ...empty,
-      vacationsToDecide: [
-        { id: "v1", requester: "Ana", start_date: "2026-10-09", end_date: "2026-10-10", created_at: "2026-10-01T10:00:00Z", days: 2 },
-        { id: "v2", requester: "Diego", start_date: "2026-11-20", end_date: "2026-11-20", created_at: "2026-09-30T10:00:00Z", days: 1 },
-      ],
-    });
-    expect(items.map((i) => [i.entityId, i.urgent])).toEqual([
-      ["v1", true],
-      ["v2", false],
-    ]);
-    expect(items[1].detail).toMatch(/1 día hábil$/);
   });
 
   it("OT: cerrar las vencidas, aprobar los borradores que ya empezaron, ignorar el resto", () => {

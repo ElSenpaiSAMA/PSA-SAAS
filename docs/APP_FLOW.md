@@ -24,7 +24,7 @@ src/
       vacations/               # saldo, solicitudes y aprobaciones
       projects/[projectId]/    # proyectos: sus órdenes de trabajo y miembros
       work-orders/[workOrderId]/ # OT por mes: tareas con fechas, estados, copiar al mes siguiente, facturación
-      inbox/                   # bandeja: pendientes de acción + notificaciones
+      inbox/                   # bandeja: pendientes de acción (OT, tareas, fichaje) + notificaciones
       calendar/                # calendario general: tareas, OT, ausencias y festivos (mes/semana)
       planning/                # carga de trabajo persona × semana vs. capacidad
       staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada

@@ -4,8 +4,9 @@ import { addMonths, formatMonth, monthStart, todayISO, toMonthParam, type ISODat
 import { cn } from "@/lib/utils";
 
 /** Navegación ‹ Octubre 2026 › por query param ?month=YYYY-MM (server component, sin JS). */
-export function MonthNav({ month, basePath }: { month: ISODate; basePath: string }) {
-  const href = (iso: ISODate) => `${basePath}?month=${toMonthParam(iso)}`;
+export function MonthNav({ month, basePath, query }: { month: ISODate; basePath: string; query?: Record<string, string> }) {
+  // query: otros parámetros a conservar al cambiar de mes (p. ej. la pestaña activa)
+  const href = (iso: ISODate) => `${basePath}?${new URLSearchParams({ ...query, month: toMonthParam(iso) })}`;
   const isCurrent = monthStart(todayISO()) === month;
   const btn =
     "inline-flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
