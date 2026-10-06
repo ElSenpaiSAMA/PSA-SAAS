@@ -61,15 +61,17 @@ export function AnimatedNumber({
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true });
   const reduced = useReducedMotion();
-  const mv = useMotionValue(reduced ? value : 0);
+  // Siempre arranca en 0: en el servidor no se sabe si el usuario prefiere menos
+  // movimiento, y el primer render del cliente tiene que coincidir (hidratación).
+  const mv = useMotionValue(0);
   const text = useTransform(mv, (n) => format(n));
 
   useEffect(() => {
-    if (!inView) return;
     if (reduced) {
       mv.set(value);
       return;
     }
+    if (!inView) return;
     const controls = animate(mv, value, { duration, ease: EASE });
     return () => controls.stop();
   }, [inView, value, duration, mv, reduced]);
