@@ -187,3 +187,40 @@ values
   -- Sofía (People Ops)
   ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000005', '2021-09-13', '56789012B', '1990-11-08', '+34 600 555 666', 'sofia.lopez@correo.test', 'Calle Prado 3, Madrid', 'Andrés López · +34 600 555 777',
    '2021-09-13', 'indefinido', 48000, 'ES38 0081 0200 0100 0123 4567', null);
+
+-- Foro interno: dudas, avisos e incidencias técnicas del taller
+insert into public.forum_threads (id, author_id, category, title, body, pinned, locked, resolved, created_at) values
+  ('99999999-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000005', 'notice',
+   'Nuevo protocolo de seguridad en el varadero',
+   E'A partir del lunes, para trabajar bajo un barco en seco es obligatorio:\n\n- Calzos y puntales revisados por el jefe de varadero antes de empezar.\n- Casco y botas de seguridad en toda la zona de grúa.\n- Avisar por el canal de taller antes de mover la grúa travel-lift.\n\nCualquier duda, respondé en este hilo.',
+   true, false, false, now() - interval '9 days'),
+  ('99999999-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000004', 'incident',
+   'Plotter Garmin GPSMAP 8612 del Lagoon 42 se reinicia solo',
+   E'El plotter del Lagoon 42 (cliente Acme) se reinicia cada 10-15 minutos con los motores en marcha. Con motores parados aguanta bien.\n\nYa revisé la tensión en bornes: 12,8 V parado y 14,1 V con el alternador cargando. ¿A alguien le pasó algo parecido?',
+   false, false, true, now() - interval '6 days'),
+  ('99999999-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000003', 'question',
+   '¿Qué sellador usamos para pasacascos bajo la línea de flotación?',
+   E'Tengo que cambiar dos pasacascos de bronce en un velero de 38 pies. ¿Seguimos usando Sikaflex 291i o hay algo mejor para debajo de la flotación?',
+   false, false, false, now() - interval '4 days'),
+  ('99999999-0000-0000-0000-000000000004', 'bbbbbbbb-0000-0000-0000-000000000002', 'incident',
+   'Alternador del Volvo Penta D2-40 no carga en ralentí',
+   E'En el refit del Bavaria 46 el alternador no carga por debajo de 1.200 rpm. La correa está bien tensada. Sospecho del regulador. ¿Alguien tiene un regulador de repuesto en el almacén?',
+   false, false, false, now() - interval '2 days'),
+  ('99999999-0000-0000-0000-000000000005', 'bbbbbbbb-0000-0000-0000-000000000001', 'notice',
+   'Pedidos de repuestos urgentes: nuevo procedimiento',
+   E'Los pedidos urgentes a proveedor (entrega en 24 h) los aprueba el jefe de taller. Cargá el pedido en el parte de la orden de trabajo y avisá por este canal. Cierro el hilo para que quede como referencia.',
+   false, true, false, now() - interval '12 days');
+
+insert into public.forum_posts (thread_id, author_id, body, created_at) values
+  ('99999999-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000003',
+   '¿Los puntales nuevos ya están en el varadero o seguimos con los de siempre?', now() - interval '8 days'),
+  ('99999999-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000005',
+   'Llegaron ayer: están junto a la grúa, etiquetados en amarillo.', now() - interval '8 days' + interval '3 hours'),
+  ('99999999-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000002',
+   'Me pasó en un Fountaine Pajot: era el ruido del alternador entrando por la alimentación. Probá con un filtro de ruido en la línea de 12 V del plotter.', now() - interval '6 days' + interval '2 hours'),
+  ('99999999-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000004',
+   'Era eso. Con el filtro instalado lleva 3 horas sin reiniciarse. Lo marco como resuelto, gracias.', now() - interval '5 days'),
+  ('99999999-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000002',
+   'Para bajo flotación usamos Sikaflex 291i, sí. Limpiá bien con Sika Aktivator y dejá curar 24 h antes de botar.', now() - interval '4 days' + interval '1 hour'),
+  ('99999999-0000-0000-0000-000000000004', 'bbbbbbbb-0000-0000-0000-000000000004',
+   'Queda uno en la estantería B3, caja de Volvo. Te lo dejo en el banco del taller.', now() - interval '1 day');
