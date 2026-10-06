@@ -36,7 +36,8 @@ function useAction() {
   return [pending, run] as const;
 }
 
-export function MyRequests({ orgId, requests }: { orgId: string; requests: VacationRequest[] }) {
+export function MyRequests({ orgId, requests, holidays }: { orgId: string; requests: VacationRequest[]; holidays: string[] }) {
+  const off = new Set(holidays);
   return (
     <ul className="divide-y divide-border">
       <AnimatePresence initial={false}>
@@ -45,7 +46,7 @@ export function MyRequests({ orgId, requests }: { orgId: string; requests: Vacat
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-medium">{range(r)}</p>
               <p className="truncate text-[12.5px] text-muted-foreground">
-                {businessDays(r)} días hábiles{r.reason ? ` · ${r.reason}` : ""}
+                {businessDays(r, off)} días hábiles{r.reason ? ` · ${r.reason}` : ""}
               </p>
             </div>
             <Badge tone={STATUS[r.status].tone} dot>
@@ -79,7 +80,8 @@ export interface PendingApproval extends VacationRequest {
   available: number;
 }
 
-export function Approvals({ orgId, requests }: { orgId: string; requests: PendingApproval[] }) {
+export function Approvals({ orgId, requests, holidays }: { orgId: string; requests: PendingApproval[]; holidays: string[] }) {
+  const off = new Set(holidays);
   return (
     <ul className="grid gap-2.5">
       <AnimatePresence initial={false}>
@@ -99,7 +101,7 @@ export function Approvals({ orgId, requests }: { orgId: string; requests: Pendin
                 <span className="text-muted-foreground">· {range(r)}</span>
               </p>
               <p className="truncate text-[12.5px] text-muted-foreground">
-                {businessDays(r)} días hábiles · le quedan {r.available}
+                {businessDays(r, off)} días hábiles · le quedan {r.available}
                 {r.reason ? ` · “${r.reason}”` : ""}
               </p>
             </div>

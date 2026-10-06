@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { getHolidaySet } from "@/lib/data/calendar";
 import { getOrgContext } from "@/lib/data/session";
 import { getVisibleVacationRequests } from "@/lib/data/vacations";
 import {
@@ -35,10 +36,11 @@ export async function requestVacation(orgId: string, _prev: ActionState, formDat
   const { startDate, endDate, reason } = parsed.data;
   const mine = await getVisibleVacationRequests([membership.id]);
   const year = Number(startDate.slice(0, 4));
-  const balance = vacationBalance(membership.annual_vacation_days, mine, year);
+  const holidays = await getHolidaySet(orgId, `${year - 1}-01-01`, `${year + 1}-12-31`);
+  const balance = vacationBalance(membership.annual_vacation_days, mine, year, holidays);
   const today = new Date().toISOString().slice(0, 10);
 
-  const problem = validateNewRequest({ start_date: startDate, end_date: endDate }, mine, balance, today);
+  const problem = validateNewRequest({ start_date: startDate, end_date: endDate }, mine, balance, today, holidays);
   if (problem) {
     const { field, text } = MESSAGES[problem];
     return fail(text, { [field]: [text] });
@@ -54,7 +56,7 @@ export async function requestVacation(orgId: string, _prev: ActionState, formDat
   if (error) return fail(dbErrorMessage(error));
 
   refresh(orgId);
-  const days = businessDays({ start_date: startDate, end_date: endDate });
+  const days = businessDays({ start_date: startDate, end_date: endDate }, holidays);
   return ok(`Solicitud enviada · ${days} ${days === 1 ? "día hábil" : "días hábiles"}`);
 }
 
