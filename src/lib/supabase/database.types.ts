@@ -183,6 +183,29 @@ export type ProjectMember = {
   added_at: Timestamp;
 };
 
+export type NotificationKind =
+  | "vacation.requested"
+  | "vacation.decided"
+  | "vacation.cancelled"
+  | "task.assigned"
+  | "project.added"
+  | "work_order.to_invoice";
+
+export type Notification = {
+  id: string;
+  org_id: string;
+  recipient_id: string;
+  actor_id: string | null;
+  kind: NotificationKind | (string & {});
+  title: string;
+  body: string | null;
+  link: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  read_at: Timestamp | null;
+  created_at: Timestamp;
+};
+
 export type AuditLog = {
   id: number;
   user_id: string | null;
@@ -228,6 +251,7 @@ export type Database = {
       work_orders: Table<WorkOrder, "project_id" | "title" | "period_start" | "period_end">;
       holidays: Table<Holiday, "org_id" | "date" | "name">;
       employee_records: Table<EmployeeRecord, "membership_id" | "effective_from">;
+      notifications: Table<Notification, "org_id" | "recipient_id" | "kind" | "title">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;
@@ -250,6 +274,7 @@ export type Database = {
       };
       org_absences: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: AbsenceRow[] };
       clock_pause: { Args: { p_org_id: string }; Returns: undefined };
+      vacation_approvers: { Args: { p_membership_id: string }; Returns: string[] };
       clock_resume: { Args: { p_org_id: string }; Returns: undefined };
       workload_items: { Args: { p_org_id: string; p_from: string; p_to: string }; Returns: WorkloadItemRow[] };
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
