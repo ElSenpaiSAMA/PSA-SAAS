@@ -1,24 +1,42 @@
 import { expect, test } from "@playwright/test";
 
-test.describe("landing pública", () => {
-  test("muestra el hero y los CTA", async ({ page }) => {
+test.describe("web pública", () => {
+  test("la home presenta la empresa y sus servicios", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("en orden");
-    await expect(page.getByRole("link", { name: /crear mi organización/i })).toBeVisible();
-  });
-
-  test("el CTA principal lleva al registro", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("link", { name: /crear mi organización/i }).click();
-    await expect(page).toHaveURL(/\/signup$/);
-    await expect(page.getByRole("heading", { name: /creá tu cuenta/i })).toBeVisible();
-  });
-
-  test("las secciones del producto están presentes", async ({ page }) => {
-    await page.goto("/");
-    for (const id of ["producto", "como-funciona", "seguridad"]) {
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("para zarpar");
+    for (const id of ["servicios", "empresa", "proceso"]) {
       await expect(page.locator(`#${id}`)).toBeAttached();
     }
+    await expect(page.getByRole("heading", { name: "Pintura y antifouling" })).toBeVisible();
+  });
+
+  test("el CTA principal lleva al contacto", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("main").getByRole("link", { name: /pedir presupuesto/i }).first().click();
+    await expect(page).toHaveURL(/\/contacto$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("le pasa a tu barco");
+  });
+
+  test("el acceso de empleados lleva al login", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("banner").getByRole("link", { name: /acceso/i }).click();
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test("el formulario de contacto valida y confirma el envío", async ({ page }) => {
+    await page.goto("/contacto");
+    await page.getByRole("button", { name: "Enviar consulta" }).click();
+    await expect(page.getByText("Contanos tu nombre")).toBeVisible();
+    await expect(page.getByText("Necesitamos tu conformidad para responderte")).toBeVisible();
+
+    await page.getByLabel("Nombre y apellido").fill("Marta Soler");
+    await page.getByLabel("Email").fill("marta@correo.com");
+    await page.getByLabel("Tipo de barco").selectOption("Velero");
+    await page.getByLabel("Servicio").selectOption("Pintura y antifouling");
+    await page.getByLabel("Mensaje").fill("Quiero hacer el antifouling antes de la temporada.");
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "Enviar consulta" }).click();
+    await expect(page.getByRole("status")).toContainText("Gracias, Marta");
   });
 });
 
@@ -31,6 +49,11 @@ test.describe("rutas protegidas", () => {
   test("sin sesión, el selector de organización redirige a login", async ({ page }) => {
     await page.goto("/select-organization");
     await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("sin sesión, el foro interno redirige a login", async ({ page }) => {
+    await page.goto("/app/aaaaaaaa-0000-0000-0000-000000000001/forum");
+    await expect(page).toHaveURL(/\/login\?next=%2Fapp%2F.*forum/);
   });
 });
 
