@@ -427,3 +427,20 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 **Cómo se probó sin clave real:** un servidor local compatible con OpenRouter que responde con llamadas a herramientas y JSON. Se ejercitó el circuito completo: el asistente pidió la herramienta "personas", recibió los datos y respondió; el reparto propuso horas (una de ellas inválida, que se corrigió sola) y se imputó; el resumen salió con los datos del equipo. Aparecieron y se corrigieron dos bugs: un efecto de React que devolvía un valor, y `Escape` que no cerraba el asistente.
 
 **Lección de CI (Informes):** un E2E asumía que Diego seguía siendo empleado, pero un test anterior lo hace responsable de departamento y eso lo asciende a manager. Quedó anotado en `CLAUDE.md`.
+
+---
+
+## 2026-10-06 Prueba técnica Diplonautic: foro interno
+
+**Prompt (resumen):** la prueba técnica pide una web corporativa demo para una empresa de reparación náutica: home pública, contacto, login de empleados con roles (empleado y admin) y un **foro interno** donde solo las personas autenticadas leen y escriben (lista de hilos con título, autor y fecha, crear hilo y responder). Se decidió **reutilizar la app** como intranet de la empresa en lugar de empezar de cero, y entregar cada parte por Pull Request.
+
+**Decisiones del foro:**
+- **Categorías propias del taller:** duda, incidencia técnica y aviso. Un *aviso* le llega como notificación a toda la empresa; las dudas e incidencias se marcan como **resueltas**, para que el foro sirva de base de conocimiento ("¿cómo se arregló el plotter del Lagoon?").
+- **La seguridad está en la base, no en la pantalla:** RLS para leer (solo la empresa) y escribir (solo a nombre propio), y triggers que impiden a un empleado fijar o cerrar hilos, editar lo ajeno, responder en un hilo cerrado o tocar los contadores. La UI solo esconde los botones que no corresponden.
+- **Moderación** con un permiso nuevo, `forum.moderate` (owner y admin): fijar arriba, cerrar y borrar.
+- **Texto plano** con saltos de línea: sin HTML ni Markdown, así no hay riesgo de inyectar código.
+- **Si alguien deja la empresa**, sus mensajes quedan (autor "Ex miembro"): el historial técnico no se pierde.
+- **Datos de prueba náuticos** en el seed: protocolo de varadero (fijado), plotter Garmin que se reinicia (resuelto), sellador para pasacascos, alternador Volvo Penta, procedimiento de repuestos urgentes (cerrado).
+
+**Pruebas:** 14 pgTAP (aislamiento entre empresas, sin sesión, autoría, cerrado, moderación, contadores, avisos), unitarios de dominio (orden, filtros, permisos) y E2E del recorrido completo: una empleada abre una incidencia, un compañero responde, la admin cierra el hilo y a la autora le llega el aviso, pero ya no puede responder.
+

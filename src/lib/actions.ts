@@ -44,6 +44,11 @@ export function dbErrorMessage(error: { message?: string; code?: string } | null
     "department must belong to the same organization": "El departamento no pertenece a esta organización.",
     "department head must belong to the same organization": "El responsable debe pertenecer a la organización.",
     "member must belong to the same organization": "La persona no pertenece a esta organización.",
+    "thread is locked": "El hilo está cerrado: ya no admite respuestas.",
+    "only moderators can pin or lock threads": "Solo la administración puede fijar o cerrar hilos.",
+    "only the author can edit the thread": "Solo quien escribió el hilo puede editarlo.",
+    "only the author can edit the post": "Solo quien escribió la respuesta puede editarla.",
+    "thread not found": "El hilo no existe o fue borrado.",
   };
   for (const [key, text] of Object.entries(known)) if (msg.includes(key)) return text;
   if (error?.code === "23505") return "Ya existe un registro igual.";

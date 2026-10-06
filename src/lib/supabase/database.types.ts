@@ -220,7 +220,37 @@ export type NotificationKind =
   | "task.overdue"
   | "team.weekly_summary"
   | "time.correction_requested"
-  | "time.correction_decided";
+  | "time.correction_decided"
+  | "forum.reply"
+  | "forum.notice";
+
+export type ForumCategory = "question" | "notice" | "incident";
+
+export type ForumThread = {
+  id: string;
+  org_id: string;
+  author_id: string | null;
+  category: ForumCategory;
+  title: string;
+  body: string;
+  pinned: boolean;
+  locked: boolean;
+  resolved: boolean;
+  reply_count: number;
+  last_activity_at: Timestamp;
+  created_at: Timestamp;
+  edited_at: Timestamp | null;
+};
+
+export type ForumPost = {
+  id: string;
+  thread_id: string;
+  org_id: string;
+  author_id: string | null;
+  body: string;
+  created_at: Timestamp;
+  edited_at: Timestamp | null;
+};
 
 export type AutomationTemplate = {
   key: string;
@@ -314,6 +344,8 @@ export type Database = {
       automation_templates: Table<AutomationTemplate, "key" | "trigger_kind" | "default_enabled">;
       automation_rules: Table<AutomationRule, "org_id" | "key" | "enabled">;
       automation_runs: Table<AutomationRun, "org_id" | "rule_key" | "dedupe_key">;
+      forum_threads: Table<ForumThread, "author_id" | "category" | "title" | "body">;
+      forum_posts: Table<ForumPost, "thread_id" | "author_id" | "body">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
       permissions: Table<{ key: Permission; description: string }, "key" | "description">;

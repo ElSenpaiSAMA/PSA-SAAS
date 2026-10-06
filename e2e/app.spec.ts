@@ -487,3 +487,51 @@ test("sin clave de IA, la app explica cómo activarla y no rompe nada", async ({
   await page.goto(`/app/${NEBULA}/time-tracking`);
   await expect(page.getByText(/Con la IA activada, Kairos te propone cómo repartir/)).toBeVisible();
 });
+
+// ── Foro interno ─────────────────────────────────────────────
+const FORUM_TITLE = "E2E: la bomba de achique no arranca";
+
+test("una empleada abre una incidencia técnica en el foro", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/forum`);
+  await expect(page.getByRole("link", { name: /Nuevo protocolo de seguridad en el varadero/ })).toBeVisible();
+  await page.getByRole("link", { name: "Nuevo hilo" }).click();
+  await page.getByLabel("Incidencia técnica").check();
+  await page.getByLabel("Título").fill(FORUM_TITLE);
+  await page.getByLabel("Mensaje").fill("En el Beneteau 40 la bomba no arranca con el flotador. Revisé el fusible.");
+  await page.getByRole("button", { name: "Publicar hilo" }).click();
+  await expect(page).toHaveURL(/\/forum\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(FORUM_TITLE);
+  // Sin moderación: no puede fijar ni cerrar
+  await expect(page.getByRole("button", { name: "Fijar arriba" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Cerrar hilo" })).toHaveCount(0);
+});
+
+test("un compañero responde el hilo", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/forum`);
+  await page.getByPlaceholder(/Buscar/).fill("bomba achique");
+  await page.getByRole("link", { name: new RegExp(FORUM_TITLE) }).click();
+  await page.getByLabel("Tu respuesta").fill("Probá puentear el flotador: si arranca, es el interruptor.");
+  await page.getByRole("button", { name: "Responder" }).click();
+  await expect(page.getByText("Respuesta publicada")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "1 respuesta" })).toBeVisible();
+});
+
+test("la administración cierra el hilo", async ({ page }) => {
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/forum`);
+  await page.getByRole("link", { name: new RegExp(FORUM_TITLE) }).click();
+  await page.getByRole("button", { name: "Cerrar hilo" }).click();
+  await expect(page.getByText("Hilo cerrado: ya no admite respuestas")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reabrir" })).toBeVisible();
+});
+
+test("la autora recibe el aviso de la respuesta y ya no puede responder", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/inbox`);
+  await page.getByRole("button", { name: new RegExp(`respondió en «${FORUM_TITLE}»`) }).first().click();
+  await expect(page).toHaveURL(/\/forum\/[0-9a-f-]{36}$/);
+  await expect(page.getByText("La administración cerró este hilo: ya no admite respuestas.")).toBeVisible();
+  await expect(page.getByLabel("Tu respuesta")).toHaveCount(0);
+});

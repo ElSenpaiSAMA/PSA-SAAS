@@ -25,6 +25,7 @@ src/
       projects/[projectId]/    # proyectos: sus órdenes de trabajo y miembros
       work-orders/[workOrderId]/ # OT por mes: tareas con fechas, estados, copiar al mes siguiente, facturación
       inbox/                   # bandeja: pendientes de acción (OT, tareas, fichaje) + notificaciones
+      forum/                   # foro interno: hilos (duda, incidencia, aviso), respuestas y moderación
       calendar/                # calendario general: tareas, OT, ausencias y festivos (mes/semana)
       planning/                # carga de trabajo persona × semana vs. capacidad
       staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada
@@ -65,4 +66,6 @@ src/
 | Crear OT, duplicarlas y copiarlas de mes | | su departamento | ✓ | ✓ |
 | Facturar OT y definir tarifas | | | ✓ | ✓ |
 | Ver planificación | la propia | su línea | toda la org | toda la org |
+| Leer el foro, abrir hilos y responder | ✓ | ✓ | ✓ | ✓ |
+| Fijar, cerrar y borrar hilos ajenos en el foro | | | ✓ | ✓ |
 | Ver auditoría de la organización | | | ✓ | ✓ |

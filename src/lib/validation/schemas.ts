@@ -227,3 +227,13 @@ export const orgSettingsSchema = z.object({
   defaultWeeklyHours: z.coerce.number({ error: "Ingresá un número" }).min(1, "Mínimo 1").max(60, "Máximo 60"),
   timezone: z.enum(TIMEZONES, "Zona horaria inválida"),
 });
+
+export const forumThreadSchema = z.object({
+  category: z.enum(["question", "notice", "incident"], "Elegí una categoría"),
+  title: z.string().trim().min(5, "Mínimo 5 caracteres").max(140, "Máximo 140 caracteres"),
+  body: z.string().trim().min(1, "Escribí el mensaje").max(5000, "Máximo 5000 caracteres"),
+});
+
+export const forumPostSchema = z.object({
+  body: z.string().trim().min(1, "Escribí una respuesta").max(5000, "Máximo 5000 caracteres"),
+});

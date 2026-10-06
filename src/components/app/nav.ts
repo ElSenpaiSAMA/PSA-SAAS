@@ -8,6 +8,7 @@ import {
   Inbox,
   IdCard,
   LayoutDashboard,
+  MessagesSquare,
   Palmtree,
   Settings,
   ScrollText,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports";
+export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports" | "forum";
 
 export interface NavItem {
   href: string;
@@ -35,6 +36,7 @@ export const NAV: NavItem[] = [
   { href: "inbox", label: "Bandeja", icon: "inbox", badge: "inbox", keywords: ["pendientes", "notificaciones", "avisos", "aprobar"] },
   { href: "time-tracking", label: "Fichaje y horas", icon: "clock", keywords: ["fichar", "horas", "tiempo"] },
   { href: "calendar", label: "Calendario", icon: "calendar", keywords: ["agenda", "festivos", "vencimientos", "ausencias"] },
+  { href: "forum", label: "Foro", icon: "forum", keywords: ["dudas", "avisos", "incidencias", "hilos", "comunidad", "preguntas"] },
   { href: "projects", label: "Proyectos", icon: "projects", keywords: ["clientes", "presupuesto"] },
   { href: "work-orders", label: "Órdenes de trabajo", icon: "workOrders", keywords: ["ot", "mes", "facturación", "tareas"] },
   { href: "planning", label: "Planificación", icon: "planning", keywords: ["carga", "capacidad", "semanas", "recursos"] },
@@ -62,4 +64,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   audit: ScrollText,
   settings: Settings,
   reports: BarChart3,
+  forum: MessagesSquare,
 };
