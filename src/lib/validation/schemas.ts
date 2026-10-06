@@ -135,3 +135,34 @@ export type FieldErrors = Record<string, string[] | undefined>;
 export function fieldErrors(error: z.ZodError): FieldErrors {
   return z.flattenError(error).fieldErrors as FieldErrors;
 }
+
+const optionalDate = emptyToUndefined.or(isoDate).optional().transform((v) => v ?? null);
+
+/** Nueva versión de la ficha de empleado (vigente desde effectiveFrom). */
+export const employeeRecordSchema = z.object({
+  effectiveFrom: isoDate,
+  national_id: optionalText(20),
+  birth_date: optionalDate,
+  phone: optionalText(30),
+  personal_email: emptyToUndefined.or(email).optional().transform((v) => v ?? null),
+  address: optionalText(200),
+  emergency_contact: optionalText(120),
+  hire_date: optionalDate,
+  contract_type: emptyToUndefined
+    .or(z.enum(["indefinido", "temporal", "practicas", "freelance"], "Tipo de contrato inválido"))
+    .optional()
+    .transform((v) => v ?? null),
+  salary_annual: emptyToUndefined
+    .or(z.coerce.number({ error: "Ingresá un número" }).min(0, "No puede ser negativo").max(10_000_000))
+    .optional()
+    .transform((v) => v ?? null),
+  iban: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .max(42)
+    .refine((v) => v === "" || /^[A-Z]{2}\d{2}[A-Z0-9 ]{10,38}$/.test(v), "IBAN inválido")
+    .optional()
+    .transform((v) => v || null),
+  notes: optionalText(300),
+});

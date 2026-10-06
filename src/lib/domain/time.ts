@@ -108,3 +108,35 @@ export function weekTotals(
 export function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
+
+export interface PeriodActivity {
+  clockMinutes: number;
+  taskMinutes: number;
+  breakMinutes: number;
+  /** Días distintos con fichaje */
+  daysWorked: number;
+  /** Minutos imputados por tarea */
+  byTask: Map<string, number>;
+}
+
+/** Resumen de actividad de un conjunto de registros (los tramos abiertos se cuentan hasta `now`). */
+export function periodActivity(
+  entries: readonly (TimeSpan & { entry_type: EntryKind; task_id: string | null })[],
+  now: Date = new Date(),
+): PeriodActivity {
+  const out: PeriodActivity = { clockMinutes: 0, taskMinutes: 0, breakMinutes: 0, daysWorked: 0, byTask: new Map() };
+  const days = new Set<string>();
+  for (const e of entries) {
+    const min = entryMinutes(e, now);
+    if (e.entry_type === "clock") {
+      out.clockMinutes += min;
+      days.add(startOfDay(new Date(e.started_at)).toDateString());
+    } else if (e.entry_type === "break") out.breakMinutes += min;
+    else {
+      out.taskMinutes += min;
+      if (e.task_id) out.byTask.set(e.task_id, (out.byTask.get(e.task_id) ?? 0) + min);
+    }
+  }
+  out.daysWorked = days.size;
+  return out;
+}
