@@ -159,3 +159,31 @@ cross join (values
   (12, 8, 'Inmaculada Concepción'), (12, 25, 'Navidad')
 ) as h(m, d, name)
 on conflict do nothing;
+
+-- Fichas de empleado (datos ficticios) con historial de versiones:
+-- alta, subida de sueldo y cambio de contrato con distintas fechas de vigencia
+insert into public.employee_records
+  (org_id, membership_id, effective_from, national_id, birth_date, phone, personal_email, address, emergency_contact,
+   hire_date, contract_type, salary_annual, iban, notes)
+values
+  -- Laura (CEO)
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000001', '2021-01-11', '12345678Z', '1985-04-02', '+34 600 111 222', 'laura.mendez@correo.test', 'Calle Mayor 1, Madrid', 'Pablo Méndez · +34 600 999 000',
+   '2021-01-11', 'indefinido', 85000, 'ES91 2100 0418 4502 0005 1332', null),
+  -- Carlos: alta y ascenso a lead con subida
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002', '2022-03-01', '23456789D', '1988-09-14', '+34 600 222 333', 'carlos.ruiz@correo.test', 'Av. Diagonal 200, Barcelona', 'Marta Ruiz · +34 600 888 111',
+   '2022-03-01', 'indefinido', 52000, 'ES79 2100 0813 6101 2345 6789', 'Alta como Senior Engineer'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002', (date_trunc('year', current_date) + interval '2 months')::date, '23456789D', '1988-09-14', '+34 600 222 333', 'carlos.ruiz@correo.test', 'Av. Diagonal 200, Barcelona', 'Marta Ruiz · +34 600 888 111',
+   '2022-03-01', 'indefinido', 61000, 'ES79 2100 0813 6101 2345 6789', 'Ascenso a Engineering Lead'),
+  -- Ana: entra en prácticas, pasa a indefinida y se muda el mes pasado
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000003', '2024-02-05', '34567890V', '1999-01-20', '+34 600 333 444', 'ana.torres@correo.test', 'Calle Sol 5, Valencia', 'Lucía Torres · +34 600 777 222',
+   '2024-02-05', 'practicas', 18000, 'ES12 0049 1500 0512 3456 7892', 'Prácticas 6 meses'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000003', '2024-08-05', '34567890V', '1999-01-20', '+34 600 333 444', 'ana.torres@correo.test', 'Calle Sol 5, Valencia', 'Lucía Torres · +34 600 777 222',
+   '2024-02-05', 'indefinido', 34000, 'ES12 0049 1500 0512 3456 7892', 'Pasa a indefinida'),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000003', (date_trunc('month', current_date) - interval '1 month' + interval '14 days')::date, '34567890V', '1999-01-20', '+34 611 333 444', 'ana.torres@correo.test', 'Calle Luna 12, Madrid', 'Lucía Torres · +34 600 777 222',
+   '2024-02-05', 'indefinido', 34000, 'ES12 0049 1500 0512 3456 7892', 'Cambio de domicilio y teléfono'),
+  -- Diego: temporal, 32 h
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000004', '2025-06-02', '45678901G', '1995-06-30', '+34 600 444 555', 'diego.fernandez@correo.test', 'Calle Río 8, Sevilla', 'Elena Fernández · +34 600 666 333',
+   '2025-06-02', 'temporal', 36000, 'ES66 0182 0400 1234 5678 9012', 'Jornada de 32 h'),
+  -- Sofía (People Ops)
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000005', '2021-09-13', '56789012B', '1990-11-08', '+34 600 555 666', 'sofia.lopez@correo.test', 'Calle Prado 3, Madrid', 'Andrés López · +34 600 555 777',
+   '2021-09-13', 'indefinido', 48000, 'ES38 0081 0200 0100 0123 4567', null);
