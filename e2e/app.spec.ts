@@ -416,8 +416,8 @@ test("quien gestiona el proyecto edita y borra tareas; las que tienen horas no s
   await page.goto(`/app/${NEBULA}/work-orders/ffffffff-0000-0000-0000-000000000002`);
   // Crear una tarea sin horas para borrarla
   await page.getByRole("button", { name: "Agregar tarea" }).click();
-  await page.getByLabel("Tarea").fill("Tarea para borrar");
-  await page.getByRole("button", { name: /Crear tarea|Agregar/ }).last().click();
+  await page.getByLabel("Nueva tarea").fill("Tarea para borrar");
+  await page.getByRole("button", { name: "Agregar", exact: true }).click();
   await expect(page.getByText("Tarea creada")).toBeVisible();
 
   const editor = page.locator("article").filter({ has: page.getByLabel(/Horas est/) });
