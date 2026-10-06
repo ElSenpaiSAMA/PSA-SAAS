@@ -247,3 +247,20 @@ Formato de cada entrada:
 **Resultado final:** al verlo integrado, el usuario prefirió volver al fondo original (cuadrícula con brillo de acento). Se revirtió antes de mergear. Los prototipos no se versionaron; queda este registro de lo explorado.
 
 **Arreglo que sí quedó:** con "reducir movimiento" activado, `AnimatedNumber` provocaba un error de hidratación (el servidor pintaba 0 y el cliente el valor final). Ahora arranca en 0 en ambos y salta al valor al montar.
+
+---
+
+## 2026-10-06 Fondo del hero: collage de producto
+
+**Prompt (resumen):** "El fondo necesito que esté un poco más cargado, no hace falta lo minimalista." Se prototiparon 6 fondos más densos: collage de producto, malla de color, mapa de calor, red del equipo, Gantt en perspectiva y marquesinas de actividad. El usuario eligió el **collage de producto**.
+
+**Resultado:** tarjetas reales de la app flotando a los costados del titular, sobre la cuadrícula original: reloj de fichaje en marcha, vacaciones aprobadas, OT con su barra de horas, gráfico de horas de la semana, equipo de hoy y OT facturada.
+
+**Por qué funciona:** llena el espacio vacío y, además, explica el producto de un vistazo.
+
+**Detalles:**
+- Solo se muestran desde 1280 px, porque en pantallas más chicas no hay lugar a los costados sin pisar el titular.
+- Las posiciones están ancladas al centro, así se reparten bien hasta 1920 px.
+- Un velo suave detrás del texto mantiene la legibilidad.
+- El contenido es fijo (sin hora real ni aleatorios) para no romper la hidratación. Con "reducir movimiento" las tarjetas no flotan.
+- Es decorativo: `aria-hidden` y sin eventos de puntero.
