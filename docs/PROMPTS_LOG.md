@@ -235,3 +235,15 @@ Formato de cada entrada:
 - **Actividad del mes:** horas fichadas contra capacidad (días hábiles × jornada, sin festivos), pausas, horas por tarea, vacaciones del año y una auditoría de lo que hizo y lo que cambió sobre la persona. Los eventos repetidos se agrupan (×N).
 
 **Verificado con datos reales:** como admin se registró una subida con vigencia futura (apareció como programada) y se validó un IBAN inválido. Como empleado, se comprobó que no ve la ficha de otra persona. Los datos de prueba se borraron.
+
+---
+
+## 2026-10-06 Fondo del hero: exploración (se mantiene el original)
+
+**Prompt (resumen):** "En la pantalla de bienvenida me gusta todo, menos el fondo. ¿Alguna otra idea?" Después: "dame más ideas, enfocate en las de tiempo y planificación".
+
+**Proceso:** se prototiparon 13 fondos en una ruta de preview local, comparados en claro, oscuro y móvil: aurora, esfera de reloj, Gantt, puntos, arco de la jornada, regla de horas, calendario, pulso, engranajes, jornadas en vivo, reloj gigante, carga de trabajo y meridianos. Se eligió el globo de meridianos y se implementó.
+
+**Resultado final:** al verlo integrado, el usuario prefirió volver al fondo original (cuadrícula con brillo de acento). Se revirtió antes de mergear. Los prototipos no se versionaron; queda este registro de lo explorado.
+
+**Arreglo que sí quedó:** con "reducir movimiento" activado, `AnimatedNumber` provocaba un error de hidratación (el servidor pintaba 0 y el cliente el valor final). Ahora arranca en 0 en ambos y salta al valor al montar.
