@@ -29,6 +29,7 @@ src/
       planning/                # carga de trabajo persona × semana vs. capacidad
       staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada
       employees/               # personas: directorio, departamentos, organigrama, invitaciones
+      automations/             # automatizaciones: activar, parámetros, ejecutar ahora, historial (automations.manage)
       audit/                   # auditoría (requiere employees.manage)
 ```
 

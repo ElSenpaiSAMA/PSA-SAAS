@@ -280,3 +280,32 @@ Formato de cada entrada:
 - En Vacaciones, el empleado ve "La aprueba Carlos Ruiz. Le llega un aviso a su bandeja."
 
 **Verificado con datos reales:** Diego pidió un día, a Carlos le apareció el contador, el pendiente y el aviso; lo aprobó desde la bandeja y a Diego le llegó la decisión. Los datos de prueba se borraron.
+
+---
+
+## 2026-10-06 Motor de automatizaciones
+
+**Prompt (resumen):** "Necesito que generes más workflows de trabajo que permitan realizar acciones automáticamente." Es la fase 2 del plan acordado, después de notificaciones y bandeja.
+
+**Decisión de arquitectura:** el motor vive **en la base**: triggers para los eventos y `pg_cron` cada 15 minutos para lo programado.
+- No depende de servidores ni crons externos.
+- Respeta RLS y los guards.
+- Cada acción queda auditada y con deduplicación: correr una regla dos veces no repite nada.
+
+La app solo configura (activar y parámetros) y muestra el historial. Un botón "Ejecutar ahora" permite probar cada regla sin esperar al próximo ciclo.
+
+**Reglas:**
+- Vacaciones: aprobar solas las ausencias cortas; escalar las que no tienen respuesta.
+- Fichaje: cerrar fichajes olvidados; recordar la salida.
+- OT: aviso al 80 % y al 100 % del presupuesto; cierre al terminar el período; creación de las OT del mes.
+- Tareas: recordatorio de vencimientos.
+- Equipo: resumen semanal para cada responsable.
+
+Las que cambian datos por su cuenta (cerrar o crear OT, aprobar vacaciones) vienen **desactivadas**. Las que solo avisan vienen activadas.
+
+**Detalles encontrados al probar:**
+- Al aprobar sola una solicitud, el aviso "pidió vacaciones" ya no le llega al aprobador. El trigger de avisos revisa el estado real de la fila, porque la automatización corre antes.
+- Copiar una OT avisaba "te asignaron una tarea" por cada tarea copiada en borrador. Ahora la copia en bloque es silenciosa.
+- Los títulos de las OT creadas solas usan los meses en español (Postgres los pone en inglés por defecto).
+
+**Verificado:** 14 tests pgTAP y una corrida forzada de todas las reglas sobre los datos reales (en una transacción revertida). En el navegador, una admin activó una regla, cambió un parámetro (con validación) y ejecutó el resumen semanal: 2 avisos. Un empleado no ve la sección. La configuración de prueba se volvió a los valores por defecto.

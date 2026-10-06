@@ -206,6 +206,40 @@ El **aprobador natural**: el primer responsable hacia arriba en la línea de rep
 
 Cubierto por `supabase/tests/notifications.test.sql` (13 tests).
 
+## Automatizaciones (`0010_automations.sql`)
+
+Reglas "cuando pasa X → si se cumple Y → hacer Z" que trabajan solas.
+
+| Tabla | Para qué |
+|---|---|
+| `automation_templates` | Catálogo de reglas: tipo (`event` o `schedule`), si viene activa y parámetros por defecto |
+| `automation_rules` | Configuración de cada empresa: activa o no, y parámetros que pisan los del catálogo. Requiere `automations.manage` (owner/admin) y se audita |
+| `automation_runs` | Historial de cada acción. Su clave de deduplicación hace que correr una regla dos veces no repita avisos ni cambios |
+
+**Cómo corren:**
+- **De evento** (triggers): aprobación automática de ausencias cortas (al crearse la solicitud) y aviso de consumo del presupuesto de una OT (al imputar horas).
+- **Programadas**: `run_automations()` recorre todas las empresas cada 15 minutos con `pg_cron`. Si `pg_cron` no está disponible, la migración lo avisa y las reglas igual se pueden correr con `run_automation_now()` ("Ejecutar ahora"), que exige `automations.manage` e ignora la ventana horaria. Si una regla falla, no frena a las demás: el error queda en el historial.
+
+**Flag `app.automation`:** mientras actúa una automatización, los guards lo reconocen (por ejemplo, puede aprobar vacaciones sin ser el aprobador; nunca a nombre del solicitante, por eso `decided_by` queda vacío). Las notificaciones salen sin actor, así también le llegan a quien originó el evento.
+
+| Regla | Tipo | Por defecto | Qué hace |
+|---|---|---|---|
+| `vacations.auto_approve_short` | evento | inactiva | Aprueba solas las ausencias de hasta N días, con aviso mínimo y sin nadie más del departamento ausente |
+| `vacations.escalate_stale` | programada | activa | Pendiente hace N días → avisa al responsable del aprobador y a administración |
+| `time.auto_close_clock` | programada | activa | Fichaje o pausa abierto más de N h → lo cierra en el límite y avisa |
+| `time.clock_out_reminder` | programada | activa | Desde cierta hora local, recuerda fichar la salida (una vez por jornada) |
+| `work_orders.budget_alert` | evento | activa | Al cruzar el 80 % o el 100 % del presupuesto de horas, avisa a quienes gestionan el proyecto |
+| `work_orders.auto_close` | programada | inactiva | Cierra las OT N días después del fin del período (facturación recibe su aviso) |
+| `work_orders.recurring` | programada | inactiva | Al empezar el mes, copia en borrador las OT del mes anterior sin continuación |
+| `tasks.due_reminder` | programada | activa | Avisa de tareas que vencen pronto o ya vencieron |
+| `team.weekly_summary` | programada | activa | Los lunes, cada responsable recibe el resumen de su equipo |
+
+**Funciones redefinidas en esta migración:**
+- `duplicate_work_order` ahora delega en `copy_work_order`, que las automatizaciones usan sin chequeo de permisos.
+- Al copiar una OT en bloque no se avisa "te asignaron una tarea" por cada tarea copiada.
+
+Cubierto por `supabase/tests/automations.test.sql` (14 tests).
+
 ## Desarrollo local
 
 ```bash

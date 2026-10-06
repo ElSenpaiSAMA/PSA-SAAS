@@ -15,6 +15,7 @@ PSA (*Professional Services Automation*) multi-tenant de gestión de personas, p
 | **Vacaciones** | Saldo en días hábiles, solicitud con validación en vivo, aprobación por la línea de reporte |
 | **Órdenes de trabajo** | Trabajo de cada proyecto por período: presupuesto, tarifa, estados, facturación, copiar al mes siguiente y duplicar tareas |
 | **Bandeja** | Pendientes que esperan tu acción (aprobar vacaciones, cerrar o facturar OT, tareas vencidas, fichaje olvidado) y notificaciones automáticas, con contador en el menú |
+| **Automatizaciones** | 9 reglas configurables que trabajan solas: aprobar ausencias cortas, escalar solicitudes sin respuesta, cerrar fichajes olvidados, recordar la salida, alertas de presupuesto de OT, cierre y creación mensual de OT, recordatorios de vencimiento y resumen semanal |
 | **Calendario** | Tareas, órdenes de trabajo, ausencias del equipo y festivos en vista mes/semana. Arrastrar para reprogramar, seleccionar días para pedir vacaciones |
 | **Planificación** | Carga persona × semana: horas planificadas contra capacidad, descontando vacaciones |
 | **Proyectos** | Por departamento, con miembros: cada persona ve solo los suyos y el responsable los de su área. Presupuesto vs. horas reales y tablero kanban |
