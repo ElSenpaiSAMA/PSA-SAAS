@@ -10,7 +10,8 @@ import { getEmployees } from "@/lib/data/employees";
 import { getOrgContext } from "@/lib/data/session";
 import { getVisibleVacationRequests } from "@/lib/data/vacations";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
-import { businessDays, vacationBalance } from "@/lib/domain/vacations";
+import { hasPermission, isRole } from "@/lib/domain/permissions";
+import { businessDays, naturalApprovers, vacationBalance } from "@/lib/domain/vacations";
 import { Approvals, MyRequests, type PendingApproval } from "./request-list";
 import { RequestForm } from "./request-form";
 
@@ -36,6 +37,12 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
   const balance = vacationBalance(me.annual_vacation_days, mine, year, holidays);
 
   const byId = new Map(employees.map((e) => [e.id, e]));
+  // Quién decide mis solicitudes (misma regla que la base: primer responsable con permiso, o administración)
+  const roleCan = (perm: "vacations.approve" | "employees.manage") => (role: string) => isRole(role) && hasPermission(role, perm);
+  const approvers = naturalApprovers(employees, me.id, roleCan("vacations.approve"), roleCan("employees.manage")).map((id) =>
+    displayName(byId.get(id)?.profile ?? null),
+  );
+  const approvedBy = approvers.length ? (approvers.length === 1 ? approvers[0] : `${approvers.slice(0, -1).join(", ")} o ${approvers.at(-1)}`) : null;
   const pending: PendingApproval[] = requests
     .filter((r) => r.status === "pending" && supervised.has(r.membership_id))
     .map((r) => {
@@ -74,7 +81,7 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
         <Card className="mt-4 border-warning/30">
           <CardHeader
             title={`Por aprobar · ${pending.length}`}
-            description="Solicitudes de tu equipo esperando tu decisión"
+            description="Solicitudes de tu equipo esperando tu decisión. También las ves en tu bandeja."
           />
           <CardBody>
             <Approvals orgId={orgId} requests={pending} holidays={holidayList} />
@@ -84,7 +91,10 @@ export default async function VacationsPage({ params }: PageProps<"/app/[orgId]/
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.3fr]">
         <Card>
-          <CardHeader title="Nueva solicitud" description="Llega a tu manager para aprobar" />
+          <CardHeader
+            title="Nueva solicitud"
+            description={approvedBy ? `La aprueba ${approvedBy}. Le llega un aviso a su bandeja.` : "No hay nadie asignado para aprobarla: avisá a administración."}
+          />
           <CardBody>
             <RequestForm orgId={orgId} available={balance.available} holidays={holidayList} />
           </CardBody>

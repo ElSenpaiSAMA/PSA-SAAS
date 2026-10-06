@@ -3,15 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import {
-  Check,
-  ChevronsUpDown,
-  LayoutGrid,
-  LogOut,
-  Menu,
-  Search,
-  X,
-} from "lucide-react";
+import { Bell, Check, ChevronsUpDown, LayoutGrid, LogOut, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { LogoMark } from "@/components/logo";
@@ -31,6 +23,8 @@ export interface ShellProps {
   permissions: Permission[];
   user: { name: string; email: string; position: string | null };
   organizations: { id: string; name: string; role: string }[];
+  /** Contadores de la navegación (pendientes + avisos sin leer) */
+  badges?: { inbox?: number };
   children: ReactNode;
 }
 
@@ -151,7 +145,12 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
                 />
               ) : null}
               <Icon className="relative size-[18px]" strokeWidth={active ? 2 : 1.75} />
-              <span className="relative">{item.label}</span>
+              <span className="relative flex-1">{item.label}</span>
+              {item.badge && props.badges?.[item.badge] ? (
+                <span className="relative min-w-5 rounded-full bg-accent px-1.5 text-center text-[11px] leading-5 font-semibold text-accent-foreground tabular">
+                  {props.badges[item.badge]! > 99 ? "99+" : props.badges[item.badge]}
+                </span>
+              ) : null}
             </Link>
           );
         })}
@@ -196,14 +195,26 @@ export function AppShell(props: ShellProps) {
           <LogoMark className="size-6" />
           <span className="max-w-[180px] truncate text-[14px] font-semibold">{props.orgName}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Abrir menú"
-          className="inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"
-        >
-          <Menu className="size-5" strokeWidth={1.75} />
-        </button>
+        <div className="flex items-center gap-1">
+          <Link
+            href={`/app/${props.orgId}/inbox`}
+            aria-label={props.badges?.inbox ? `Bandeja: ${props.badges.inbox} pendientes` : "Bandeja"}
+            className="relative inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"
+          >
+            <Bell className="size-5" strokeWidth={1.75} />
+            {props.badges?.inbox ? (
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-accent ring-2 ring-background" />
+            ) : null}
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menú"
+            className="inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"
+          >
+            <Menu className="size-5" strokeWidth={1.75} />
+          </button>
+        </div>
       </header>
 
       <AnimatePresence>

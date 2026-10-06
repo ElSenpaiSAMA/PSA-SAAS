@@ -4,6 +4,7 @@ import {
   ClipboardList,
   Clock3,
   FolderKanban,
+  Inbox,
   IdCard,
   LayoutDashboard,
   Palmtree,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "audit";
+export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "audit";
 
 export interface NavItem {
   href: string;
@@ -22,10 +23,13 @@ export interface NavItem {
   /** Si se define, solo se muestra con ese permiso */
   permission?: Permission;
   keywords?: string[];
+  /** Muestra un contador (p. ej. pendientes de la bandeja) */
+  badge?: "inbox";
 }
 
 export const NAV: NavItem[] = [
   { href: "dashboard", label: "Inicio", icon: "dashboard", keywords: ["resumen", "home"] },
+  { href: "inbox", label: "Bandeja", icon: "inbox", badge: "inbox", keywords: ["pendientes", "notificaciones", "avisos", "aprobar"] },
   { href: "time-tracking", label: "Fichaje y horas", icon: "clock", keywords: ["fichar", "horas", "tiempo"] },
   { href: "calendar", label: "Calendario", icon: "calendar", keywords: ["agenda", "festivos", "vencimientos", "ausencias"] },
   { href: "projects", label: "Proyectos", icon: "projects", keywords: ["clientes", "presupuesto"] },
@@ -39,6 +43,7 @@ export const NAV: NavItem[] = [
 
 export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   dashboard: LayoutDashboard,
+  inbox: Inbox,
   clock: Clock3,
   calendar: CalendarDays,
   vacations: Palmtree,
