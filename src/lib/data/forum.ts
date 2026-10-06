@@ -24,6 +24,29 @@ const withAuthor = (names: Map<string, string>, id: string | null): Author => ({
   name: (id && names.get(id)) || "Ex miembro",
 });
 
+/** Hilos con actividad de otras personas desde mi última visita al foro (para el aviso del menú). */
+export const getForumUnreadCount = cache(async (orgId: string): Promise<number> => {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("forum_unread_count", { p_org_id: orgId });
+  return data ?? 0;
+});
+
+/** Cuándo vi el foro por última vez (o, si nunca, cuándo entré a la empresa). */
+export const getForumSeenAt = cache(async (membershipId: string, joinedAt: string): Promise<string> => {
+  const supabase = await createClient();
+  const { data } = await supabase.from("forum_reads").select("seen_at").eq("membership_id", membershipId).maybeSingle();
+  return data?.seen_at ?? joinedAt;
+});
+
+/** Personas de la empresa que se pueden mencionar con @. */
+export const getMentionables = cache(async (orgId: string) => {
+  const employees = await getEmployees(orgId);
+  return employees
+    .filter((e) => e.status === "active")
+    .map((e) => ({ id: e.id, name: displayName(e.profile) }))
+    .sort((a, b) => a.name.localeCompare(b.name, "es"));
+});
+
 /** RLS: solo personas de la empresa leen el foro. */
 export const getThreads = cache(async (orgId: string): Promise<ThreadWithAuthor[]> => {
   const supabase = await createClient();

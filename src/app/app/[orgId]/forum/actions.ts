@@ -12,6 +12,25 @@ function refresh(orgId: string) {
   revalidatePath(`/app/${orgId}`, "layout");
 }
 
+// Menciones elegidas en el formulario: la base las filtra a personas activas de la empresa
+const mentionsSchema = z.array(z.guid()).max(20);
+function parseMentions(formData: FormData): string[] {
+  try {
+    const parsed = mentionsSchema.safeParse(JSON.parse(String(formData.get("mentions") ?? "[]")));
+    return parsed.success ? parsed.data : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Marca el foro como visto: el aviso del menú vuelve a cero. */
+export async function markForumSeen(orgId: string): Promise<void> {
+  const ctx = await getOrgContext(orgId);
+  const supabase = await createClient();
+  await supabase.from("forum_reads").upsert({ membership_id: ctx.membership.id, org_id: orgId });
+  revalidatePath(`/app/${orgId}`, "layout");
+}
+
 // La autoría y los permisos los aplica la base (RLS + guards): acá solo se valida
 // el formulario y se traducen los errores.
 
@@ -23,7 +42,7 @@ export async function createThread(orgId: string, _prev: ActionState, formData: 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("forum_threads")
-    .insert({ author_id: ctx.membership.id, ...parsed.data })
+    .insert({ author_id: ctx.membership.id, ...parsed.data, mentions: parseMentions(formData) })
     .select("id")
     .single();
   if (error) return fail(dbErrorMessage(error));
@@ -39,7 +58,7 @@ export async function replyToThread(orgId: string, threadId: string, _prev: Acti
   const supabase = await createClient();
   const { error } = await supabase
     .from("forum_posts")
-    .insert({ thread_id: z.guid().parse(threadId), author_id: ctx.membership.id, body: parsed.data.body });
+    .insert({ thread_id: z.guid().parse(threadId), author_id: ctx.membership.id, body: parsed.data.body, mentions: parseMentions(formData) });
   if (error) return fail(dbErrorMessage(error));
   refresh(orgId);
   return ok("Respuesta publicada");
