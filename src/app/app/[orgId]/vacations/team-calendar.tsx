@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import type { AbsenceCell, GridDay } from "@/lib/domain/team-absences";
+import { ABSENCE_LABEL, type AbsenceKind } from "@/lib/domain/vacations";
 import { cn } from "@/lib/utils";
 
 export interface TeamCalendarRow {
@@ -14,6 +15,16 @@ export interface TeamCalendarRow {
 }
 
 const WEEKDAY = ["L", "M", "X", "J", "V", "S", "D"];
+
+const KIND_COLOR: Record<AbsenceKind, string> = {
+  vacation: "bg-success/70",
+  personal: "bg-accent/60",
+  sick: "bg-danger/55",
+  other: "bg-muted-foreground/40",
+};
+const PENDING =
+  "bg-[repeating-linear-gradient(135deg,var(--color-warning)_0_4px,color-mix(in_oklab,var(--color-warning)_45%,transparent)_4px_8px)]";
+const same = (a: AbsenceCell, b: AbsenceCell) => !!a && !!b && a.status === b.status && a.kind === b.kind;
 
 /** Grilla persona × día del mes con las ausencias del equipo (aprobadas y pendientes). */
 export function TeamCalendar({ orgId, days, rows, today }: { orgId: string; days: GridDay[]; rows: TeamCalendarRow[]; today: string }) {
@@ -64,8 +75,8 @@ export function TeamCalendar({ orgId, days, rows, today }: { orgId: string; days
               </Link>
               {row.cells.map((cell, i) => {
                 const d = days[i];
-                const prevSame = i > 0 && row.cells[i - 1] === cell;
-                const nextSame = i < row.cells.length - 1 && row.cells[i + 1] === cell;
+                const prevSame = i > 0 && same(row.cells[i - 1], cell);
+                const nextSame = i < row.cells.length - 1 && same(row.cells[i + 1], cell);
                 return (
                   <div
                     key={d.date}
@@ -77,14 +88,12 @@ export function TeamCalendar({ orgId, days, rows, today }: { orgId: string; days
                   >
                     {cell ? (
                       <span
-                        title={cell === "approved" ? "Aprobada" : "Pendiente de aprobación"}
+                        title={`${ABSENCE_LABEL[cell.kind]} · ${cell.status === "approved" ? "aprobada" : "pendiente de aprobación"}`}
                         className={cn(
                           "h-5 w-full",
                           !prevSame && "ml-1 rounded-l-md",
                           !nextSame && "mr-1 rounded-r-md",
-                          cell === "approved"
-                            ? "bg-success/70"
-                            : "bg-[repeating-linear-gradient(135deg,var(--color-warning)_0_4px,color-mix(in_oklab,var(--color-warning)_45%,transparent)_4px_8px)]",
+                          cell.status === "approved" ? KIND_COLOR[cell.kind] : PENDING,
                         )}
                       />
                     ) : null}
@@ -97,12 +106,13 @@ export function TeamCalendar({ orgId, days, rows, today }: { orgId: string; days
       </div>
 
       <div className="flex flex-wrap items-center gap-4 text-[12px] text-muted-foreground">
+        {(Object.keys(KIND_COLOR) as AbsenceKind[]).map((k) => (
+          <span key={k} className="inline-flex items-center gap-1.5">
+            <span className={cn("h-3 w-5 rounded", KIND_COLOR[k])} /> {ABSENCE_LABEL[k]}
+          </span>
+        ))}
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-5 rounded bg-success/70" /> Aprobada
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-5 rounded bg-[repeating-linear-gradient(135deg,var(--color-warning)_0_4px,color-mix(in_oklab,var(--color-warning)_45%,transparent)_4px_8px)]" />{" "}
-          Pendiente
+          <span className={cn("h-3 w-5 rounded", PENDING)} /> Pendiente
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-3 w-5 rounded bg-muted" /> Fin de semana o festivo

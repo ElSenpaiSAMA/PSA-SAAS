@@ -1,6 +1,7 @@
 import { addDays, monthEnd, type ISODate } from "./periods";
+import type { AbsenceKind } from "./vacations";
 
-export type AbsenceCell = "approved" | "pending" | null;
+export type AbsenceCell = { status: "approved" | "pending"; kind: AbsenceKind } | null;
 
 export interface AbsenceRequest {
   id: string;
@@ -8,6 +9,7 @@ export interface AbsenceRequest {
   start_date: ISODate;
   end_date: ISODate;
   status: string;
+  kind?: AbsenceKind;
 }
 
 export interface GridDay {
@@ -49,16 +51,17 @@ export function absenceGrid(
     const own = requests.filter((r) => r.membership_id === memberId && (r.status === "approved" || r.status === "pending"));
     const cells: AbsenceCell[] = days.map((day) => {
       const hit = own.filter((r) => r.start_date <= day.date && r.end_date >= day.date);
-      if (hit.some((r) => r.status === "approved")) return "approved";
-      if (hit.length) return "pending";
+      const approved = hit.find((r) => r.status === "approved");
+      if (approved) return { status: "approved", kind: approved.kind ?? "vacation" };
+      if (hit.length) return { status: "pending", kind: hit[0].kind ?? "vacation" };
       return null;
     });
     const working = (i: number) => !days[i].weekend && !days[i].holiday;
     return {
       memberId,
       cells,
-      approvedDays: cells.filter((c, i) => c === "approved" && working(i)).length,
-      pendingDays: cells.filter((c, i) => c === "pending" && working(i)).length,
+      approvedDays: cells.filter((c, i) => c?.status === "approved" && working(i)).length,
+      pendingDays: cells.filter((c, i) => c?.status === "pending" && working(i)).length,
     };
   });
 

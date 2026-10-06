@@ -133,3 +133,36 @@ describe("naturalApprovers", () => {
     expect(naturalApprovers(withInactive, "junior", can, admin)).toEqual(["ceo"]);
   });
 });
+
+describe("tipos de ausencia", () => {
+  const r = (kind: "vacation" | "sick" | "personal" | "other" | undefined, status: "approved" | "pending" = "approved") => ({
+    membership_id: "m",
+    start_date: "2026-03-02",
+    end_date: "2026-03-06",
+    status,
+    kind,
+  });
+
+  it("solo las vacaciones descuentan del saldo", () => {
+    expect(vacationBalance(22, [r("vacation"), r("sick"), r("personal"), r(undefined, "pending")], 2026)).toEqual({
+      allowance: 22,
+      used: 5,
+      pending: 5,
+      available: 12,
+    });
+  });
+
+  it("una baja médica se puede cargar con fecha pasada; las vacaciones no", () => {
+    const balance = vacationBalance(22, [], 2026);
+    const past = { start_date: "2026-10-01", end_date: "2026-10-02" };
+    expect(validateNewRequest(past, [], balance, "2026-10-06")).toBe("starts_in_past");
+    expect(validateNewRequest(past, [], balance, "2026-10-06", new Set(), "sick")).toBeNull();
+  });
+
+  it("sin saldo se pueden pedir asuntos propios, no vacaciones", () => {
+    const empty = vacationBalance(0, [], 2026);
+    const range = { start_date: "2026-11-02", end_date: "2026-11-02" };
+    expect(validateNewRequest(range, [], empty, "2026-10-06")).toBe("insufficient_balance");
+    expect(validateNewRequest(range, [], empty, "2026-10-06", new Set(), "personal")).toBeNull();
+  });
+});

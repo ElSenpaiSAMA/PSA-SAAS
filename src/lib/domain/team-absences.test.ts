@@ -30,7 +30,7 @@ describe("calendario de ausencias del equipo", () => {
       new Set(),
     );
     const ana = rows[0].cells;
-    expect(ana.slice(4, 9)).toEqual(["approved", "approved", "approved", "pending", "pending"]);
+    expect(ana.slice(4, 9).map((c) => c?.status)).toEqual(["approved", "approved", "approved", "pending", "pending"]);
     expect(rows[0]).toMatchObject({ approvedDays: 3, pendingDays: 2 });
     expect(rows[1].cells.every((c) => c === null)).toBe(true);
   });
@@ -39,6 +39,11 @@ describe("calendario de ausencias del equipo", () => {
     const { rows } = absenceGrid(["ana"], [req("1", "ana", "2026-10-09", "2026-10-13")], "2026-10-01", new Set(["2026-10-12"]));
     // 9 (vie) y 13 (mar): 2 días hábiles; 10-11 fin de semana, 12 festivo
     expect(rows[0].approvedDays).toBe(2);
+  });
+
+  it("cada celda conserva el tipo de ausencia", () => {
+    const { rows } = absenceGrid(["ana"], [{ ...req("1", "ana", "2026-10-05", "2026-10-05"), kind: "sick" }], "2026-10-01", new Set());
+    expect(rows[0].cells[4]).toEqual({ status: "approved", kind: "sick" });
   });
 
   it("detecta quién más del equipo está ausente esos días", () => {

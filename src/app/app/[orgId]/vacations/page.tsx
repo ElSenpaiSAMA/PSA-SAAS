@@ -15,7 +15,7 @@ import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
 import { monthStart, parseMonthParam, todayISO, toMonthParam } from "@/lib/domain/periods";
 import { hasPermission, isRole } from "@/lib/domain/permissions";
 import { absenceGrid, overlappingPeople } from "@/lib/domain/team-absences";
-import { businessDays, naturalApprovers, vacationBalance } from "@/lib/domain/vacations";
+import { ABSENCE_LABEL, businessDays, naturalApprovers, vacationBalance } from "@/lib/domain/vacations";
 import { cn } from "@/lib/utils";
 import { Approvals, MyRequests, type PendingApproval } from "./request-list";
 import { RequestForm } from "./request-form";
@@ -181,6 +181,7 @@ export default async function VacationsPage({ params, searchParams }: PageProps<
                         {new Date(`${r.start_date}T12:00:00`).toLocaleDateString("es-ES", { day: "numeric", month: "short" })}
                         {" · "}
                         {businessDays(r, holidays)} días
+                        {r.kind !== "vacation" ? ` · ${ABSENCE_LABEL[r.kind]}` : ""}
                       </p>
                     </div>
                   </li>
