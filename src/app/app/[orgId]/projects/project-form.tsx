@@ -54,7 +54,7 @@ export function NewProject({
           >
             <div className="mt-2 grid gap-4 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2 lg:grid-cols-[2fr_1.3fr_1.3fr_0.9fr_0.9fr_auto] lg:items-end">
               <Field label="Nombre" error={state.fieldErrors?.name}>
-                <Input name="name" placeholder="Rediseño portal clientes" autoFocus />
+                <Input name="name" placeholder="Climatización Princess V58" autoFocus />
               </Field>
               <Field label="Departamento" error={state.fieldErrors?.departmentId}>
                 <Select name="departmentId" defaultValue={allowNoDepartment ? "" : departments[0]?.id}>

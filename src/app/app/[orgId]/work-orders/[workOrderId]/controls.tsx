@@ -213,3 +213,70 @@ export function RepeatWorkOrder({
     </div>
   );
 }
+
+/**
+ * Tarjeta de tareas de la OT: una barra de herramientas compacta (título + acciones)
+ * sobre el tablero. "Agregar tarea" y "Repetir" despliegan su formulario debajo.
+ */
+export function TasksPanel({
+  count,
+  addForm,
+  repeatForm,
+  defaultOpen,
+  children,
+}: {
+  count: number;
+  addForm?: ReactNode;
+  repeatForm?: ReactNode;
+  defaultOpen?: "add" | "repeat";
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState<"add" | "repeat" | null>(defaultOpen ?? null);
+  const toggle = (panel: "add" | "repeat") => setOpen((o) => (o === panel ? null : panel));
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border bg-card" aria-labelledby="tasks-title">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
+        <h2 id="tasks-title" className="text-[15px] font-semibold tracking-tight">
+          Tareas <span className="ml-1 text-muted-foreground tabular">{count}</span>
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          {repeatForm ? (
+            <button
+              type="button"
+              aria-expanded={open === "repeat"}
+              aria-label="Repetir esta OT en otro período"
+              onClick={() => toggle("repeat")}
+              className={buttonClasses(open === "repeat" ? "secondary" : "ghost", "sm")}
+            >
+              <CalendarRange className="size-4" strokeWidth={1.75} /> Repetir OT
+            </button>
+          ) : null}
+          {addForm ? (
+            <button
+              type="button"
+              aria-expanded={open === "add"}
+              onClick={() => toggle("add")}
+              className={buttonClasses(open === "add" ? "secondary" : "primary", "sm")}
+            >
+              <Plus className={`size-4 transition-transform ${open === "add" ? "rotate-45" : ""}`} strokeWidth={2} /> Agregar tarea
+            </button>
+          ) : null}
+        </div>
+      </div>
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            key={open}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="border-b border-border bg-muted/30 px-5 py-4">{open === "add" ? addForm : repeatForm}</div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+      <div className="p-4">{children}</div>
+    </section>
+  );
+}

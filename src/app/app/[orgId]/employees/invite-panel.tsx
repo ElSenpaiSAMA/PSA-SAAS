@@ -136,8 +136,8 @@ function InviteFields({
         <Mail className="size-4" /> Enviar invitación
       </SubmitButton>
       <p className="text-[12px] leading-relaxed text-muted-foreground">
-        Solo pueden registrarse personas invitadas. Pasale el enlace de activación: al crear su contraseña entra directo a la intranet con este
-        rol.
+        Le llega un email para activar su cuenta y elegir su contraseña; al entrar ya está en la empresa con este rol. Si el
+        envío de emails no está configurado, copiá el enlace de activación desde la invitación pendiente.
       </p>
     </>
   );

@@ -15,7 +15,7 @@ begin
 end;
 $$;
 
--- Una tarea nueva, sin horas, en un proyecto que gestiona Carlos (responsable de Ingeniería)
+-- Una tarea nueva, sin horas, en un proyecto que gestiona Carlos (responsable del Taller)
 insert into public.tasks (project_id, title)
 select p.id, 'Tarea sin horas' from public.projects p
 where p.org_id = 'aaaaaaaa-0000-0000-0000-000000000001'

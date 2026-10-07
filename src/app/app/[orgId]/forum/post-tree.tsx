@@ -41,80 +41,81 @@ function PostItem({ node, depth, props }: { node: PostNode<PostView>; depth: num
   const [replying, setReplying] = useState(false);
   const closeReply = useCallback(() => setReplying(false), []);
   const isOp = post.author_id !== null && post.author_id === props.threadAuthorId;
+  const nested = depth > 0;
 
-  return (
-    <li id={`post-${post.id}`}>
-      <div className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-        <div className="flex items-center gap-2.5 text-[13px] text-muted-foreground">
-          <Avatar name={post.author} size={26} />
-          <span className="font-medium text-foreground/80">{post.author}</span>
-          {isOp ? <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium">Autor</span> : null}
-          <span aria-hidden>·</span>
-          <TimeAgo iso={post.created_at} />
-          <span className="ml-auto">
-            {post.author_id === props.me || props.isModerator ? <DeletePostButton orgId={props.orgId} postId={post.id} /> : null}
-          </span>
-        </div>
-        <p className="mt-2.5 text-[14.5px] leading-relaxed whitespace-pre-line">
-          <MentionText body={post.body} people={post.mentioned} />
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-1">
-          {props.canReply ? (
-            <button
-              type="button"
-              onClick={() => setReplying((r) => !r)}
-              aria-expanded={replying}
-              aria-label={`Responder a ${post.author}`}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <MessageSquareReply className="size-3.5" /> Responder
-            </button>
-          ) : null}
-          {descendants > 0 ? (
-            <button
-              type="button"
-              onClick={() => setCollapsed((c) => !c)}
-              aria-expanded={!collapsed}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12.5px] font-medium text-accent transition-colors hover:bg-accent-soft"
-            >
-              <ChevronDown className={cn("size-3.5 transition-transform", collapsed && "-rotate-90")} />
-              {collapsed ? `Ver ${descendants === 1 ? "1 respuesta" : `${descendants} respuestas`}` : "Ocultar respuestas"}
-            </button>
-          ) : null}
-        </div>
-        {replying ? (
-          <div className="mt-3 border-t border-border pt-3">
-            <ReplyForm
-              orgId={props.orgId}
-              threadId={props.threadId}
-              people={props.people}
-              parentId={post.id}
-              replyingTo={post.author}
-              onDone={closeReply}
-            />
-          </div>
+  const body = (
+    <>
+      <div className="flex items-center gap-2.5 text-[13px] text-muted-foreground">
+        <Avatar name={post.author} size={nested ? 22 : 26} />
+        <span className="font-medium text-foreground/80">{post.author}</span>
+        {isOp ? <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium">Autor</span> : null}
+        <span aria-hidden>·</span>
+        <TimeAgo iso={post.created_at} />
+        <span className="ml-auto">
+          {post.author_id === props.me || props.isModerator ? <DeletePostButton orgId={props.orgId} postId={post.id} /> : null}
+        </span>
+      </div>
+      <p className={cn("mt-2 leading-relaxed whitespace-pre-line", nested ? "text-[14px]" : "text-[14.5px]")}>
+        <MentionText body={post.body} people={post.mentioned} />
+      </p>
+      <div className="mt-2 -ml-2.5 flex flex-wrap items-center gap-1">
+        {props.canReply ? (
+          <button
+            type="button"
+            onClick={() => setReplying((r) => !r)}
+            aria-expanded={replying}
+            aria-label={`Responder a ${post.author}`}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <MessageSquareReply className="size-3.5" /> Responder
+          </button>
+        ) : null}
+        {descendants > 0 ? (
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            aria-expanded={!collapsed}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12.5px] font-medium text-accent transition-colors hover:bg-accent-soft"
+          >
+            <ChevronDown className={cn("size-3.5 transition-transform", collapsed && "-rotate-90")} />
+            {collapsed ? `Ver ${descendants === 1 ? "1 respuesta" : `${descendants} respuestas`}` : "Ocultar respuestas"}
+          </button>
         ) : null}
       </div>
+      {replying ? (
+        <div className="mt-2 rounded-xl border border-border bg-muted/30 p-3">
+          <ReplyForm
+            orgId={props.orgId}
+            threadId={props.threadId}
+            people={props.people}
+            parentId={post.id}
+            replyingTo={post.author}
+            onDone={closeReply}
+          />
+        </div>
+      ) : null}
 
+      {/* Las respuestas a esta respuesta van dentro de la misma tarjeta, con una línea guía */}
       {children.length > 0 && !collapsed ? (
-        <ol
-          className={cn(
-            "mt-2 grid gap-2",
-            // Línea guía a la izquierda, como en los hilos de un foro profesional
-            depth < MAX_INDENT && "ml-4 border-l-2 border-border pl-4 sm:ml-6 sm:pl-5",
-          )}
-        >
+        <ol className={cn("mt-2 grid", depth < MAX_INDENT && "ml-2.5 border-l-2 border-border pl-4")}>
           {children.map((child) => (
             <PostItem key={child.post.id} node={child} depth={depth + 1} props={props} />
           ))}
         </ol>
       ) : null}
       {children.length > 0 && collapsed ? (
-        <p className="mt-1.5 ml-5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+        <p className="mt-1 flex items-center gap-1.5 text-[12px] text-muted-foreground">
           <CornerDownRight className="size-3.5" />
           {descendants === 1 ? "1 respuesta oculta" : `${descendants} respuestas ocultas`}
         </p>
       ) : null}
+    </>
+  );
+
+  // Solo la respuesta directa al hilo es una tarjeta; la conversación que cuelga de ella vive adentro
+  return (
+    <li id={`post-${post.id}`} className={nested ? "border-t border-border/70 pt-3 pb-1 first:border-t-0 first:pt-2" : "rounded-2xl border border-border bg-card p-4 sm:p-5"}>
+      {body}
     </li>
   );
 }

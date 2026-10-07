@@ -18,19 +18,9 @@ import { getAllWorkOrders } from "@/lib/data/work-orders";
 import { acceptsTimeEntries, workOrderCode } from "@/lib/domain/work-orders";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
 import { addDays, todayISO } from "@/lib/domain/periods";
-import {
-  clockState,
-  closedMinutes,
-  isSameDay,
-  startOfDay,
-  startOfWeek,
-} from "@/lib/domain/time";
+import { clockState, closedMinutes, isSameDay, startOfDay, startOfWeek } from "@/lib/domain/time";
 import { ABSENCE_LABEL } from "@/lib/domain/vacations";
-import {
-  MyCorrections,
-  TeamCorrections,
-  type CorrectionView,
-} from "./corrections-list";
+import { MyCorrections, TeamCorrections, type CorrectionView } from "./corrections-list";
 import { aiEnabled } from "@/lib/ai/openrouter";
 import { AiAllocation } from "./ai-allocation";
 import { LogHoursForm } from "./log-hours-form";
@@ -39,17 +29,11 @@ import { Timesheet } from "./timesheet";
 
 export const metadata: Metadata = { title: "Fichaje y horas" };
 
-export default async function TimeTrackingPage({
-  params,
-  searchParams,
-}: PageProps<"/app/[orgId]/time-tracking">) {
+export default async function TimeTrackingPage({ params, searchParams }: PageProps<"/app/[orgId]/time-tracking">) {
   const { orgId } = await params;
   const { semana } = await searchParams;
   // Semana pedida (lunes, AAAA-MM-DD); sin parámetro, el navegador muestra la actual
-  const weekParam =
-    typeof semana === "string" && /^\d{4}-\d{2}-\d{2}$/.test(semana)
-      ? semana
-      : null;
+  const weekParam = typeof semana === "string" && /^\d{4}-\d{2}-\d{2}$/.test(semana) ? semana : null;
   const ctx = await getOrgContext(orgId);
   const me = ctx.membership;
 
@@ -62,16 +46,7 @@ export default async function TimeTrackingPage({
   const from = addDays(base, -2);
   const to = addDays(base, 9);
 
-  const [
-    entries,
-    weekEntries,
-    tasks,
-    projects,
-    workOrders,
-    myCorrectionRows,
-    holidays,
-    absences,
-  ] = await Promise.all([
+  const [entries, weekEntries, tasks, projects, workOrders, myCorrectionRows, holidays, absences] = await Promise.all([
     getMyEntriesSince(me.id, twoDaysAgo.toISOString()),
     getMyEntriesBetween(me.id, `${from}T00:00:00Z`, `${to}T00:00:00Z`),
     getTasks(orgId),
@@ -88,23 +63,15 @@ export default async function TimeTrackingPage({
   const myTasks = tasks
     .filter((t) => t.assigned_to === me.id && t.status !== "done")
     .filter((t) => {
-      const wo = t.work_order_id
-        ? workOrderById.get(t.work_order_id)
-        : undefined;
-      return (
-        !t.work_order_id || (wo !== undefined && acceptsTimeEntries(wo.status))
-      );
+      const wo = t.work_order_id ? workOrderById.get(t.work_order_id) : undefined;
+      return !t.work_order_id || (wo !== undefined && acceptsTimeEntries(wo.status));
     })
     .map((t) => {
-      const wo = t.work_order_id
-        ? workOrderById.get(t.work_order_id)
-        : undefined;
+      const wo = t.work_order_id ? workOrderById.get(t.work_order_id) : undefined;
       return {
         id: t.id,
         title: t.title,
-        projectName: wo
-          ? `${workOrderCode(wo.number)} · ${wo.title}`
-          : (projectName.get(t.project_id) ?? "Proyecto"),
+        projectName: wo ? `${workOrderCode(wo.number)} · ${wo.title}` : (projectName.get(t.project_id) ?? "Proyecto"),
       };
     });
 
@@ -121,16 +88,9 @@ export default async function TimeTrackingPage({
   ): CorrectionView => ({
     ...c,
     name,
-    previous:
-      c.status === "pending" && entry
-        ? { started_at: entry.started_at, ended_at: entry.ended_at }
-        : null,
+    previous: c.status === "pending" && entry ? { started_at: entry.started_at, ended_at: entry.ended_at } : null,
   });
-  const myCorrections = myCorrectionRows
-    .slice(0, 8)
-    .map((c) =>
-      toView(c, "", c.entry_id ? entryById.get(c.entry_id) : undefined),
-    );
+  const myCorrections = myCorrectionRows.slice(0, 8).map((c) => toView(c, "", c.entry_id ? entryById.get(c.entry_id) : undefined));
 
   let team: {
     members: Parameters<typeof TeamWorkload>[0]["members"];
@@ -139,11 +99,7 @@ export default async function TimeTrackingPage({
   let teamCorrections: CorrectionView[] = [];
   if (ctx.can("time.view_team")) {
     const employees = await getEmployees(orgId);
-    const visible = supervisedIds(
-      employees,
-      me.id,
-      ctx.can("employees.manage"),
-    );
+    const visible = supervisedIds(employees, me.id, ctx.can("employees.manage"));
     const members = employees
       .filter((e) => visible.has(e.id) && e.status === "active")
       .map((e) => ({
@@ -159,16 +115,10 @@ export default async function TimeTrackingPage({
     team = { members, entries: teamEntries };
     const pendingTeam = corrections.filter((c) => c.status === "pending");
     // Horarios actuales de los tramos a corregir (pueden ser de hace más de una semana)
-    const previous = await getTimeEntriesById(
-      pendingTeam.flatMap((c) => (c.entry_id ? [c.entry_id] : [])),
-    );
+    const previous = await getTimeEntriesById(pendingTeam.flatMap((c) => (c.entry_id ? [c.entry_id] : [])));
     const names = new Map(members.map((m) => [m.membershipId, m.name]));
     teamCorrections = pendingTeam.map((c) =>
-      toView(
-        c,
-        names.get(c.membership_id) ?? "Alguien",
-        c.entry_id ? previous.get(c.entry_id) : undefined,
-      ),
+      toView(c, names.get(c.membership_id) ?? "Alguien", c.entry_id ? previous.get(c.entry_id) : undefined),
     );
   }
 
@@ -197,12 +147,7 @@ export default async function TimeTrackingPage({
         </Card>
       ) : null}
 
-      <ClockWidget
-        orgId={orgId}
-        state={state}
-        workedMinutes={closedMinutes(today, "clock")}
-        breakMinutes={closedMinutes(today, "break")}
-      />
+      <ClockWidget orgId={orgId} state={state} workedMinutes={closedMinutes(today, "clock")} breakMinutes={closedMinutes(today, "break")} />
 
       <div className="mt-4">
         <Timesheet
@@ -214,18 +159,12 @@ export default async function TimeTrackingPage({
           absences={absences.map((a) => ({
             start_date: a.start_date,
             end_date: a.end_date,
-            label:
-              ABSENCE_LABEL[a.kind as keyof typeof ABSENCE_LABEL] ?? "Ausencia",
+            label: ABSENCE_LABEL[a.kind as keyof typeof ABSENCE_LABEL] ?? "Ausencia",
           }))}
-          pendingEntryIds={myCorrectionRows.flatMap((c) =>
-            c.status === "pending" && c.entry_id ? [c.entry_id] : [],
-          )}
+          pendingEntryIds={myCorrectionRows.flatMap((c) => (c.status === "pending" && c.entry_id ? [c.entry_id] : []))}
           logSlot={
             <Card>
-              <CardHeader
-                title="Imputar horas"
-                description="A una de tus tareas abiertas"
-              />
+              <CardHeader title="Imputar horas" description="A una de tus tareas abiertas" />
               <CardBody className="grid gap-4">
                 <LogHoursForm orgId={orgId} tasks={myTasks} />
                 <AiAllocation orgId={orgId} enabled={aiEnabled()} />
@@ -239,11 +178,7 @@ export default async function TimeTrackingPage({
         <Card className="mt-4">
           <CardHeader
             title="Carga del equipo"
-            description={
-              ctx.can("employees.manage")
-                ? "Toda la organización, esta semana"
-                : "Tu línea de reporte, esta semana"
-            }
+            description={ctx.can("employees.manage") ? "Toda la organización, esta semana" : "Tu línea de reporte, esta semana"}
           />
           <CardBody>
             <TeamWorkload members={team.members} entries={team.entries} />
@@ -253,10 +188,7 @@ export default async function TimeTrackingPage({
 
       {myCorrections.length > 0 ? (
         <Card className="mt-4">
-          <CardHeader
-            title="Mis correcciones"
-            description="Fichajes que pediste corregir"
-          />
+          <CardHeader title="Mis correcciones" description="Fichajes que pediste corregir" />
           <CardBody>
             <MyCorrections orgId={orgId} items={myCorrections} />
           </CardBody>

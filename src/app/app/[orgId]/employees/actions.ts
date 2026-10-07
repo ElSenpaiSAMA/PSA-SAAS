@@ -7,6 +7,8 @@ import { getEmployees } from "@/lib/data/employees";
 import { getOrgContext } from "@/lib/data/session";
 import { wouldCreateCycle } from "@/lib/domain/hierarchy";
 import { isRole, outranks } from "@/lib/domain/permissions";
+import { env } from "@/lib/env";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { departmentSchema, fieldErrors, invitationSchema, memberUpdateSchema } from "@/lib/validation/schemas";
 
@@ -44,7 +46,25 @@ export async function inviteEmployee(orgId: string, _prev: ActionState, formData
     return fail(dbErrorMessage(error));
   }
   refresh(orgId);
-  return ok(`Invitación enviada a ${email}`);
+
+  // Email de invitación (Supabase Auth). Sin la clave de servicio, se comparte el enlace a mano.
+  const admin = createAdminClient();
+  if (!admin) return ok(`Invitación creada. Copiá el enlace de activación y pasáselo a ${email}.`);
+  const { error: mailError } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${env.siteUrl}/activar-cuenta`,
+    data: { invited_to: ctx.organization.name },
+  });
+  if (mailError) {
+    // Ya tiene cuenta: verá la invitación al iniciar sesión
+    if (/already|registered|exists/i.test(mailError.message)) {
+      return ok(`${email} ya tiene cuenta: verá la invitación al iniciar sesión.`);
+    }
+    if (mailError.status === 429 || /rate limit/i.test(mailError.message)) {
+      return ok("Invitación creada, pero se alcanzó el límite de emails por hora. Copiá el enlace de activación y compartilo.");
+    }
+    return ok("Invitación creada, pero el email no se pudo enviar. Copiá el enlace de activación y compartilo.");
+  }
+  return ok(`Te enviamos la invitación por email a ${email}.`);
 }
 
 export async function revokeInvitation(orgId: string, invitationId: string): Promise<ActionState> {

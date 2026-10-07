@@ -19,7 +19,7 @@ create or replace function pg_temp.m0() returns date language sql as $$ select d
 create or replace function pg_temp.m_end() returns date language sql as $$ select (date_trunc('month', current_date) + interval '1 month - 1 day')::date $$;
 
 -- OT del seed: f..01 Portal mes anterior (cerrada y facturada), f..02 Portal mes actual (en curso),
--- f..03 API mes actual (en curso), f..04 Onboarding mes actual (aprobada)
+-- f..03 Lagoon mes actual (en curso), f..04 Formación mes actual (aprobada)
 
 select results_eq(
   $$ select number from public.work_orders where org_id = 'aaaaaaaa-0000-0000-0000-000000000001' order by number $$,
@@ -89,7 +89,7 @@ select pg_temp.login_as('22222222-2222-2222-2222-222222222222', 'carlos@demo.com
 create temporary table copied as
 select public.duplicate_work_order(
   'ffffffff-0000-0000-0000-000000000001',
-  'Portal clientes · copia',
+  'Princess V58 · copia',
   (pg_temp.m0() + interval '1 month')::date,
   (pg_temp.m0() + interval '2 months - 1 day')::date
 ) as id;
