@@ -8,7 +8,7 @@ import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { idle, type ActionState } from "@/lib/actions";
-import { outranks, ROLE_LABEL, ROLES, type Role } from "@/lib/domain/permissions";
+import { ROLE_LABEL, type Role, assignableRoles, ROLE_SCOPE } from "@/lib/domain/permissions";
 import { inviteEmployee, revokeInvitation } from "./actions";
 
 export interface PendingInvite {
@@ -31,17 +31,19 @@ export function InvitePanel({
   myRole,
   managers,
   departments,
+  branches,
   pending,
 }: {
   orgId: string;
   myRole: Role;
   managers: { id: string; name: string }[];
   departments: DepartmentOption[];
+  branches: { id: string; name: string }[];
   pending: PendingInvite[];
 }) {
   const [state, action] = useActionState(inviteEmployee.bind(null, orgId), idle);
   const handled = useRef<number | undefined>(undefined);
-  const roles = ROLES.filter((r) => r !== "owner" && (myRole === "owner" || outranks(myRole, r)));
+  const roles = assignableRoles(myRole);
 
   useEffect(() => {
     if (!state.submittedAt || handled.current === state.submittedAt) return;
@@ -53,7 +55,7 @@ export function InvitePanel({
   return (
     <div className="grid gap-6">
       <form key={state.status === "success" ? state.submittedAt : "draft"} action={action} noValidate className="grid gap-3">
-        <InviteFields state={state} roles={roles} managers={managers} departments={departments} />
+        <InviteFields state={state} roles={roles} managers={managers} departments={departments} branches={branches} />
       </form>
 
       {pending.length > 0 ? (
@@ -77,13 +79,16 @@ function InviteFields({
   roles,
   managers,
   departments,
+  branches,
 }: {
   state: ActionState;
   roles: Role[];
   managers: { id: string; name: string }[];
   departments: DepartmentOption[];
+  branches: { id: string; name: string }[];
 }) {
   const [departmentId, setDepartmentId] = useState("");
+  const [role, setRole] = useState<Role>("employee");
   // Con departamento (y responsable), el manager es el responsable
   const managedByHead = departments.find((d) => d.id === departmentId)?.hasHead ?? false;
 
@@ -103,8 +108,8 @@ function InviteFields({
         </Select>
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Rol" error={state.fieldErrors?.role}>
-          <Select name="role" defaultValue="employee">
+        <Field label="Nivel" error={state.fieldErrors?.role}>
+          <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
             {roles.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABEL[r]}
@@ -129,8 +134,21 @@ function InviteFields({
           </Field>
         )}
       </div>
+      <p className="-mt-1 text-[12px] text-muted-foreground">{ROLE_SCOPE[role]}</p>
+      {role === "director" ? (
+        <Field label="Rama que dirige" error={state.fieldErrors?.branchId}>
+          <Select name="branchId" defaultValue="">
+            <option value="">Elegí una rama</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      ) : null}
       <Field label="Puesto" error={state.fieldErrors?.position}>
-        <Input name="position" placeholder="Ej: Product Designer" />
+        <Input name="position" placeholder="Ej: Técnico de climatización" />
       </Field>
       <SubmitButton pendingLabel="Invitando…">
         <Mail className="size-4" /> Enviar invitación

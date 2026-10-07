@@ -21,19 +21,28 @@ export interface DepartmentInfo {
   id: string;
   name: string;
   headId: string | null;
+  branchId: string | null;
   projectCount: number;
+}
+
+/** Rama de la empresa (agrupa departamentos). */
+export interface BranchOption {
+  id: string;
+  name: string;
 }
 
 function DepartmentForm({
   orgId,
   department,
   people,
+  branches,
   takenHeads,
   onDone,
 }: {
   orgId: string;
   department?: DepartmentInfo;
   people: Person[];
+  branches: BranchOption[];
   takenHeads: Set<string>;
   onDone: () => void;
 }) {
@@ -65,9 +74,19 @@ function DepartmentForm({
       className="overflow-hidden"
     >
       {department ? <input type="hidden" name="departmentId" value={department.id} /> : null}
-      <div className="grid gap-3 pt-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+      <div className="grid gap-3 pt-4 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
         <Field label="Nombre" error={state.fieldErrors?.name}>
-          <Input name="name" defaultValue={department?.name} placeholder="Ej: Ingeniería" autoFocus={!department} />
+          <Input name="name" defaultValue={department?.name} placeholder="Ej: Taller" autoFocus={!department} />
+        </Field>
+        <Field label="Rama" error={state.fieldErrors?.branchId}>
+          <Select name="branchId" defaultValue={department?.branchId ?? ""}>
+            <option value="">Sin rama</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </Select>
         </Field>
         <Field label="Responsable" error={state.fieldErrors?.headId}>
           <Select name="headId" defaultValue={department?.headId ?? ""}>
@@ -137,13 +156,16 @@ export function DepartmentsView({
   orgId,
   departments,
   people,
+  branches,
   canManage,
 }: {
   orgId: string;
   departments: DepartmentInfo[];
   people: Person[];
+  branches: BranchOption[];
   canManage: boolean;
 }) {
+  const branchName = new Map(branches.map((b) => [b.id, b.name]));
   const [editing, setEditing] = useState<string | null>(null);
   const takenHeads = new Set(departments.map((d) => d.headId).filter((h): h is string => !!h));
   const byId = new Map(people.map((p) => [p.id, p]));
@@ -165,7 +187,7 @@ export function DepartmentsView({
           </div>
           <AnimatePresence>
             {editing === "new" ? (
-              <DepartmentForm orgId={orgId} people={people} takenHeads={takenHeads} onDone={() => setEditing(null)} />
+              <DepartmentForm orgId={orgId} people={people} branches={branches} takenHeads={takenHeads} onDone={() => setEditing(null)} />
             ) : null}
           </AnimatePresence>
         </div>
@@ -199,6 +221,7 @@ export function DepartmentsView({
                     </div>
                     <div>
                       <h3 className="text-[15px] font-semibold tracking-tight">{d.name}</h3>
+                      {d.branchId ? <p className="text-[12px] font-medium text-accent">Rama {branchName.get(d.branchId)}</p> : null}
                       <p className="flex items-center gap-1 text-[12.5px] text-muted-foreground">
                         {members.length} {members.length === 1 ? "persona" : "personas"}
                         <span aria-hidden>·</span>
@@ -257,6 +280,7 @@ export function DepartmentsView({
                       orgId={orgId}
                       department={d}
                       people={people}
+                      branches={branches}
                       takenHeads={takenHeads}
                       onDone={() => setEditing(null)}
                     />
