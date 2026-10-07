@@ -647,7 +647,7 @@ const TINY_PNG = Buffer.from(
   "base64",
 );
 
-test("una empleada entra a su perfil desde el avatar, sube su foto y ajusta sus avisos", async ({ page }) => {
+test("una empleada entra a su perfil desde el avatar y sube su foto; nombre y avisos los gestiona administración", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/dashboard`);
   await page.getByRole("button", { name: "Menú de usuario" }).click();
@@ -660,13 +660,12 @@ test("una empleada entra a su perfil desde el avatar, sube su foto y ajusta sus 
   await expect(page.getByText("Foto actualizada.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Menú de usuario" }).locator("img")).toBeVisible();
 
+  // Nombre y avisos los gestiona administración: se ven, pero no se pueden cambiar
+  await expect(page.getByRole("textbox", { name: "Nombre y apellido" })).toHaveCount(0);
   const reminders = page.getByRole("switch", { name: "Recordatorios" });
+  await expect(reminders).toHaveAttribute("aria-disabled", "true");
+  await reminders.click({ force: true });
   await expect(reminders).toHaveAttribute("aria-checked", "true");
-  await reminders.click();
-  await expect(reminders).toHaveAttribute("aria-checked", "false");
-  await page.waitForLoadState("networkidle");
-  await page.reload();
-  await expect(page.getByRole("switch", { name: "Recordatorios" })).toHaveAttribute("aria-checked", "false");
-  // Lo que pide una acción no aparece: no se puede silenciar
+  // Lo que pide una acción ni siquiera aparece: no se puede silenciar
   await expect(page.getByRole("switch", { name: /vacaciones/i })).toHaveCount(0);
 });
