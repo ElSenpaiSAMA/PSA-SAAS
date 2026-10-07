@@ -36,8 +36,8 @@ select is(
 );
 select is(
   (select array_agg(x order by x) from public.vacation_approvers('bbbbbbbb-0000-0000-0000-000000000001') x),
-  array['bbbbbbbb-0000-0000-0000-000000000005'::uuid],
-  'sin responsable por encima (la CEO), aprueba administración (Sofía)'
+  array['bbbbbbbb-0000-0000-0000-000000000005'::uuid, 'bbbbbbbb-0000-0000-0000-000000000105'::uuid],
+  'sin responsable por encima (la CEO), aprueba RRHH (Sofía e Irene), nunca el superadmin'
 );
 
 -- ── Diego pide vacaciones → avisa a Carlos ───────────────────

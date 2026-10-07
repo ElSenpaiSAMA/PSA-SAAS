@@ -87,7 +87,7 @@ begin
     raise exception 'not allowed to rename this member';
   end if;
   select * into v_me from public.memberships where id = public.my_membership_id(v_target.org_id);
-  if v_me.role_id <> 'owner'
+  if v_me.role_id not in ('owner', 'superadmin')
      and (select level from public.roles where id = v_me.role_id) <= (select level from public.roles where id = v_target.role_id) then
     raise exception 'not allowed to rename this member';
   end if;
