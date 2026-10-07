@@ -1,4 +1,5 @@
-import { Droplets, Fan, Plug, Snowflake, Zap } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Droplets, Fan, Plug, Snowflake, Zap } from "lucide-react";
 import { Reveal, RevealItem } from "@/components/ui/motion";
 import { SpotlightCard } from "./spotlight-card";
 
@@ -110,10 +111,15 @@ export function Services() {
         {/* ElectroMotor: la otra línea de la empresa */}
         <Reveal className="mt-4">
           <RevealItem>
-            <div className="flex flex-col gap-4 rounded-3xl bg-[linear-gradient(120deg,#0b1f3a,#123a6b)] p-6 text-white sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <Link
+              href="/electromotor"
+              className="group flex flex-col gap-4 rounded-3xl bg-[linear-gradient(120deg,#0b1f3a,#123a6b)] p-6 text-white transition-shadow hover:shadow-[0_24px_50px_-24px_rgba(11,31,58,0.7)] sm:flex-row sm:items-center sm:justify-between sm:p-8"
+            >
               <div>
                 <p className="text-[12.5px] font-medium text-sky-300">También en el grupo</p>
-                <h3 className="mt-1 text-[22px] font-semibold tracking-tight">ElectroMotor</h3>
+                <h3 className="mt-1 flex items-center gap-2 text-[22px] font-semibold tracking-tight">
+                  ElectroMotor <ArrowRight className="size-5 text-sky-300 transition-transform group-hover:translate-x-1" />
+                </h3>
                 <p className="mt-1.5 max-w-xl text-[14px] leading-relaxed text-white/70">
                   Taller propio de reparación de motores de arranque, alternadores y dinamos, para barcos y también para otros vehículos.
                 </p>
@@ -125,7 +131,7 @@ export function Services() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Link>
           </RevealItem>
         </Reveal>
       </div>

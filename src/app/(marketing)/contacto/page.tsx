@@ -5,12 +5,18 @@ import { ChartBackground } from "@/components/marketing/chart-background";
 import { SiteFooter } from "@/components/marketing/final-cta";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { company } from "@/lib/brand";
+import { CONTACT_SERVICES } from "@/lib/validation/schemas";
 import { getUser } from "@/lib/data/session";
 import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = {
   title: "Contacto",
   description: "Pedí presupuesto para la instalación, reparación o mantenimiento de los equipos de tu barco.",
+};
+
+// /contacto?servicio=electromotor llega con el servicio ya elegido en el formulario
+const SERVICE_BY_PARAM: Record<string, (typeof CONTACT_SERVICES)[number]> = {
+  electromotor: "ElectroMotor: arranque, alternador o dinamo",
 };
 
 const CHANNELS = [
@@ -20,8 +26,9 @@ const CHANNELS = [
   { icon: Clock3, label: "Horario", value: company.hours },
 ];
 
-export default async function ContactPage() {
-  const user = await getUser();
+export default async function ContactPage({ searchParams }: PageProps<"/contacto">) {
+  const [user, { servicio }] = await Promise.all([getUser(), searchParams]);
+  const defaultService = typeof servicio === "string" && Object.hasOwn(SERVICE_BY_PARAM, servicio) ? SERVICE_BY_PARAM[servicio] : undefined;
 
   return (
     <>
@@ -84,7 +91,7 @@ export default async function ContactPage() {
 
             <div className="order-1 lg:order-2">
               <div className="rounded-3xl border border-blue-100 bg-white p-6 shadow-[0_30px_80px_-40px_rgba(11,31,58,0.55)] sm:p-8">
-                <ContactForm />
+                <ContactForm defaultService={defaultService} />
               </div>
             </div>
           </div>

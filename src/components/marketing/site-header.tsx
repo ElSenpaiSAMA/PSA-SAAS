@@ -7,11 +7,12 @@ import { Logo } from "@/components/logo";
 import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// Rutas absolutas ("/#…"): el header se usa también en /contacto
+// Rutas absolutas ("/#…"): el header se usa también en /contacto y /electromotor
 const links = [
   { href: "/#servicios", label: "Servicios" },
   { href: "/#empresa", label: "Empresa" },
   { href: "/#proceso", label: "Cómo trabajamos" },
+  { href: "/electromotor", label: "ElectroMotor" },
   { href: "/contacto", label: "Contacto" },
 ];
 
