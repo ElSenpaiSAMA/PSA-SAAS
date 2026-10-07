@@ -2,6 +2,8 @@
 
 > Prueba técnica: web demo para una empresa de reparación e instalaciones náuticas, con acceso de empleados y foro interno.
 
+**🌐 Probalo online: [diplonautic.vercel.app](https://diplonautic.vercel.app)** · Acceso empleados con cualquiera de los [usuarios de demo](#usuarios-de-demo) (contraseña `Demo1234!`).
+
 **Diplonautic** es una empresa de Barcelona que instala, repara y mantiene los equipos eléctricos y de confort de yates y embarcaciones: aire acondicionado, refrigeración, generadores, potabilizadoras, sistemas eléctricos y hélices de proa. El proyecto tiene dos partes:
 
 1. **Web pública:** la empresa, sus servicios y una página de contacto.
@@ -23,44 +25,49 @@
 | Foro solo para personas autenticadas | RLS en `0016_forum.sql` + `proxy.ts` | Sin sesión, `/app/.../forum` redirige al login; por API, la base no devuelve nada |
 | Datos de prueba | `supabase/seed.sql` | Usuarios, barcos, órdenes de trabajo e hilos del foro de un taller náutico |
 | Commits claros y ramas | historial de git | Conventional Commits, un commit por capa, ramas `feat/*` → `dev` → `main` |
-| Al menos un Pull Request con descripción | GitHub → Pull requests | **#1** incorpora el foro (`feat/forum` → `dev`); hay más PRs, uno por funcionalidad |
+| Al menos un Pull Request con descripción | GitHub → Pull requests | **#1** incorpora el foro (`feat/forum` → `dev`); hay más de 10 PRs, uno por funcionalidad |
 | Uso de herramientas de IA | [Uso de IA](#uso-de-ia) y [docs/PROMPTS_LOG.md](docs/PROMPTS_LOG.md) | Cada decisión registrada con qué se pidió, por qué y el resultado |
 
 ---
 
 ## Probarlo en 5 minutos
 
-Contraseña de todos los usuarios de demo: **`Demo1234!`**
+**Web:** [diplonautic.vercel.app](https://diplonautic.vercel.app) → botón **Acceso empleados**.
 
-Hay un usuario por cada puesto de la estructura de la empresa (ver [Roles y jerarquía](#roles-y-jerarquía)):
+### Usuarios de demo
 
-| Usuario | Nivel | Rama / departamento | Puesto |
+Todos tienen la contraseña **`Demo1234!`**. Hay uno por cada puesto de la empresa (ver [Roles y jerarquía](#roles-y-jerarquía)), así se puede ver qué cambia según quién entra:
+
+| Usuario | Nivel | Puesto | Qué probar con este usuario |
 |---|---|---|---|
-| `dev@demo.com` | Superadmin | Todo, más Errores y Estructura (solo suyos) | Desarrollo |
-| `laura@demo.com` | **CEO** | Toda la empresa | CEO |
-| `jorge@demo.com` | Dirección de rama | Técnica | Director técnico |
-| `raul@demo.com` | Dirección de rama | Comercial | Director comercial |
-| `sofia@demo.com` | Dirección de rama | Administración y RRHH | Directora de administración y RRHH |
-| `carlos@demo.com` | Responsable de departamento | Taller | Jefe de taller |
-| `nuria@demo.com` | Responsable de departamento | Oficina técnica | Responsable de oficina técnica |
-| `irene@demo.com` | Responsable de departamento | RRHH | Responsable de RRHH |
-| `toni@demo.com` | Coordinador / Encargado | Taller (a cargo de Lucía) | Encargado de varadero |
-| `ana@demo.com` | **Empleada** | Taller | Técnica de climatización |
-| `diego@demo.com` | Empleado · *responsable del proyecto Lagoon* | Taller | Técnico electricista |
-| `pol@demo.com` | Empleado · *observador del proyecto Princess* | Oficina técnica | Técnico comercial |
-| `ivan@demo.com` | Empleado | Administración | Administrativo |
-| `lucia@demo.com` | Aprendiz | Taller | Aprendiz de taller |
-| `gestoria@demo.com` | Externo | Administración | Gestoría externa |
-| `marc.vidal@demo.com` | *Invitación pendiente* (todavía sin cuenta) | Taller | Técnico electricista |
+| `laura@demo.com` | **CEO** | CEO | Ve y gestiona toda la empresa. En **Personas**, editar a alguien y cambiarle el nivel o la rama |
+| `sofia@demo.com` | Dirección de rama · Administración y RRHH | Directora de administración y RRHH | **Administradora**: invitar y eliminar personas, fichas con datos sensibles, ajustes, auditoría, mensajes web. En el foro: **Fijar** y **Cerrar hilo** |
+| `jorge@demo.com` | Dirección de rama · Técnica | Director técnico | Ve los proyectos y la planificación del taller, pero **no** gestiona personas |
+| `raul@demo.com` | Dirección de rama · Comercial | Director comercial | Proyectos de clientes, facturación y **Mensajes web** |
+| `carlos@demo.com` | Responsable de departamento · Taller | Jefe de taller | Aprueba las vacaciones de su equipo y ve sus fichajes y horas |
+| `nuria@demo.com` | Responsable de departamento · Oficina técnica | Responsable de oficina técnica | Gestiona proyectos de toda la empresa (presupuestos) |
+| `irene@demo.com` | Responsable de departamento · RRHH | Responsable de RRHH | Gestiona personas de toda la empresa (función de su departamento) |
+| `toni@demo.com` | Coordinador / Encargado · Taller | Encargado de varadero | Ve las horas y la planificación de quien tiene a cargo (Lucía) |
+| `ana@demo.com` | **Empleada** · Taller | Técnica de climatización | **Empleada**: solo lo suyo. Fichar, pedir vacaciones, el foro, sus proyectos. Sin Personas, Planificación ni Informes |
+| `diego@demo.com` | Empleado · Taller · *responsable del proyecto Lagoon* | Técnico electricista | Desde el proyecto Lagoon **invita** a otras personas (rol por proyecto) |
+| `pol@demo.com` | Empleado · Oficina técnica · *observador del Princess* | Técnico comercial | Ve el proyecto Princess pero no imputa horas (observador) |
+| `ivan@demo.com` | Empleado · Administración | Administrativo | Empleado de otra rama: no ve los proyectos del taller |
+| `lucia@demo.com` | Aprendiz · Taller | Aprendiz de taller | Solo imputa horas en sus propias tareas |
+| `gestoria@demo.com` | Externo · Administración | Gestoría externa | Sin foro, calendario ni directorio de la empresa |
+| `dev@demo.com` | Superadmin (la plataforma) | Desarrollo | Todo, más **Errores** (registro de errores) y **Estructura** (qué gestiona cada rama) |
+| `marc.vidal@demo.com` | *Invitación pendiente* | Técnico electricista | Todavía sin cuenta: sirve para probar el alta por invitación (paso 6) |
 
-Recorrido sugerido:
+### Recorrido sugerido
 
-1. **Web pública** (`/`): el hero, el **barco 3D** (se gira con el mouse; al pasar por un equipo se ilumina), los servicios y el contacto.
-2. **Acceso empleados** → entrar como **Ana** (empleada). Se entra directo a la intranet de Diplonautic.
+1. **Web pública** (`/`): el hero, el **barco 3D** (se gira con el mouse; al pasar por un equipo se ilumina), los servicios y el **contacto**: el mensaje se guarda, llega a la intranet (**Mensajes web**) y a quien escribe le llega un email de confirmación.
+2. **Acceso empleados** → entrar como **Ana** (empleada). Se entra directo a la intranet. Ver el menú: solo lo suyo.
 3. **Foro**: abrir un hilo y responder. Escribir `@Die` para **mencionar** a Diego, o contestar una respuesta concreta (las conversaciones se pliegan).
-4. Cerrar sesión y entrar como **Sofía** (admin): en el foro aparecen **Fijar arriba** y **Cerrar hilo**, que una empleada no tiene. En **Personas**, invitar a alguien.
+4. Cerrar sesión (menú del avatar) y entrar como **Sofía**: el menú completo de administración. En el foro aparecen **Fijar arriba** y **Cerrar hilo**; en **Personas**, invitar, editar el nivel o eliminar a alguien.
 5. Volver como **Diego**: en la barra lateral, "Foro" muestra las **novedades** y la **Bandeja** el aviso de la mención.
-6. **Alta por invitación**: abrir `/signup?email=marc.vidal@demo.com`, elegir una contraseña y entrar directo como técnico. Con otro email, el registro se rechaza. *(En local se entra directo; en un proyecto con confirmación de email activada, primero llega el email de confirmación.)*
+6. **Alta por invitación**: abrir `/signup?email=marc.vidal@demo.com`, elegir una contraseña y entrar directo como técnico. Con otro email, el registro se rechaza.
+7. **Mi perfil** (menú del avatar): subir una foto; se ve en el foro y en Personas.
+
+> La demo es compartida: si alguien elimina o cambia usuarios, puede que veas los datos distintos. Los datos se pueden restaurar con `supabase/seed.sql`.
 
 ---
 
