@@ -14,7 +14,8 @@ import { sendContact } from "./actions";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-export function ContactForm() {
+/** `defaultService`: servicio ya elegido al llegar desde otra página (p. ej. ElectroMotor). */
+export function ContactForm({ defaultService }: { defaultService?: (typeof CONTACT_SERVICES)[number] }) {
   const [state, action] = useActionState(sendContact, idle);
   // Tras enviar se muestra la confirmación; "Enviar otra consulta" vuelve al formulario vacío
   const [dismissed, setDismissed] = useState<number | undefined>();
@@ -60,7 +61,7 @@ export function ContactForm() {
           <Input name="boatModel" placeholder="Modelo, eslora o año" />
         </Field>
         <Field label="Servicio" error={errors?.service}>
-          <Select name="service" defaultValue="">
+          <Select name="service" defaultValue={defaultService ?? ""}>
             <option value="" disabled>
               ¿Qué necesitás?
             </option>

@@ -639,3 +639,16 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** 6 pgTAP (quién marca un proyecto como mensual, solo se renuevan los mensuales, en borrador), unitarios de `shiftPeriod` y E2E del interruptor y de copiar a otro mes.
 
+
+---
+
+## 2026-10-07 Página ElectroMotor
+
+**Prompt (resumen):** faltaba la sección de diplonautic.com/electromotor en la web corporativa. Tenía que mantener el diseño del sitio y la banda ElectroMotor de la home tenía que llevar a ella. Antes de publicar, se pidió ver ejemplos.
+
+**Decisiones:**
+- **Se mostraron tres propuestas.** Se descartaron un encabezado tipo plano técnico y uno con foto y selector. Quedó la tercera, en 3D, como el barco de la home.
+- **El taller en 3D:** los cinco equipos de la web original (arranque, alternadores, dinamos, motores eléctricos y bombas) armados con formas simples, sin modelos externos. "Desmontar" separa las piezas y cada una se resalta junto con su nombre. La ficha muestra la foto real del equipo y lo que se le hace, con los textos de la web original.
+- **Integrada al sitio:** link en el header y en el footer, banda de la home clicable y ruta pública. "Pedir presupuesto" abre Contacto con el servicio ElectroMotor ya elegido (`/contacto?servicio=electromotor`).
+
+**Pruebas:** unitario de la ruta pública y E2E (home → ElectroMotor → contacto con el servicio preseleccionado).
