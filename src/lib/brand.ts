@@ -1,6 +1,17 @@
 export const brand = {
-  name: "Kairos",
-  tagline: "El tiempo de tu equipo, en orden.",
+  name: "Diplonautic",
+  tagline: "Instalaciones y diseños náuticos.",
   description:
-    "Fichaje, horas por proyecto, vacaciones y jerarquía de equipo en un solo lugar. Multi-empresa, auditado y seguro por diseño.",
+    "Instalación, reparación y mantenimiento de equipos eléctricos y de confort para yates y embarcaciones: aire acondicionado, refrigeración, generadores, potabilizadoras y sistemas eléctricos.",
+} as const;
+
+/** Datos de contacto públicos de la empresa (web demostrativa para una prueba técnica). */
+export const company = {
+  legalName: "Diplonautic SL",
+  phone: "+34 930 247 180",
+  phoneHref: "tel:+34930247180",
+  email: "info@diplonautic.com",
+  address: "Carrer de Neus Català, Local 9",
+  city: "08930 Sant Adrià de Besòs, Barcelona",
+  hours: "Lunes a viernes, 9:00 – 13:00 y 14:30 – 18:00",
 } as const;

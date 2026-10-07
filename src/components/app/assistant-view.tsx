@@ -52,7 +52,7 @@ export function AssistantView({ orgId, initialQuestion, onBack }: { orgId: strin
           <ArrowLeft className="size-4" />
         </button>
         <Sparkles className="size-4 text-accent" />
-        <span className="text-[13.5px] font-medium">Kairos IA</span>
+        <span className="text-[13.5px] font-medium">Asistente IA</span>
         <span className="ml-auto text-[11.5px] text-muted-foreground">Responde con tus datos y tus permisos</span>
       </div>
 

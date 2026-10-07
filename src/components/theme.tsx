@@ -1,14 +1,18 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { ThemeProvider as NextThemes, useTheme } from "next-themes";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { Toaster } from "sonner";
+import { isPublicSitePath } from "@/lib/public-site";
 import { cn } from "@/lib/utils";
 
 export function Providers({ children }: { children: ReactNode }) {
+  // La web pública de la empresa es siempre clara; la intranet respeta la preferencia
+  const forced = isPublicSitePath(usePathname()) ? "light" : undefined;
   return (
-    <NextThemes attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextThemes attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange forcedTheme={forced}>
       {children}
       <ThemedToaster />
     </NextThemes>

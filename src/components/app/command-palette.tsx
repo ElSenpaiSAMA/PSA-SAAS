@@ -114,14 +114,14 @@ export function CommandPalette({
                   autoFocus
                   value={search}
                   onValueChange={setSearch}
-                  placeholder={aiEnabled ? "Buscá una página o preguntale algo a Kairos…" : "Buscá una página o acción…"}
+                  placeholder={aiEnabled ? "Buscá una página o preguntale algo al asistente…" : "Buscá una página o acción…"}
                   className="h-14 w-full border-b border-border bg-transparent px-5 text-[15px] outline-none placeholder:text-muted-foreground"
                 />
                 <Command.List className="max-h-[360px] overflow-y-auto p-2">
                   <Command.Empty className="py-10 text-center text-[13px] text-muted-foreground">Sin resultados.</Command.Empty>
 
                   {search.trim().length >= 3 ? (
-                    <Command.Group heading="Kairos IA" forceMount>
+                    <Command.Group heading="Asistente IA" forceMount>
                       <Command.Item
                         value={`__ia__ ${search}`}
                         forceMount
@@ -132,10 +132,10 @@ export function CommandPalette({
                         <Sparkles className="size-4 shrink-0 text-accent" strokeWidth={1.75} />
                         {aiEnabled ? (
                           <span className="truncate">
-                            Preguntarle a Kairos: <span className="text-foreground">“{search.trim()}”</span>
+                            Preguntarle al asistente: <span className="text-foreground">“{search.trim()}”</span>
                           </span>
                         ) : (
-                          <span>Kairos IA no está activada (falta OPENROUTER_API_KEY)</span>
+                          <span>El asistente IA no está activado (falta OPENROUTER_API_KEY)</span>
                         )}
                       </Command.Item>
                     </Command.Group>

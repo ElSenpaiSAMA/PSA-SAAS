@@ -52,7 +52,7 @@ export function AiAllocation({ orgId, enabled }: { orgId: string; enabled: boole
   if (!enabled) {
     return (
       <p className="flex items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-[12px] text-muted-foreground">
-        <Sparkles className="size-3.5" /> Con la IA activada, Kairos te propone cómo repartir lo fichado entre tus tareas.
+        <Sparkles className="size-3.5" /> Con la IA activada, el asistente te propone cómo repartir lo fichado entre tus tareas.
       </p>
     );
   }

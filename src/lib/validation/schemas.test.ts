@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  contactSchema,
   fieldErrors,
+  forumThreadSchema,
   invitationSchema,
   signUpSchema,
   timeCorrectionSchema,
@@ -82,5 +84,44 @@ describe("solicitud de ausencia", () => {
     expect(vacationRequestSchema.parse({ startDate: "2026-11-02", endDate: "2026-11-02" }).kind).toBe("vacation");
     const other = vacationRequestSchema.safeParse({ kind: "other", startDate: "2026-11-02", endDate: "2026-11-02" });
     expect(fieldErrors(other.error!).reason).toEqual(["Contá de qué se trata la ausencia"]);
+  });
+});
+
+describe("formulario de contacto", () => {
+  const valid = {
+    name: "  Marta Soler ",
+    email: "MARTA@correo.com",
+    phone: "",
+    boatType: "Velero",
+    boatModel: "",
+    service: "Generadores",
+    message: "El generador no arranca desde la última salida.",
+    privacy: "on",
+  };
+
+  it("acepta una consulta completa y normaliza los opcionales", () => {
+    const r = contactSchema.parse(valid);
+    expect(r).toMatchObject({ name: "Marta Soler", email: "marta@correo.com", phone: null, boatModel: null });
+  });
+
+  it("exige la conformidad, un servicio de la lista y un mensaje con contenido", () => {
+    const r = contactSchema.safeParse({ ...valid, privacy: undefined, service: "Pesca", message: "hola" });
+    expect(r.success).toBe(false);
+    expect(Object.keys(fieldErrors(r.error!)).sort()).toEqual(["message", "privacy", "service"]);
+  });
+
+  it("valida el teléfono solo si se completa", () => {
+    expect(contactSchema.safeParse({ ...valid, phone: "+34 600 123 456" }).success).toBe(true);
+    expect(contactSchema.safeParse({ ...valid, phone: "llamame" }).success).toBe(false);
+  });
+});
+
+describe("hilo del foro", () => {
+  it("recorta espacios y rechaza títulos cortos o categorías inventadas", () => {
+    expect(forumThreadSchema.parse({ category: "notice", title: "  Cierre por fiestas ", body: "El 12 cerramos." }).title).toBe(
+      "Cierre por fiestas",
+    );
+    expect(forumThreadSchema.safeParse({ category: "notice", title: "Hola", body: "x" }).success).toBe(false);
+    expect(forumThreadSchema.safeParse({ category: "spam", title: "Título válido", body: "x" }).success).toBe(false);
   });
 });

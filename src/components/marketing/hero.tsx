@@ -1,116 +1,136 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { motion, useScroll, useTransform } from "motion/react";
-import { useRef } from "react";
+import { ArrowRight, Clock3, Droplets, Fan, Phone, Plug, ShieldCheck, Snowflake, Wrench, Zap, type LucideIcon } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { buttonClasses } from "@/components/ui/button";
-import { brand } from "@/lib/brand";
+import { company } from "@/lib/brand";
 import { cn } from "@/lib/utils";
-import { HeroCollage } from "./hero-collage";
-import { ProductPreview } from "./product-preview";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-const word = {
-  hidden: { opacity: 0, y: "0.4em", filter: "blur(8px)" },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { delay: 0.15 + i * 0.07, duration: 0.9, ease: EASE },
-  }),
-};
+const SPECIALTIES: { text: string; icon: LucideIcon }[] = [
+  { text: "Aire acondicionado", icon: Fan },
+  { text: "Refrigeración", icon: Snowflake },
+  { text: "Generadores", icon: Zap },
+  { text: "Potabilizadoras", icon: Droplets },
+  { text: "Sistemas eléctricos", icon: Plug },
+];
+
+const PROMISES = [
+  { icon: Clock3, text: "Más de 30 años de experiencia" },
+  { icon: Wrench, text: "Proyectos a medida" },
+  { icon: ShieldCheck, text: "Presupuesto antes de empezar" },
+];
+
+/** "Especialistas en …": las especialidades se turnan en una píldora en lugar de leerse en una lista larga. */
+function RotatingSpecialty() {
+  const still = useReducedMotion();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (still) return;
+    const t = setInterval(() => setI((n) => (n + 1) % SPECIALTIES.length), 2200);
+    return () => clearInterval(t);
+  }, [still]);
+  const { text, icon: Icon } = SPECIALTIES[i];
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 text-[15px] text-white/75">
+      <span>Especialistas en</span>
+      <motion.span
+        layout
+        transition={{ layout: { duration: 0.45, ease: EASE } }}
+        className="inline-flex h-9 items-center overflow-hidden rounded-full border border-white/20 bg-white/10 px-3.5 font-medium text-white backdrop-blur"
+        aria-live="polite"
+      >
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.span
+            key={text}
+            initial={{ y: 18, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -18, opacity: 0 }}
+            transition={{ duration: 0.4, ease: EASE }}
+            className="inline-flex items-center gap-2 whitespace-nowrap"
+          >
+            <Icon className="size-4 text-sky-300" strokeWidth={1.75} />
+            {text}
+          </motion.span>
+        </AnimatePresence>
+      </motion.span>
+    </div>
+  );
+}
 
 export function Hero() {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  // El preview arranca inclinado en perspectiva y se "asienta" al hacer scroll
-  const rotateX = useTransform(scrollYProgress, [0, 0.35], [14, 0]);
-  const scale = useTransform(scrollYProgress, [0, 0.35], [0.94, 1]);
-  const y = useTransform(scrollYProgress, [0, 0.35], [0, -40]);
-  const glowOpacity = useTransform(scrollYProgress, [0, 0.4], [1, 0.3]);
-
-  const headline = ["El", "tiempo", "de", "tu", "equipo,"];
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1.05, 1.15]);
 
   return (
-    <section ref={ref} className="relative overflow-hidden pt-36 pb-24 sm:pt-44">
-      <HeroCollage glowOpacity={glowOpacity} />
+    <section ref={ref} className="relative isolate flex min-h-[760px] items-center overflow-hidden pt-28 pb-40 text-white">
+      <motion.div style={{ y, scale }} className="absolute inset-0 -z-20">
+        <Image src="/barcos/yate-atardecer.jpg" alt="" fill preload sizes="100vw" className="object-cover object-[60%_55%]" />
+      </motion.div>
+      {/* Velo azul en degradé para que el texto se lea sobre la foto */}
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(11,31,58,.78)_0%,rgba(18,58,107,.62)_45%,rgba(11,31,58,.85)_100%)]" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_40%,rgba(59,130,246,.25),transparent_60%)]" />
 
-      <div className="mx-auto max-w-6xl px-6 text-center">
-        <motion.a
-          href="#producto"
+      <div className="mx-auto max-w-4xl px-6 text-center">
+        <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: EASE }}
-          className="group mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 py-1 pr-3 pl-1 text-[12.5px] text-muted-foreground backdrop-blur transition-colors hover:border-border-strong hover:text-foreground"
+          className="text-[12.5px] font-medium tracking-[0.22em] text-sky-300 uppercase"
         >
-          <span className="rounded-full bg-accent-soft px-2 py-0.5 font-medium text-accent">Nuevo</span>
-          Aprobaciones por jerarquía
-          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-        </motion.a>
-
-        <h1 className="mx-auto max-w-4xl text-[clamp(2.6rem,7vw,5.6rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance">
-          {headline.map((w, i) => (
-            <motion.span key={i} custom={i} variants={word} initial="hidden" animate="show" className="inline-block pr-[0.22em]">
-              {w}
-            </motion.span>
-          ))}
-          <motion.span
-            custom={headline.length}
-            variants={word}
-            initial="hidden"
-            animate="show"
-            className="inline-block font-serif font-normal tracking-[-0.02em] italic"
-          >
-            en orden.
-          </motion.span>
-        </h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.9, ease: EASE }}
-          className="mx-auto mt-7 max-w-xl text-[17px] leading-relaxed text-muted-foreground text-balance"
-        >
-          {brand.description}
+          Instalaciones y diseños náuticos · Barcelona
         </motion.p>
-
+        <motion.h1
+          initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ delay: 0.15, duration: 1, ease: EASE }}
+          className="mt-5 text-[clamp(2.6rem,7vw,5.6rem)] leading-[0.98] font-semibold tracking-[-0.045em] text-balance"
+        >
+          Tu barco, listo <span className="font-serif font-normal text-sky-300 italic">para zarpar.</span>
+        </motion.h1>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.9, ease: EASE }}>
+          <p className="mx-auto mt-6 max-w-lg text-[17px] leading-relaxed text-balance text-white/75">
+            Instalamos, reparamos y mantenemos los equipos eléctricos y de confort de tu barco.
+          </p>
+          <RotatingSpecialty />
+        </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.85, duration: 0.9, ease: EASE }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-3"
+          transition={{ delay: 0.65, duration: 0.9, ease: EASE }}
+          className="mt-9 flex flex-wrap justify-center gap-3"
         >
-          <Link href="/signup" className={cn(buttonClasses("primary", "lg"), "group")}>
-            Crear mi organización
-            <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+          <Link href="/contacto" className={cn(buttonClasses("primary", "lg"), "group bg-blue-600 text-white shadow-[0_12px_30px_-12px_rgba(37,99,235,0.9)] hover:bg-blue-500")}>
+            Pedir presupuesto <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </Link>
-          <Link href="/login" className={buttonClasses("secondary", "lg")}>
-            Ver la demo
-          </Link>
+          <a href={company.phoneHref} className={cn(buttonClasses("secondary", "lg"), "border-white/25 bg-white/5 text-white backdrop-blur hover:bg-white/10")}>
+            <Phone className="size-4" /> {company.phone}
+          </a>
         </motion.div>
-        <motion.p
+        <motion.ul
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.1, duration: 1 }}
-          className="mt-4 text-[12.5px] text-muted-foreground"
+          transition={{ delay: 0.9, duration: 1 }}
+          className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[13px] text-white/75"
         >
-          Sin tarjeta · Configuración en 2 minutos
-        </motion.p>
+          {PROMISES.map(({ icon: Icon, text }) => (
+            <li key={text} className="inline-flex items-center gap-1.5">
+              <Icon className="size-4 text-sky-300" strokeWidth={1.75} /> {text}
+            </li>
+          ))}
+        </motion.ul>
       </div>
 
-      <div className="mx-auto mt-20 max-w-6xl px-4 sm:px-6 [perspective:1600px]">
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1.4, ease: EASE }}
-        >
-          <motion.div style={{ rotateX, scale, y }} className="origin-top">
-            <ProductPreview />
-          </motion.div>
-        </motion.div>
-      </div>
+      {/* Borde inferior en forma de ola, que da paso a la carta náutica */}
+      <svg aria-hidden className="absolute inset-x-0 -bottom-px h-24 w-full text-[#e6f0fc]" viewBox="0 0 1440 96" preserveAspectRatio="none">
+        <path d="M0 50 C240 10 480 90 720 50 S1200 10 1440 50 V96 H0 Z" fill="currentColor" />
+      </svg>
     </section>
   );
 }

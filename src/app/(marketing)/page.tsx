@@ -1,8 +1,10 @@
+import { BoatStage } from "@/components/marketing/boat-stage";
+import { Company } from "@/components/marketing/company";
 import { FinalCta, SiteFooter } from "@/components/marketing/final-cta";
-import { Features } from "@/components/marketing/features";
+import { Gallery } from "@/components/marketing/gallery";
 import { Hero } from "@/components/marketing/hero";
-import { HowItWorks } from "@/components/marketing/how-it-works";
-import { Security } from "@/components/marketing/security";
+import { Process } from "@/components/marketing/process";
+import { Services } from "@/components/marketing/services";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { SmoothScroll } from "@/components/marketing/smooth-scroll";
 import { getUser } from "@/lib/data/session";
@@ -13,12 +15,14 @@ export default async function LandingPage() {
   return (
     <>
       <SmoothScroll />
-      <SiteHeader signedIn={!!user} />
-      <main>
+      <SiteHeader signedIn={!!user} overDark />
+      <main className="bg-white">
         <Hero />
-        <Features />
-        <HowItWorks />
-        <Security />
+        <BoatStage />
+        <Services />
+        <Company />
+        <Gallery />
+        <Process />
         <FinalCta />
       </main>
       <SiteFooter />

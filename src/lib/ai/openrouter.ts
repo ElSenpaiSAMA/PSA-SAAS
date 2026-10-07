@@ -1,4 +1,5 @@
 import "server-only";
+import { brand } from "@/lib/brand";
 
 // Cliente mínimo de OpenRouter (API compatible con OpenAI). Solo corre en el
 // servidor: la clave nunca llega al navegador.
@@ -56,7 +57,7 @@ export async function chat(params: {
         "Content-Type": "application/json",
         // Opcionales de OpenRouter: identifican la app en su panel
         "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-        "X-Title": "Kairos PSA",
+        "X-Title": brand.name,
       },
       body: JSON.stringify({
         model: AI_MODEL,
