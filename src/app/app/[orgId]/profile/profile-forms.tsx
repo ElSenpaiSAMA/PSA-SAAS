@@ -2,7 +2,7 @@
 
 import { Camera, Laptop, Moon, Sun, Trash2 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useRef, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { isGroupEnabled, NOTIFICATION_GROUPS } from "@/lib/domain/notification-p
 import { createClient } from "@/lib/supabase/client";
 import { useHydrated } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { setAvatar } from "./actions";
+import { setAvatar, setMyNotificationPrefs } from "./actions";
 
 const MAX_INPUT_BYTES = 8 * 1024 * 1024;
 const OUTPUT_SIZE = 320;
@@ -146,31 +146,64 @@ export function ThemePreference() {
 }
 
 /** Avisos que recibe la persona. Solo lectura: los configura administración. */
-export function NotificationPrefs({ muted, permissions }: { muted: string[]; permissions: string[] }) {
+/**
+ * Avisos que recibe la persona. Para el resto son de solo lectura (los configura
+ * administración); el superadmin elige los suyos.
+ */
+export function NotificationPrefs({
+  orgId,
+  muted,
+  permissions,
+  editable,
+}: {
+  orgId: string;
+  muted: string[];
+  permissions: string[];
+  editable: boolean;
+}) {
   const groups = NOTIFICATION_GROUPS.filter((g) => !g.permission || permissions.includes(g.permission));
+  const [disabled, setDisabled] = useState(() => groups.filter((g) => !isGroupEnabled(g, muted)).map((g) => g.key));
+  const [pending, start] = useTransition();
+
+  const toggle = (key: string) => {
+    if (!editable) return;
+    const next = disabled.includes(key) ? disabled.filter((k) => k !== key) : [...disabled, key];
+    setDisabled(next);
+    start(async () => {
+      const r = await setMyNotificationPrefs(orgId, next);
+      if (r.status === "error") {
+        setDisabled(disabled);
+        toast.error(r.message);
+      }
+    });
+  };
+
   return (
-    <ul className="divide-y divide-border">
+    <ul className="divide-y divide-border" aria-busy={pending}>
       {groups.map((g) => {
-        const on = isGroupEnabled(g, muted);
+        const on = !disabled.includes(g.key);
         return (
           <li key={g.key} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
             <div className="min-w-0">
               <p className="text-[13.5px] font-medium">{g.label}</p>
               <p className="text-[12.5px] text-muted-foreground">{g.description}</p>
             </div>
-            <span
+            <button
+              type="button"
               role="switch"
               aria-checked={on}
-              aria-disabled
+              aria-disabled={!editable}
               aria-label={g.label}
-              title="Lo configura administración"
+              title={editable ? undefined : "Lo configura administración"}
+              onClick={() => toggle(g.key)}
               className={cn(
-                "relative inline-flex h-6 w-11 shrink-0 cursor-not-allowed items-center rounded-full opacity-60",
+                "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
                 on ? "bg-accent" : "bg-muted-foreground/30",
+                editable ? "cursor-pointer" : "cursor-not-allowed opacity-60",
               )}
             >
-              <span className={cn("inline-block size-5 rounded-full bg-white shadow", on ? "translate-x-5.5" : "translate-x-0.5")} />
-            </span>
+              <span className={cn("inline-block size-5 rounded-full bg-white shadow transition-transform", on ? "translate-x-5.5" : "translate-x-0.5")} />
+            </button>
           </li>
         );
       })}

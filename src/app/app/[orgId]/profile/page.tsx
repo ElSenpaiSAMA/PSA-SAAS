@@ -65,15 +65,21 @@ export default async function ProfilePage({ params }: PageProps<"/app/[orgId]/pr
           <Card>
             <CardHeader
               title="Avisos"
-              description="Lo que te llega a la campana. Lo configura administración; lo que necesita tu aprobación llega siempre."
+              description={
+                ctx.can("platform.manage")
+                  ? "Elegí qué te llega a la campana. Lo que necesita tu aprobación llega siempre."
+                  : "Lo que te llega a la campana. Lo configura administración; lo que necesita tu aprobación llega siempre."
+              }
               action={
-                <span className="inline-flex shrink-0 items-center gap-1 text-[12px] whitespace-nowrap text-muted-foreground">
-                  <Lock className="size-3.5" /> Solo lectura
-                </span>
+                ctx.can("platform.manage") ? undefined : (
+                  <span className="inline-flex shrink-0 items-center gap-1 text-[12px] whitespace-nowrap text-muted-foreground">
+                    <Lock className="size-3.5" /> Solo lectura
+                  </span>
+                )
               }
             />
             <CardBody>
-              <NotificationPrefs muted={profile?.muted_notifications ?? []} permissions={PERMISSIONS.filter((p) => ctx.can(p))} />
+              <NotificationPrefs orgId={orgId} editable={ctx.can("platform.manage")} muted={profile?.muted_notifications ?? []} permissions={PERMISSIONS.filter((p) => ctx.can(p))} />
             </CardBody>
           </Card>
         </div>

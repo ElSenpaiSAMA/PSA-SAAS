@@ -29,8 +29,8 @@ describe("permisos base", () => {
     for (const p of PERMISSIONS) expect(hasPermission("owner", p)).toBe(p !== "platform.manage");
   });
 
-  it("el superadmin solo ve la auditoría y configura la plataforma", () => {
-    expect(PERMISSIONS.filter((p) => hasPermission("superadmin", p))).toEqual(["audit.view", "platform.manage"]);
+  it("el superadmin tiene todo, también la plataforma", () => {
+    for (const p of PERMISSIONS) expect(hasPermission("superadmin", p)).toBe(true);
   });
 
   it("un empleado y una aprendiz solo acceden al espacio común", () => {

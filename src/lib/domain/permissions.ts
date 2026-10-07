@@ -53,7 +53,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 
 /** Qué abarca cada nivel, en una línea (para los selectores y la ayuda). */
 export const ROLE_SCOPE: Record<Role, string> = {
-  superadmin: "La plataforma: auditoría, errores y estructura de permisos. No ve la gestión de la empresa",
+  superadmin: "Todo: la empresa y la plataforma (errores y estructura de permisos)",
   owner: "Toda la empresa",
   director: "Las personas y los módulos de su rama",
   manager: "Su departamento",
@@ -66,8 +66,8 @@ export const ROLE_SCOPE: Record<Role, string> = {
 // Espejo de public.role_permissions (permisos BASE de cada nivel). La rama que dirige
 // o el departamento que encabeza cada persona suman los de su función.
 const BASE: Record<Role, readonly Permission[]> = {
-  // La plataforma: solo auditoría y configuración (no la gestión de la empresa)
-  superadmin: ["audit.view", "platform.manage"],
+  // El desarrollador: todo, incluida la plataforma (errores y estructura de permisos)
+  superadmin: PERMISSIONS,
   // El CEO: toda la empresa, pero no la configuración de la plataforma
   owner: PERMISSIONS.filter((p) => p !== "platform.manage"),
   director: ["time.view_team", "vacations.approve", "planning.view", "people.view", "workspace.access"],

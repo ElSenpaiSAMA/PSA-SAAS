@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ArrowRight, CalendarClock, Clock3, Gauge, ListTodo, Palmtree } from "lucide-react";
 import { ClockWidget } from "@/components/app/clock-widget";
 import { PageHeader, SectionTitle } from "@/components/app/page-header";
@@ -30,8 +29,6 @@ const STATUS_LABEL = { todo: "Por hacer", in_progress: "En curso", done: "Hecha"
 export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/dashboard">) {
   const { orgId } = await params;
   const ctx = await getOrgContext(orgId);
-  // El superadmin no gestiona la empresa: su inicio es la plataforma
-  if (ctx.can("platform.manage") && !ctx.can("workspace.access")) redirect(`/app/${orgId}/errors`);
   const me = ctx.membership;
   const now = new Date();
   const weekStart = startOfWeek(now);

@@ -38,8 +38,6 @@ export interface NavItem {
   group: NavGroup;
   /** Muestra un contador (p. ej. pendientes de la bandeja) */
   badge?: "inbox" | "forum" | "contact";
-  /** Lo ve también el superadmin, que solo ve lo de plataforma */
-  platform?: true;
 }
 
 export const NAV: NavItem[] = [
@@ -58,9 +56,9 @@ export const NAV: NavItem[] = [
   { href: "reports", group: "Gestión", label: "Informes", icon: "reports", permission: "time.view_team", keywords: ["excel", "csv", "exportar", "facturación", "horas", "ausencias"] },
   { href: "automations", group: "Gestión", label: "Automatizaciones", icon: "automations", permission: "automations.manage", keywords: ["reglas", "workflows", "flujos", "recordatorios", "automático"] },
   { href: "settings", group: "Gestión", label: "Ajustes", icon: "settings", permission: "employees.manage", keywords: ["configuración", "empresa", "zona horaria", "roles", "permisos"] },
-  { href: "audit", group: "Gestión", label: "Auditoría", icon: "audit", permission: "audit.view", platform: true, keywords: ["log", "historial"] },
-  { href: "errors", group: "Plataforma", label: "Errores", icon: "errors", permission: "platform.manage", platform: true, keywords: ["fallos", "bugs", "logs", "excepciones"] },
-  { href: "structure", group: "Plataforma", label: "Estructura", icon: "structure", permission: "platform.manage", platform: true, keywords: ["ramas", "departamentos", "permisos", "roles"] },
+  { href: "audit", group: "Gestión", label: "Auditoría", icon: "audit", permission: "audit.view", keywords: ["log", "historial"] },
+  { href: "errors", group: "Plataforma", label: "Errores", icon: "errors", permission: "platform.manage", keywords: ["fallos", "bugs", "logs", "excepciones"] },
+  { href: "structure", group: "Plataforma", label: "Estructura", icon: "structure", permission: "platform.manage", keywords: ["ramas", "departamentos", "permisos", "roles"] },
 ];
 
 export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
@@ -84,11 +82,7 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   structure: Network,
 };
 
-/**
- * Qué secciones ve alguien según sus permisos efectivos. El superadmin (plataforma sin
- * acceso al espacio de la empresa) ve solo lo de plataforma: auditoría, errores y estructura.
- */
+/** Qué secciones ve alguien según sus permisos efectivos (Errores y Estructura: solo el superadmin). */
 export function visibleNav(permissions: readonly Permission[]): NavItem[] {
-  const platformOnly = permissions.includes("platform.manage") && !permissions.includes("workspace.access");
-  return NAV.filter((n) => (platformOnly ? n.platform : !n.permission || permissions.includes(n.permission)));
+  return NAV.filter((n) => !n.permission || permissions.includes(n.permission));
 }
