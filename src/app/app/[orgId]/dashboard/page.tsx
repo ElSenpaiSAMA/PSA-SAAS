@@ -118,7 +118,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
         breakMinutes={closedMinutes(todayEntries, "break")}
       />
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
         <StatCard index={0} label="Horas esta semana" value={weekMinutes} format="minutes" icon={Clock3} hint={`de ${me.weekly_hours}h contratadas`} />
         <StatCard
           index={1}

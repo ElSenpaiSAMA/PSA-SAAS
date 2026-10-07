@@ -76,7 +76,7 @@ async function Billing({ orgId, month }: { orgId: string; month: string }) {
   const { rows, totals } = await getBillingReport(orgId, month);
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
         <StatCard index={0} label="Facturado" value={totals.invoiced} format="currency" icon={Euro} tone="success" />
         <StatCard
           index={1}
@@ -166,7 +166,7 @@ async function Hours({ orgId, month }: { orgId: string; month: string }) {
   const capacity = sum((r) => r.capacityHours);
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         <StatCard index={0} label="Horas fichadas" value={sum((r) => r.clockHours) * 60} format="minutes" icon={Clock3} />
         <StatCard index={1} label="Imputadas a proyectos" value={sum((r) => r.taskHours) * 60} format="minutes" icon={Timer} />
         <StatCard
@@ -233,7 +233,7 @@ async function Absences({ orgId, month }: { orgId: string; month: string }) {
   const out = rows.filter((r) => r.total > 0);
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         <StatCard
           index={0}
           label="Días de ausencia en el mes"

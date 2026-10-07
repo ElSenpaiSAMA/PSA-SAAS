@@ -129,7 +129,7 @@ export default async function VacationsPage({ params, searchParams }: PageProps<
         />
         {tabs}
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
           <StatCard index={0} label="Por decidir" value={pending.length} icon={CalendarClock} tone={pending.length ? "warning" : undefined} />
           <StatCard
             index={1}
@@ -209,7 +209,7 @@ export default async function VacationsPage({ params, searchParams }: PageProps<
       />
       {tabs}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
         <StatCard index={0} label="Disponibles" value={balance.available} format="days" icon={Palmtree} tone="success" />
         <StatCard index={1} label="Usados" value={balance.used} format="days" icon={CalendarCheck2} />
         <StatCard index={2} label="Pendientes" value={balance.pending} format="days" icon={CalendarClock} tone={balance.pending ? "warning" : undefined} />

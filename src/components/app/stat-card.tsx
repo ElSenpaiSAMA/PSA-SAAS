@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { FadeIn, StatValue, type StatFormat } from "./stat-card.client";
 
+// Celda de una banda de indicadores: va dentro de un contenedor con `gap-px bg-border`
+// (las líneas divisorias son el fondo que asoma entre celdas), como en los PSA profesionales.
 // Server Component: el ícono (una función) no cruza la frontera servidor→cliente;
 // se renderiza acá y solo el número animado y la entrada viven en el cliente.
 export function StatCard({
@@ -27,7 +29,7 @@ export function StatCard({
   return (
     <FadeIn
       index={index}
-      className="group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-border-strong"
+      className="group bg-card p-5 transition-colors hover:bg-muted/40"
     >
       <div className="flex items-center justify-between">
         <p className="text-[13px] text-muted-foreground">{label}</p>

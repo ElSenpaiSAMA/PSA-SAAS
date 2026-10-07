@@ -36,7 +36,7 @@ export default async function AutomationsPage({ params }: PageProps<"/app/[orgId
         description="Reglas que trabajan solas: avisan, recuerdan, cierran y crean cosas por vos. Activá las que quieras y ajustá sus valores."
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         <StatCard index={0} label="Activas" value={active} icon={Power} hint={`de ${cards.length} disponibles`} />
         <StatCard index={1} label="Acciones en 30 días" value={actions30} icon={Activity} hint="Avisos enviados y cambios hechos" />
         <StatCard index={2} label="Frecuencia" value={15} icon={Workflow} hint="minutos entre revisiones programadas" />

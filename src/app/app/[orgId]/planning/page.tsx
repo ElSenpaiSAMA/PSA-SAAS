@@ -104,7 +104,7 @@ export default async function PlanningPage({ params, searchParams }: PageProps<"
         actions={<MonthNav month={month} basePath={`/app/${orgId}/planning`} />}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
         <StatCard index={0} label="Personas" value={rows.length} icon={Users} />
         <StatCard index={1} label="Horas planificadas" value={totalPlanned * 60} format="minutes" icon={CalendarRange} hint={`de ${Math.round(totalCapacity)}h de capacidad`} />
         <StatCard
