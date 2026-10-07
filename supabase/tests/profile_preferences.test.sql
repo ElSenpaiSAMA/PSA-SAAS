@@ -28,12 +28,12 @@ $$;
 -- ── Qué se puede cambiar del propio perfil ────────────────────
 select pg_temp.login_as('33333333-3333-3333-3333-333333333333', 'ana@demo.com');
 select throws_ok(
-  $ update public.profiles set full_name = 'Ana Torres Vidal' where id = '33333333-3333-3333-3333-333333333333' $,
+  $$ update public.profiles set full_name = 'Ana Torres Vidal' where id = '33333333-3333-3333-3333-333333333333' $$,
   'name is managed by administration',
   'una vez elegido, el nombre no lo cambia la propia persona'
 );
 select throws_ok(
-  $ update public.profiles set email = 'otra@demo.com' where id = '33333333-3333-3333-3333-333333333333' $,
+  $$ update public.profiles set email = 'otra@demo.com' where id = '33333333-3333-3333-3333-333333333333' $$,
   'only the photo can be changed',
   'el email no se cambia desde la app'
 );
@@ -78,21 +78,21 @@ select pg_temp.as_system();
 update public.profiles set full_name = null where id = '44444444-4444-4444-4444-444444444444';
 select pg_temp.login_as('44444444-4444-4444-4444-444444444444', 'diego@demo.com');
 select lives_ok(
-  $ update public.profiles set full_name = 'Diego Fernández' where id = '44444444-4444-4444-4444-444444444444' $,
+  $$ update public.profiles set full_name = 'Diego Fernández' where id = '44444444-4444-4444-4444-444444444444' $$,
   'al activar la cuenta, la persona elige su nombre'
 );
 select throws_ok(
-  $ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000003', 'Ana Cambiada') $,
+  $$ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000003', 'Ana Cambiada') $$,
   'not allowed to rename this member',
   'un empleado no cambia el nombre de otra persona'
 );
 select pg_temp.login_as('55555555-5555-5555-5555-555555555555', 'sofia@demo.com');
 select lives_ok(
-  $ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000003', 'Ana Torres Vidal') $,
+  $$ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000003', 'Ana Torres Vidal') $$,
   'administración corrige el nombre de una empleada'
 );
 select throws_ok(
-  $ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000001', 'Laura Cambiada') $,
+  $$ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000001', 'Laura Cambiada') $$,
   'not allowed to rename this member',
   'una admin no cambia el nombre de alguien de mayor rango (la owner)'
 );

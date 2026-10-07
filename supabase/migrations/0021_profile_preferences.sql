@@ -37,7 +37,7 @@ alter table public.profiles
 create or replace function public.guard_profile_update()
 returns trigger
 language plpgsql
-as $
+as $$
 begin
   new.full_name := nullif(trim(new.full_name), '');
   if new.full_name is not null and length(new.full_name) not between 2 and 80 then
@@ -77,7 +77,7 @@ returns void
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   v_target public.memberships;
   v_me public.memberships;
@@ -93,7 +93,7 @@ begin
   end if;
   update public.profiles set full_name = p_name where id = v_target.user_id;
 end;
-$;
+$$;
 
 revoke execute on function public.set_member_name(uuid, text) from public, anon;
 grant execute on function public.set_member_name(uuid, text) to authenticated;
