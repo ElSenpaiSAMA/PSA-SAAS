@@ -541,3 +541,18 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Bandeja "Mensajes web":** lista y detalle con estados nuevo → en curso → cerrado. La base registra quién y cuándo la tomó, y el mensaje del cliente no se puede editar. Se responde con un email ya armado (asunto y consulta citada) o por teléfono.
 
 **Pruebas:** 12 pgTAP (envío anónimo, sin acceso directo a la tabla, aviso solo a administración, permisos, solo cambia el estado, freno a envíos repetidos), 8 unitarios del dominio y E2E: una consulta enviada desde la web llega a Sofía, que la toma, y una empleada no ve la sección.
+
+---
+
+## 2026-10-07 Foro en una tarjeta, contenedor fijo y perfil de usuario
+
+**Prompt (resumen):** el hilo del foro se veía partido en tarjetas sueltas; se pidió todo en una sola, como en Reddit, y que el contenedor de la intranet no crezca con el contenido (scroll interno). Después, aprovechar los costados vacíos del hilo y sumar una sección de perfil donde cada persona ajuste sus preferencias y suba su foto, entrando desde su avatar.
+
+**Decisiones:**
+- **Hilo en una tarjeta:** publicación, barra de acciones, caja de respuesta y conversación separada por líneas. Al costado, "Sobre este hilo": estado, fechas, participantes y otros hilos de la misma categoría (funciones puras con tests).
+- **Contenedor fijo en escritorio:** barra lateral, barra superior y contenedor ocupan la pantalla y el contenido hace scroll por dentro. En móvil se mantiene el scroll de la página, que es lo esperable en un teléfono.
+- **Foto de perfil en Supabase Storage**, recortada en cuadrado y achicada en el navegador antes de subirla (WebP de 320 px). Cada persona solo escribe en su carpeta, y la base rechaza URLs externas.
+- **Avisos configurables, pero no todos:** se pueden apagar los informativos (foro, tareas, recordatorios…). Lo que pide una acción llega siempre. La base filtra en `notify()`, así ninguna parte de la app se olvida de respetar la preferencia.
+- **Arreglo de seguridad de paso:** la política "update own" de `profiles` permitía cambiar el propio email, que se muestra a los compañeros. Ahora un guard lo impide.
+
+**Pruebas:** 12 pgTAP (qué se puede cambiar, fotos solo en la carpeta propia, avisos silenciados y menciones que siguen llegando), unitarios de preferencias (incluido que la lista coincida con la de la base) y E2E: entrar desde el avatar, subir una foto y apagar un aviso.

@@ -70,6 +70,7 @@ La intranet es un PSA (*Professional Services Automation*) completo, pensado par
 | Módulo | Qué hace |
 |---|---|
 | **Foro** | Hilos por categoría (duda, incidencia técnica, aviso), menciones con `@`, respuestas anidadas que se pliegan, moderación (fijar, cerrar, borrar), "resuelto" y avisos de novedades |
+| **Mi perfil** | Desde el avatar: foto de perfil (se ve en el foro, Personas y Empleados), nombre, tema claro u oscuro, qué avisos recibir y el resumen del puesto |
 | **Mensajes web** | Las consultas del formulario de contacto llegan a una bandeja para administración, con aviso en la campana, estados (nuevo, en curso, cerrado) y respuesta por email o teléfono |
 | **Fichaje y horas** | Fichar entrada, pausa y salida; registro semanal tipo Factorial (barra de la jornada, trabajado contra previsto, saldo); hoja de horas por tarea tipo Productive; correcciones con aprobación |
 | **Órdenes de trabajo** | El trabajo de cada barco por mes: presupuesto, tarifa, ciclo de vida (borrador → aprobada → en curso → cerrada → facturada), tareas en tablero y copia al mes siguiente |
