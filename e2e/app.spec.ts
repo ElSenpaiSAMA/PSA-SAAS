@@ -805,9 +805,11 @@ test("el responsable marca un proyecto como mensual: su OT se renueva sola", asy
   await expect(page.getByRole("switch", { name: "Renovar la OT cada mes" })).toHaveAttribute("aria-checked", "true");
 });
 
-test("una OT se copia a otro mes desde la lista", async ({ page }) => {
+test("una OT se copia a otro mes desde su botón", async ({ page }) => {
   await login(page, "carlos@demo.com");
-  await page.goto(`/app/${NEBULA}/work-orders`);
+  // En el proyecto, la OT más reciente siempre se puede copiar (las del mes en curso ya
+  // pueden tener su continuación por un test anterior)
+  await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
   await page.getByRole("button", { name: "Copiar a otro mes" }).first().click();
   const option = page.getByRole("menuitem").last();
   const month = (await option.innerText()).trim();
