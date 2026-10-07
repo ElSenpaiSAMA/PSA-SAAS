@@ -744,20 +744,25 @@ test("el responsable de un proyecto invita a alguien; el equipo se ve también e
 });
 
 
-test("el superadmin solo ve la plataforma: auditoría, errores y estructura", async ({ page }) => {
+test("el superadmin tiene acceso a todo, más errores y estructura", async ({ page }) => {
   await login(page, "dev@demo.com");
-  // No tiene "Inicio": entra directo al registro de errores
-  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/errors`));
-  await expect(page.getByRole("heading", { name: /Registro/ })).toBeVisible();
+  await page.goto(`/app/${NEBULA}/dashboard`);
   const nav = page.getByRole("navigation", { name: "Principal" });
-  await expect(nav.getByRole("link")).toHaveText([/^Auditoría/, /^Errores/, /^Estructura/]);
-  // La gestión de la empresa no le corresponde
-  await page.goto(`/app/${NEBULA}/forum`);
-  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+  for (const visible of ["Inicio", "Foro", "Proyectos", "Personas", "Ajustes", "Auditoría", "Errores", "Estructura"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${visible}`) })).toBeVisible();
+  }
+  await nav.getByRole("link", { name: /^Errores/ }).click();
+  await expect(page.getByRole("heading", { name: /Registro/ })).toBeVisible();
 
   await page.goto(`/app/${NEBULA}/structure`);
-  await expect(page.getByRole("heading", { name: /Estructura/ })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Personas para Administración y RRHH" })).toBeChecked();
+
+  // Elige sus propios avisos (al resto se los configura administración)
+  await page.goto(`/app/${NEBULA}/profile`);
+  const reminders = page.getByRole("switch", { name: "Recordatorios" });
+  await expect(reminders).toHaveAttribute("aria-disabled", "false");
+  await reminders.click();
+  await expect(reminders).toHaveAttribute("aria-checked", "false");
 });
 
 test("el CEO no configura la plataforma", async ({ page }) => {
