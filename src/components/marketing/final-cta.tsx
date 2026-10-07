@@ -82,6 +82,9 @@ export function SiteFooter() {
           <Link href="/#empresa" className="hover:text-white">
             La empresa
           </Link>
+          <Link href="/electromotor" className="hover:text-white">
+            ElectroMotor
+          </Link>
           <Link href="/contacto" className="hover:text-white">
             Contacto
           </Link>
