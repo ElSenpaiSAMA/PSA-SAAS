@@ -14,7 +14,7 @@ src/
   proxy.ts                     # refresca la sesión y redirige rutas protegidas (Next 16: ex-middleware)
   app/
     (marketing)/page.tsx       # web pública de Diplonautic: empresa, servicios y forma de trabajar
-    (marketing)/contacto/      # contacto: datos del taller y formulario (validado en el servidor, no se envía)
+    (marketing)/contacto/      # contacto: datos del taller y formulario (se guarda y llega a Mensajes web)
     (auth)/                    # login y registro + Server Actions de auth
     auth/callback/route.ts     # confirmación de email (PKCE)
     select-organization/       # resuelve a qué empresa entrar (con una sola, redirige directo al panel)
@@ -27,6 +27,7 @@ src/
       work-orders/[workOrderId]/ # OT por mes: tareas con fechas, estados, copiar al mes siguiente, facturación
       inbox/                   # bandeja: pendientes de acción (OT, tareas, fichaje) + notificaciones
       forum/                   # foro interno: hilos (duda, incidencia, aviso), respuestas y moderación
+      contact/                 # mensajes de la web: consultas del formulario de contacto (contact.manage)
       calendar/                # calendario general: tareas, OT, ausencias y festivos (mes/semana)
       planning/                # carga de trabajo persona × semana vs. capacidad
       staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada

@@ -352,6 +352,16 @@ Cubierto por `supabase/tests/forum_mentions.test.sql` (10 tests).
 
 `forum_posts.parent_id` apunta a la respuesta que se contesta (`null` = directa al hilo). Un trigger valida que la madre sea del mismo hilo y no deja cambiarla después. Si se borra la madre, las respuestas que la contestaban quedan como directas (`on delete set null`): no se pierde la conversación. Cubierto por `supabase/tests/forum_nested.test.sql` (5 tests).
 
+## Mensajes de la web (`0020_contact_messages.sql`)
+
+El formulario de contacto de la web pública guarda cada consulta en `contact_messages` (datos de contacto, tipo y modelo de barco, servicio, mensaje y estado `new` → `in_progress` → `closed`).
+
+- **Entrada:** la web (anónima) no escribe en la tabla: llama a `submit_contact_message`, `security definer`, que la guarda en la empresa marcada con `organizations.receives_web_contact` (una sola por instalación, índice único parcial; no se cambia desde la app). Frena envíos repetidos: 3 por email y 60 en total por hora.
+- **Lectura y gestión:** permiso nuevo `contact.manage` (owner y admin). Un trigger solo deja cambiar el estado y registra quién y cuándo (`handled_by`, `handled_at`). Cambios y borrados quedan en la auditoría.
+- **Aviso:** cada mensaje nuevo genera una notificación `contact.received` para quienes tienen `contact.manage`. `contact_new_count(org)` alimenta el contador del menú.
+
+Cubierto por `supabase/tests/contact_messages.test.sql` (13 tests).
+
 ## Desarrollo local
 
 ```bash
@@ -359,7 +369,7 @@ npx supabase start      # Postgres + Auth + Studio en Docker
 npx supabase db reset   # aplica migraciones + supabase/seed.sql
 ```
 
-El seed crea dos organizaciones demo (*Nébula Studio* y *Orbital Labs*) con jerarquía owner → manager → empleados, proyectos, fichajes de dos semanas, vacaciones pendientes de aprobar y una invitación. Usuarios: `laura@`, `carlos@`, `ana@`, `diego@`, `sofia@demo.com`, contraseña `Demo1234!`. Laura y Carlos pertenecen a ambas orgs con roles distintos, para probar el selector de organización.
+El seed crea la empresa *Diplonautic* (y una segunda organización sin miembros, solo para los tests de aislamiento) con jerarquía owner → manager → empleados, barcos de clientes como proyectos, órdenes de trabajo, fichajes, vacaciones pendientes, hilos del foro, mensajes de la web y una invitación pendiente. Usuarios: `laura@`, `sofia@`, `carlos@`, `ana@`, `diego@demo.com`, contraseña `Demo1234!`.
 
 ## Migraciones
 

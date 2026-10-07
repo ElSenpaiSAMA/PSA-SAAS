@@ -14,7 +14,7 @@
 | Requisito | Dónde | Cómo verlo |
 |---|---|---|
 | Home pública con la empresa y sus servicios | `src/app/(marketing)/page.tsx`, `src/components/marketing/` | Abrir `/` |
-| Página de contacto con formulario (visual) | `src/app/(marketing)/contacto/` | `/contacto`: se valida en el servidor, pero no envía nada |
+| Página de contacto con formulario | `src/app/(marketing)/contacto/`, migración `0020_contact_messages.sql` | `/contacto`: el mensaje se guarda y llega a la intranet (**Mensajes web**, como Sofía o Laura) |
 | Login de empleados (registro **o** alta por el admin, justificado) | `src/app/(auth)/`, migración `0017_single_company.sql` | Ver [Alta de empleados](#alta-de-empleados-por-qué-por-invitación) |
 | Login y logout | `src/app/(auth)/actions.ts` | Menú del avatar → "Cerrar sesión" |
 | Roles: empleado y administrador | `roles` / `permissions` en la base, `src/lib/domain/permissions.ts` | `ana@demo.com` (empleada) vs `sofia@demo.com` (admin) |
@@ -70,6 +70,7 @@ La intranet es un PSA (*Professional Services Automation*) completo, pensado par
 | Módulo | Qué hace |
 |---|---|
 | **Foro** | Hilos por categoría (duda, incidencia técnica, aviso), menciones con `@`, respuestas anidadas que se pliegan, moderación (fijar, cerrar, borrar), "resuelto" y avisos de novedades |
+| **Mensajes web** | Las consultas del formulario de contacto llegan a una bandeja para administración, con aviso en la campana, estados (nuevo, en curso, cerrado) y respuesta por email o teléfono |
 | **Fichaje y horas** | Fichar entrada, pausa y salida; registro semanal tipo Factorial (barra de la jornada, trabajado contra previsto, saldo); hoja de horas por tarea tipo Productive; correcciones con aprobación |
 | **Órdenes de trabajo** | El trabajo de cada barco por mes: presupuesto, tarifa, ciclo de vida (borrador → aprobada → en curso → cerrada → facturada), tareas en tablero y copia al mes siguiente |
 | **Proyectos** | Barcos o encargos de cada cliente, con equipo, avance de horas y salud del presupuesto |
