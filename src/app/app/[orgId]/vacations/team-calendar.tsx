@@ -27,7 +27,7 @@ const PENDING =
 const same = (a: AbsenceCell, b: AbsenceCell) => !!a && !!b && a.status === b.status && a.kind === b.kind;
 
 /** Grilla persona × día del mes con las ausencias del equipo (aprobadas y pendientes). */
-export function TeamCalendar({ orgId, days, rows, today }: { orgId: string; days: GridDay[]; rows: TeamCalendarRow[]; today: string }) {
+export function TeamCalendar({ days, rows, today }: { days: GridDay[]; rows: TeamCalendarRow[]; today: string }) {
   const cols = `minmax(12rem, 15rem) repeat(${days.length}, minmax(1.6rem, 1fr))`;
 
   return (
@@ -61,7 +61,7 @@ export function TeamCalendar({ orgId, days, rows, today }: { orgId: string; days
           {rows.map((row) => (
             <div key={row.memberId} className="group grid border-b border-border last:border-b-0" style={{ gridTemplateColumns: cols }}>
               <Link
-                href={`/app/${orgId}/staff/${row.memberId}`}
+                href={`/app/staff/${row.memberId}`}
                 className="sticky left-0 z-10 flex items-center gap-2.5 bg-card px-3 py-2 transition-colors group-hover:bg-muted/60"
               >
                 <Avatar name={row.name} size={26} />

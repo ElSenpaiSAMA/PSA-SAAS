@@ -17,7 +17,7 @@ export default async function NewThreadPage({ params }: PageProps<"/app/[orgId]/
   return (
     <div className="mx-auto max-w-3xl">
       <Link
-        href={`/app/${orgId}/forum`}
+        href={`/app/forum`}
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-3.5" /> Volver al foro

@@ -25,24 +25,24 @@ export default async function SettingsPage({ params }: PageProps<"/app/[orgId]/s
 
   const links = [
     {
-      href: `/app/${orgId}/calendar`,
+      href: `/app/calendar`,
       icon: CalendarDays,
       title: "Festivos",
       text: "Se cargan desde el calendario y no cuentan como días de vacaciones.",
     },
     {
-      href: `/app/${orgId}/employees`,
+      href: `/app/employees`,
       icon: Building2,
       title: "Departamentos y personas",
       text: "Responsables, organigrama, invitaciones y jornada de cada persona.",
     },
     {
-      href: `/app/${orgId}/automations`,
+      href: `/app/automations`,
       icon: Workflow,
       title: "Automatizaciones",
       text: "Recordatorios, cierres y aprobaciones automáticas.",
     },
-    { href: `/app/${orgId}/audit`, icon: ScrollText, title: "Auditoría", text: "Quién hizo qué y cuándo." },
+    { href: `/app/audit`, icon: ScrollText, title: "Auditoría", text: "Quién hizo qué y cuándo." },
   ];
 
   return (

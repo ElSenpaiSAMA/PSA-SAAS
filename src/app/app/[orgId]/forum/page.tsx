@@ -40,14 +40,14 @@ export default async function ForumPage({ params }: PageProps<"/app/[orgId]/foru
         accent="del equipo"
         description="Dudas, incidencias técnicas y avisos. Solo lo ve la gente de la empresa."
         actions={
-          <Link href={`/app/${orgId}/forum/new`} className={buttonClasses("primary")}>
+          <Link href={`/app/forum/new`} className={buttonClasses("primary")}>
             <Plus className="size-4" />
             Nuevo hilo
           </Link>
         }
       />
       <ForumSeen orgId={orgId} />
-      <ThreadList orgId={orgId} threads={items} />
+      <ThreadList threads={items} />
     </>
   );
 }

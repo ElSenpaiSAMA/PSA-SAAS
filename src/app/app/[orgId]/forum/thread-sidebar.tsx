@@ -36,12 +36,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 /** "Sobre este hilo": estado, fechas, quiénes participan y otros hilos para seguir leyendo. */
 export function ThreadSidebar({
-  orgId,
   thread,
   participants,
   related,
 }: {
-  orgId: string;
   thread: SidebarThread;
   participants: Participant[];
   related: RelatedThread[];
@@ -123,7 +121,7 @@ export function ThreadSidebar({
           <ul className="-mx-2 grid gap-0.5">
             {related.map((t) => (
               <li key={t.id}>
-                <Link href={`/app/${orgId}/forum/${t.id}`} className="block rounded-lg px-2 py-2 transition-colors hover:bg-muted">
+                <Link href={`/app/forum/${t.id}`} className="block rounded-lg px-2 py-2 transition-colors hover:bg-muted">
                   <span className="line-clamp-2 text-[13px] leading-snug font-medium">{t.title}</span>
                   <span className="mt-1 flex items-center gap-2 text-[11.5px] text-muted-foreground">
                     {sameCategory ? null : <span>{CATEGORY_LABEL[t.category]}</span>}

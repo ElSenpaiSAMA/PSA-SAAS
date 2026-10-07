@@ -101,7 +101,7 @@ export default async function PlanningPage({ params, searchParams }: PageProps<"
             ? "Horas planificadas en tareas contra la capacidad de cada persona, semana a semana. Vacaciones aprobadas y festivos descuentan capacidad."
             : "Tus horas planificadas en tareas contra tu capacidad, semana a semana."
         }
-        actions={<MonthNav month={month} basePath={`/app/${orgId}/planning`} />}
+        actions={<MonthNav month={month} basePath={`/app/planning`} />}
       />
 
       <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">

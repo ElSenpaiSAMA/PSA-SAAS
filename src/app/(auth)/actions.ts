@@ -1,9 +1,11 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { fail, ok, type ActionState } from "@/lib/actions";
 import { safeNextPath } from "@/lib/domain/redirect";
 import { env } from "@/lib/env";
+import { ORG_COOKIE } from "@/lib/supabase/proxy";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors, signInSchema, signUpSchema } from "@/lib/validation/schemas";
 
@@ -18,6 +20,8 @@ export async function signIn(_prev: ActionState, formData: FormData): Promise<Ac
     return fail("Email o contraseña incorrectos.");
   }
 
+  // La empresa activa se vuelve a elegir con la sesión nueva (puede ser otra persona)
+  (await cookies()).delete(ORG_COOKIE);
   await supabase.rpc("log_event", { p_action: "auth.login" });
   redirect(safeNextPath(formData.get("next")));
 }
@@ -66,5 +70,6 @@ export async function signOut() {
   const supabase = await createClient();
   await supabase.rpc("log_event", { p_action: "auth.logout" });
   await supabase.auth.signOut();
+  (await cookies()).delete(ORG_COOKIE);
   redirect("/");
 }

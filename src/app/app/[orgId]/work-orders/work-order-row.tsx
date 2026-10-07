@@ -47,7 +47,7 @@ export function WorkOrderRow({ orgId, row }: { orgId: string; row: WorkOrderRowD
     <li className="group relative grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 gap-y-3 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 @3xl:grid-cols-[minmax(0,1.7fr)_7.5rem_minmax(0,1.1fr)_6.5rem_11.5rem] @3xl:items-center">
       <div className="order-1 col-span-2 min-w-0 @xl:col-span-1 @3xl:order-1">
         <Link
-          href={`/app/${orgId}/work-orders/${row.id}`}
+          href={`/app/work-orders/${row.id}`}
           className="block text-[14px] font-medium @xl:truncate after:absolute after:inset-0 after:content-[''] group-hover:text-accent"
         >
           {row.title}
@@ -77,7 +77,7 @@ export function WorkOrderRow({ orgId, row }: { orgId: string; row: WorkOrderRowD
         <div className="order-5 col-span-2 -ml-2.5 flex @xl:order-4 @xl:col-span-1 @xl:ml-0 @xl:items-end @xl:justify-end @3xl:order-5 @3xl:items-center">
         {row.continuationId ? (
           <Link
-            href={`/app/${orgId}/work-orders/${row.continuationId}`}
+            href={`/app/work-orders/${row.continuationId}`}
             className="relative z-10 inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-[12.5px] whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Sigue en {formatMonth(next.start)} <ArrowRight className="size-3.5" />

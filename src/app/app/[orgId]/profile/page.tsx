@@ -107,7 +107,7 @@ export default async function ProfilePage({ params }: PageProps<"/app/[orgId]/pr
               <Row label="En la empresa desde">{since}</Row>
             </dl>
             <Link
-              href={`/app/${orgId}/staff/${me.id}`}
+              href={`/app/staff/${me.id}`}
               className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-accent hover:underline"
             >
               Ver mi ficha completa <ArrowRight className="size-3.5" />

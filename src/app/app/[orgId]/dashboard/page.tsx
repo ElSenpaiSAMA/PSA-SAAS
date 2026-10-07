@@ -91,14 +91,14 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
         date: t.due_date!,
         kind: "task" as const,
         title: `Vence: ${t.title}`,
-        href: t.work_order_id ? `/app/${orgId}/work-orders/${t.work_order_id}` : `/app/${orgId}/projects/${t.project_id}`,
+        href: t.work_order_id ? `/app/work-orders/${t.work_order_id}` : `/app/projects/${t.project_id}`,
       })),
     ...absencesSoon
       .filter((a) => a.status === "approved")
       .flatMap((a) => {
         const name = displayName(byId.get(a.membership_id)?.profile ?? null);
         const start = a.start_date < today ? today : a.start_date;
-        return [{ date: start, kind: "absence" as const, title: `${name} de vacaciones hasta el ${Number(a.end_date.slice(8))}/${Number(a.end_date.slice(5, 7))}`, href: `/app/${orgId}/calendar` }];
+        return [{ date: start, kind: "absence" as const, title: `${name} de vacaciones hasta el ${Number(a.end_date.slice(8))}/${Number(a.end_date.slice(5, 7))}`, href: `/app/calendar` }];
       }),
     ...holidaysSoon.map((h) => ({ date: h.date, kind: "holiday" as const, title: `Festivo: ${h.name}` })),
   ];
@@ -135,7 +135,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
 
       {pendingApprovals > 0 ? (
         <Link
-          href={`/app/${orgId}/vacations`}
+          href={`/app/vacations`}
           className="group mt-4 flex items-center gap-4 rounded-2xl border border-warning/30 bg-warning/[0.06] p-4 transition-colors hover:bg-warning/10"
         >
           <div className="flex size-10 items-center justify-center rounded-xl bg-warning/15 text-warning">
@@ -152,7 +152,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
       ) : null}
 
       <div className={ctx.can("time.view_team") ? "mt-4 grid gap-4 lg:grid-cols-2 lg:items-start" : "mt-4"}>
-        <Upcoming orgId={orgId} today={today} items={upcoming} />
+        <Upcoming today={today} items={upcoming} />
         {ctx.can("time.view_team") ? <TeamSummary orgId={orgId} enabled={aiEnabled()} /> : null}
       </div>
 
@@ -161,7 +161,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
           <CardHeader
             title="Tus tareas"
             action={
-              <Link href={`/app/${orgId}/projects`} className="text-[12.5px] text-muted-foreground transition-colors hover:text-foreground">
+              <Link href={`/app/projects`} className="text-[12.5px] text-muted-foreground transition-colors hover:text-foreground">
                 Ver proyectos →
               </Link>
             }
@@ -175,7 +175,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
                   const logged = (minutes.get(t.id) ?? 0) / 60;
                   return (
                     <li key={t.id}>
-                      <Link href={`/app/${orgId}/projects/${t.project_id}`} className="group flex items-center gap-3 py-3">
+                      <Link href={`/app/projects/${t.project_id}`} className="group flex items-center gap-3 py-3">
                         <span className={t.status === "in_progress" ? "size-2 rounded-full bg-accent" : "size-2 rounded-full bg-border-strong"} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13.5px] font-medium transition-colors group-hover:text-accent">{t.title}</p>
@@ -219,7 +219,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
                   ))}
                 </ul>
               )}
-              <Link href={`/app/${orgId}/time-tracking`} className="mt-5 inline-block text-[12.5px] text-muted-foreground transition-colors hover:text-foreground">
+              <Link href={`/app/time-tracking`} className="mt-5 inline-block text-[12.5px] text-muted-foreground transition-colors hover:text-foreground">
                 Ver carga del equipo →
               </Link>
             </CardBody>
@@ -235,7 +235,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
                 ].map((a) => (
                   <Link
                     key={a.href}
-                    href={`/app/${orgId}/${a.href}`}
+                    href={`/app/${a.href}`}
                     className="group flex items-center gap-3 rounded-xl border border-border p-3 transition-colors hover:border-border-strong"
                   >
                     <a.icon className="size-4 text-muted-foreground" strokeWidth={1.75} />

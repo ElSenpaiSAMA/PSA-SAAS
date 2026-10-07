@@ -76,7 +76,7 @@ export function CommandPalette({
     close();
     fn();
   };
-  const go = (path: string) => run(() => router.push(`/app/${orgId}/${path}`));
+  const go = (path: string) => run(() => router.push(`/app/${path}`));
 
   return (
     <AnimatePresence>
