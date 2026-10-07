@@ -605,3 +605,34 @@ test("un técnico contesta una respuesta y la conversación se puede plegar", as
   await page.getByRole("button", { name: /Ver \d+ respuesta/ }).first().click();
   await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
 });
+
+test("una consulta de la web llega a Mensajes web y la administración la toma", async ({ page }) => {
+  const name = `Capitán E2E ${Date.now()}`;
+  await page.goto("/contacto");
+  await page.getByLabel("Nombre y apellido").fill(name);
+  await page.getByLabel("Email").fill(`capitan+${Date.now()}@correo.com`);
+  await page.getByLabel("Tipo de barco").selectOption("Catamarán");
+  await page.getByLabel("Servicio").selectOption("Potabilizadoras");
+  await page.getByLabel("Mensaje").fill("E2E: quiero instalar una potabilizadora antes del verano.");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Enviar consulta" }).click();
+  await expect(page.getByRole("status")).toContainText("Gracias, Capitán");
+
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await page.getByRole("link", { name: /Mensajes web/ }).click();
+  await page.getByRole("link", { name: new RegExp(name) }).click();
+  await expect(page.getByRole("heading", { name })).toBeVisible();
+  await expect(page.getByText("E2E: quiero instalar una potabilizadora antes del verano.").last()).toBeVisible();
+  await page.getByRole("button", { name: "Me ocupo yo" }).click();
+  await expect(page.getByText("Consulta en curso")).toBeVisible();
+  await expect(page.getByText(/La gestiona Sofía/)).toBeVisible();
+});
+
+test("una empleada no ve los mensajes de la web", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await expect(page.getByRole("link", { name: /Mensajes web/ })).toHaveCount(0);
+  await page.goto(`/app/${NEBULA}/contact`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});

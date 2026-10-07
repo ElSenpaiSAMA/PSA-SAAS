@@ -30,7 +30,8 @@ test.describe("web pública", () => {
     await expect(page.getByText("Necesitamos tu conformidad para responderte")).toBeVisible();
 
     await page.getByLabel("Nombre y apellido").fill("Marta Soler");
-    await page.getByLabel("Email").fill("marta@correo.com");
+    // Email único por corrida: la base limita a 3 consultas por hora por email
+    await page.getByLabel("Email").fill(`marta+${Date.now()}@correo.com`);
     await page.getByLabel("Tipo de barco").selectOption("Velero");
     await page.getByLabel("Servicio").selectOption("Generadores");
     await page.getByLabel("Mensaje").fill("El generador no arranca desde la última salida.");
