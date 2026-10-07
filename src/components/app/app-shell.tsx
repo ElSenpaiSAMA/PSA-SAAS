@@ -117,12 +117,21 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-5">
-        <Link href={`/app/${props.orgId}/dashboard`} onClick={onNavigate} aria-label="Ir al inicio">
+        <Link
+          href={`/app/${props.orgId}/dashboard`}
+          onClick={onNavigate}
+          aria-label={`${props.orgName} OS: ir al inicio`}
+          className="flex items-center gap-2.5"
+        >
           {props.orgName === "Diplonautic" ? (
             <Image src="/logo/diplonautic-claro.png" alt="Diplonautic" width={566} height={96} className="h-6 w-auto" />
           ) : (
             <span className="text-[15px] font-semibold text-white">{props.orgName}</span>
           )}
+          {/* El sistema interno de la empresa: "Diplonautic OS" */}
+          <span className="rounded-md border border-sky-300/30 bg-sky-300/10 px-1.5 py-0.5 font-mono text-[10.5px] leading-none font-semibold tracking-[0.18em] text-sky-200">
+            OS
+          </span>
         </Link>
       </div>
 
