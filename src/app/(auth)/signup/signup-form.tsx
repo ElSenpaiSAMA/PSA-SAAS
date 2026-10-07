@@ -16,7 +16,7 @@ const rules = [
   { label: "Un número", test: (v: string) => /\d/.test(v) },
 ];
 
-export function SignupForm() {
+export function SignupForm({ defaultEmail }: { defaultEmail?: string }) {
   const [state, action] = useActionState(signUp, idle);
   const [password, setPassword] = useState("");
 
@@ -27,7 +27,7 @@ export function SignupForm() {
         <Input name="fullName" autoComplete="name" placeholder="Ana Torres" autoFocus required />
       </Field>
       <Field label="Email de trabajo" error={state.fieldErrors?.email}>
-        <Input name="email" type="email" autoComplete="email" placeholder="vos@empresa.com" required />
+        <Input name="email" type="email" autoComplete="email" placeholder="vos@diplonautic.com" defaultValue={defaultEmail} required />
       </Field>
       <Field label="Contraseña" error={state.fieldErrors?.password}>
         <Input
@@ -64,8 +64,8 @@ export function SignupForm() {
           );
         })}
       </ul>
-      <SubmitButton className="group mt-2 w-full" size="lg" pendingLabel="Creando cuenta…">
-        Crear cuenta
+      <SubmitButton className="group mt-2 w-full bg-blue-600 text-white hover:bg-blue-500" size="lg" pendingLabel="Activando…">
+        Activar cuenta
         <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
       </SubmitButton>
     </form>

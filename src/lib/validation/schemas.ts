@@ -23,10 +23,6 @@ export const signUpSchema = z.object({
     .regex(/\d/, "Debe incluir un número"),
 });
 
-export const organizationSchema = z.object({
-  name: z.string().trim().min(2, "Mínimo 2 caracteres").max(60, "Máximo 60 caracteres"),
-});
-
 export const taskHoursSchema = z.object({
   taskId: id,
   date: isoDate,

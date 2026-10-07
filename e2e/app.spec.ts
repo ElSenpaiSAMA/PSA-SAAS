@@ -25,16 +25,12 @@ test("credenciales inválidas muestran un error genérico", async ({ page }) => 
   await expect(page.getByText("Email o contraseña incorrectos.")).toBeVisible();
 });
 
-test("un usuario en dos empresas elige con cuál trabajar", async ({ page }) => {
+test("al iniciar sesión se entra directo a la intranet de Diplonautic", async ({ page }) => {
   await login(page, "carlos@demo.com");
-  await expect(page).toHaveURL(/\/select-organization/);
-  await expect(page.getByRole("link", { name: /Nébula Studio/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Orbital Labs/ })).toBeVisible();
-  await page.getByRole("link", { name: /Orbital Labs/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/app/${ORBITAL}/dashboard`));
+  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/dashboard`));
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Hola, Carlos");
+  await expect(page.getByText("Intranet · Manager")).toBeVisible();
 });
-
 test("empleada ficha entrada, pausa para almorzar, reanuda y ficha salida", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
@@ -269,14 +265,32 @@ test("se piden vacaciones seleccionando un día en el calendario", async ({ page
   await expect(page.getByText(/Solicitud enviada/)).toBeVisible();
 });
 
-test("una invitación pendiente se acepta desde el selector", async ({ page }) => {
-  await login(page, "ana@demo.com");
-  await page.goto("/select-organization?new=1");
-  await expect(page.getByText(/Te invitaron como empleado/)).toBeVisible();
-  await page.getByRole("button", { name: "Aceptar" }).click();
-  await expect(page).toHaveURL(new RegExp(`/app/${ORBITAL}/dashboard`));
+test("sin invitación no se puede activar una cuenta", async ({ page }) => {
+  await page.goto("/signup");
+  await page.getByLabel("Nombre completo").fill("Persona Externa");
+  await page.getByLabel("Email de trabajo").fill("externa@correo.test");
+  await page.getByLabel("Contraseña", { exact: true }).fill("Externa1234");
+  await page.getByRole("button", { name: /activar cuenta/i }).click();
+  await expect(page.getByText(/no tiene una invitación de Diplonautic/)).toBeVisible();
+  await expect(page).toHaveURL(/\/signup/);
 });
 
+test("un técnico invitado activa su cuenta y entra directo a Diplonautic", async ({ page }) => {
+  // El seed deja una invitación pendiente para marc.vidal@demo.com (técnico, a cargo de Carlos)
+  await page.goto("/signup?email=marc.vidal@demo.com");
+  await expect(page.getByLabel("Email de trabajo")).toHaveValue("marc.vidal@demo.com");
+  await page.getByLabel("Nombre completo").fill("Marc Vidal");
+  await page.getByLabel("Contraseña", { exact: true }).fill("Marc12345");
+  await page.getByRole("button", { name: /activar cuenta/i }).click();
+
+  // En CI la confirmación por email está desactivada y entra directo; en un proyecto
+  // con confirmación, la cuenta queda creada y se pide confirmar el email
+  const confirm = page.getByText("Te enviamos un email para confirmar tu cuenta.");
+  await expect(page.getByRole("heading", { name: /Hola, Marc/ }).or(confirm)).toBeVisible();
+  if (await confirm.isVisible()) return;
+  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/dashboard`));
+  await expect(page.getByText("Intranet · Empleado")).toBeVisible();
+});
 test("una admin abre la ficha de un empleado, navega en el tiempo y registra un cambio", async ({ page }) => {
   await login(page, "sofia@demo.com");
   await page.goto(`/app/${NEBULA}/staff`);
@@ -464,7 +478,7 @@ test("la owner ve los tres informes y exporta la facturación a CSV", async ({ p
   await expect(page.getByRole("cell", { name: /Acme Corp/ }).first()).toBeVisible();
 
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Exportar a Excel/ }).click()]);
-  expect(download.suggestedFilename()).toMatch(/^facturacion-\d{4}-\d{2}-nebula-studio\.csv$/);
+  expect(download.suggestedFilename()).toMatch(/^facturacion-\d{4}-\d{2}-diplonautic\.csv$/);
 });
 
 test("un empleado no ve los informes ni puede exportarlos", async ({ page }) => {

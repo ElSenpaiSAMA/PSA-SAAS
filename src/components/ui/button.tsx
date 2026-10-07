@@ -2,8 +2,9 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
 const variants = {
+  // Azul marino de la marca (Diplonautic); en oscuro, botón claro
   primary:
-    "bg-foreground text-background hover:bg-foreground/90 shadow-[0_1px_0_0_rgb(255_255_255/0.1)_inset,0_1px_2px_0_rgb(0_0_0/0.2)]",
+    "bg-[#0b1f3a] text-white hover:bg-[#123a6b] shadow-[0_1px_0_0_rgb(255_255_255/0.1)_inset,0_1px_2px_0_rgb(0_0_0/0.2)] dark:bg-white dark:text-[#0b1f3a] dark:hover:bg-white/90",
   accent: "bg-accent text-accent-foreground hover:brightness-110",
   secondary: "bg-card text-foreground border border-border hover:bg-muted hover:border-border-strong",
   ghost: "text-muted-foreground hover:text-foreground hover:bg-muted",

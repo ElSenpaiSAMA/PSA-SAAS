@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Mail, Plus } from "lucide-react";
-import { useActionState, useState } from "react";
+import { motion } from "motion/react";
+import { ArrowRight, Lock, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Field } from "@/components/ui/field";
-import { FormAlert } from "@/components/ui/form-alert";
-import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { idle } from "@/lib/actions";
 import { isRole, ROLE_LABEL, type Role } from "@/lib/domain/permissions";
-import { acceptInvitation, createOrganization } from "./actions";
+import { acceptInvitation } from "./actions";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -53,8 +48,6 @@ export function OrgPicker({
   invitations: PendingInvitation[];
   invitationError: boolean;
 }) {
-  const [creating, setCreating] = useState(memberships.length === 0 && invitations.length === 0);
-  const [state, action] = useActionState(createOrganization, idle);
   let index = 0;
 
   return (
@@ -64,7 +57,7 @@ export function OrgPicker({
           Hola, <span className="font-serif font-normal italic">{name}</span>
         </h1>
         <p className="mt-2 text-[15px] text-muted-foreground">
-          {memberships.length > 0 ? "Elegí con qué organización querés trabajar." : "Empecemos por tu organización."}
+          {memberships.length > 0 ? "Elegí con qué organización querés trabajar." : "Bienvenido a la intranet."}
         </p>
       </motion.div>
 
@@ -133,62 +126,25 @@ export function OrgPicker({
         </section>
       ) : null}
 
-      <motion.section custom={index++} variants={item} initial="hidden" animate="show" className="mt-6">
-        <AnimatePresence mode="wait" initial={false}>
-          {creating ? (
-            <motion.form
-              key="form"
-              action={action}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.5, ease: EASE }}
-              className="overflow-hidden"
-            >
-              <div className="grid gap-4 rounded-2xl border border-border bg-card p-5">
-                <div>
-                  <p className="font-medium">Nueva organización</p>
-                  <p className="text-[13px] text-muted-foreground">Vas a ser el owner, con control total.</p>
-                </div>
-                <FormAlert state={state} />
-                <Field label="Nombre de la empresa" error={state.fieldErrors?.name}>
-                  <Input name="name" placeholder="Nébula Studio" autoFocus required maxLength={60} />
-                </Field>
-                <div className="flex justify-end gap-2">
-                  {memberships.length > 0 || invitations.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => setCreating(false)}
-                      className="h-10 rounded-xl px-4 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      Cancelar
-                    </button>
-                  ) : null}
-                  <SubmitButton pendingLabel="Creando…">Crear organización</SubmitButton>
-                </div>
-              </div>
-            </motion.form>
-          ) : (
-            <motion.button
-              key="trigger"
-              type="button"
-              onClick={() => setCreating(true)}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="group flex w-full items-center gap-4 rounded-2xl border border-dashed border-border-strong p-4 text-left transition-colors hover:border-foreground/40 hover:bg-card"
-            >
-              <div className="flex size-11 items-center justify-center rounded-xl border border-dashed border-border-strong transition-transform duration-300 group-hover:rotate-90">
-                <Plus className="size-5 text-muted-foreground" strokeWidth={1.75} />
-              </div>
-              <div>
-                <p className="font-medium">Crear una organización</p>
-                <p className="text-[13px] text-muted-foreground">Para tu propia empresa o equipo</p>
-              </div>
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </motion.section>
+      {memberships.length === 0 && invitations.length === 0 ? (
+        <motion.div
+          custom={index++}
+          variants={item}
+          initial="hidden"
+          animate="show"
+          className="mt-10 flex items-start gap-4 rounded-2xl border border-border bg-card p-5"
+        >
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <Lock className="size-5" strokeWidth={1.75} />
+          </div>
+          <div>
+            <p className="font-medium">Tu cuenta todavía no tiene acceso</p>
+            <p className="mt-1 text-[13.5px] text-muted-foreground">
+              El acceso a la intranet lo da la administración de la empresa. Pedile a tu responsable que te invite desde Personas.
+            </p>
+          </div>
+        </motion.div>
+      ) : null}
     </div>
   );
 }

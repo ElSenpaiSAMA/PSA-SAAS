@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Bell, Check, ChevronsUpDown, LayoutGrid, LogOut, Menu, Search, X } from "lucide-react";
+import { Bell, Check, ChevronsUpDown, LogOut, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { LogoMark } from "@/components/logo";
@@ -48,22 +48,31 @@ function OrgSwitcher({ orgId, orgName, role, organizations }: Pick<ShellProps, "
     };
   }, [open]);
 
+  // Instalación de una sola empresa: la marca es un encabezado fijo. El selector
+  // solo aparece si alguien pertenece a más de una organización.
+  const multiple = organizations.length > 1;
+  const brand = (
+    <>
+      <LogoMark inverted className="size-9 shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-semibold tracking-tight text-white">{orgName}</p>
+        <p className="text-[11.5px] text-white/55">Intranet · {ROLE_LABEL[role]}</p>
+      </div>
+    </>
+  );
+
+  if (!multiple) return <div className="flex items-center gap-3 p-2">{brand}</div>;
+
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-muted"
+        className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors hover:bg-white/5"
       >
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-gradient-to-b from-card to-muted text-[13px] font-semibold">
-          {orgName.slice(0, 1).toUpperCase()}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13.5px] font-semibold">{orgName}</p>
-          <p className="text-[11.5px] text-muted-foreground">{ROLE_LABEL[role]}</p>
-        </div>
-        <ChevronsUpDown className="size-4 text-muted-foreground" />
+        {brand}
+        <ChevronsUpDown className="size-4 text-white/50" />
       </button>
 
       <AnimatePresence>
@@ -90,14 +99,6 @@ function OrgSwitcher({ orgId, orgName, role, organizations }: Pick<ShellProps, "
                 {o.id === orgId ? <Check className="size-3.5 text-accent" /> : null}
               </Link>
             ))}
-            <div className="my-1 h-px bg-border" />
-            <Link
-              href="/select-organization?new=1"
-              className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <LayoutGrid className="size-4" />
-              Todas las organizaciones
-            </Link>
           </motion.div>
         ) : null}
       </AnimatePresence>
@@ -116,11 +117,11 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
       <button
         type="button"
         onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
-        className="flex h-9 items-center gap-2 rounded-xl border border-border bg-background px-3 text-[13px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
+        className="flex h-9 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-[13px] text-white/55 transition-colors hover:border-white/20 hover:text-white"
       >
         <Search className="size-4" strokeWidth={1.75} />
         <span className="flex-1 text-left">Buscar…</span>
-        <kbd className="rounded-md border border-border bg-muted px-1.5 font-mono text-[10.5px]">⌘K</kbd>
+        <kbd className="rounded-md border border-white/15 bg-white/5 px-1.5 font-mono text-[10.5px]">⌘K</kbd>
       </button>
 
       <nav className="grid gap-0.5" aria-label="Principal">
@@ -136,20 +137,20 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
               aria-current={active ? "page" : undefined}
               className={cn(
                 "relative flex h-9 items-center gap-3 rounded-xl px-3 text-[13.5px] transition-colors",
-                active ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+                active ? "font-medium text-white" : "text-white/65 hover:bg-white/5 hover:text-white",
               )}
             >
               {active ? (
                 <motion.span
                   layoutId={onNavigate ? "nav-pill-mobile" : "nav-pill"}
-                  className="absolute inset-0 rounded-xl border border-border bg-card shadow-sm"
+                  className="absolute inset-0 rounded-xl bg-white/10 shadow-[inset_3px_0_0_0_#7dd3fc]"
                   transition={{ type: "spring", stiffness: 500, damping: 40 }}
                 />
               ) : null}
               <Icon className="relative size-[18px]" strokeWidth={active ? 2 : 1.75} />
               <span className="relative flex-1">{item.label}</span>
               {item.badge && props.badges?.[item.badge] ? (
-                <span className="relative min-w-5 rounded-full bg-accent px-1.5 text-center text-[11px] leading-5 font-semibold text-accent-foreground tabular">
+                <span className="relative min-w-5 rounded-full bg-blue-500 px-1.5 text-center text-[11px] leading-5 font-semibold text-white tabular">
                   {props.badges[item.badge]! > 99 ? "99+" : props.badges[item.badge]}
                 </span>
               ) : null}
@@ -159,18 +160,18 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
       </nav>
 
       <div className="mt-auto grid gap-2">
-        <div className="flex items-center gap-3 rounded-xl p-2">
-          <Avatar name={props.user.name} size={32} />
+        <div className="flex items-center gap-3 rounded-xl border-t border-white/10 p-2 pt-4">
+          <Avatar name={props.user.name} size={32} className="ring-[#0b1f3a]" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium">{props.user.name}</p>
-            <p className="truncate text-[11.5px] text-muted-foreground">{props.user.position ?? props.user.email}</p>
+            <p className="truncate text-[13px] font-medium text-white">{props.user.name}</p>
+            <p className="truncate text-[11.5px] text-white/55">{props.user.position ?? props.user.email}</p>
           </div>
-          <ThemeToggle className="size-8" />
+          <ThemeToggle className="size-8 text-white/60 hover:bg-white/10 hover:text-white" />
           <form action={signOut}>
             <button
               type="submit"
               aria-label="Cerrar sesión"
-              className="inline-flex size-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex size-8 items-center justify-center rounded-xl text-white/60 transition-colors hover:bg-white/10 hover:text-white"
             >
               <LogOut className="size-4" strokeWidth={1.75} />
             </button>
@@ -187,32 +188,32 @@ export function AppShell(props: ShellProps) {
 
   return (
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh border-r border-border bg-muted/30 lg:block">
+      <aside className="sticky top-0 hidden h-dvh bg-[#0b1f3a] lg:block dark:bg-[#081527]">
         <SidebarContent props={props} />
       </aside>
 
       {/* Barra superior móvil */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between bg-[#0b1f3a] px-4 text-white lg:hidden">
         <div className="flex items-center gap-2.5">
-          <LogoMark className="size-6" />
+          <LogoMark inverted className="size-7" />
           <span className="max-w-[180px] truncate text-[14px] font-semibold">{props.orgName}</span>
         </div>
         <div className="flex items-center gap-1">
           <Link
             href={`/app/${props.orgId}/inbox`}
             aria-label={props.badges?.inbox ? `Bandeja: ${props.badges.inbox} pendientes` : "Bandeja"}
-            className="relative inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"
+            className="relative inline-flex size-9 items-center justify-center rounded-xl hover:bg-white/10"
           >
             <Bell className="size-5" strokeWidth={1.75} />
             {props.badges?.inbox ? (
-              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-accent ring-2 ring-background" />
+              <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-sky-400 ring-2 ring-[#0b1f3a]" />
             ) : null}
           </Link>
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
             aria-label="Abrir menú"
-            className="inline-flex size-9 items-center justify-center rounded-xl hover:bg-muted"
+            className="inline-flex size-9 items-center justify-center rounded-xl hover:bg-white/10"
           >
             <Menu className="size-5" strokeWidth={1.75} />
           </button>
@@ -230,7 +231,7 @@ export function AppShell(props: ShellProps) {
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
-              className="fixed inset-y-0 left-0 z-50 w-[290px] border-r border-border bg-background lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-[290px] bg-[#0b1f3a] lg:hidden"
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
