@@ -588,3 +588,19 @@ test("al mencionado le llega el aviso y ve la novedad en el foro", async ({ page
   // Al ver el foro, el aviso del menú vuelve a cero
   await expect(forumLink).toHaveText(/^Foro$/);
 });
+
+test("un técnico contesta una respuesta y la conversación se puede plegar", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  // Hilo del seed: Carlos respondió sugiriendo un filtro de ruido
+  await page.goto(`/app/${NEBULA}/forum/99999999-0000-0000-0000-000000000002`);
+  await page.getByRole("button", { name: "Responder a Carlos Ruiz" }).first().click();
+  await page.getByLabel("Respuesta a Carlos Ruiz").fill("E2E: a mí me pasó igual en un Lagoon 40, gracias.");
+  await page.getByRole("button", { name: "Responder", exact: true }).first().click();
+  await expect(page.getByText("Respuesta publicada")).toBeVisible();
+  await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Ocultar respuestas" }).first().click();
+  await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toHaveCount(0);
+  await page.getByRole("button", { name: /Ver \d+ respuesta/ }).first().click();
+  await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
+});
