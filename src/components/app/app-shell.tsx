@@ -234,7 +234,7 @@ function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
   const inbox = props.badges?.inbox ?? 0;
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl sm:px-6">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl sm:px-6">
       <button
         type="button"
         onClick={onMenu}
@@ -293,7 +293,10 @@ export function AppShell(props: ShellProps) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[260px_1fr]">
+    // En escritorio el marco ocupa justo la pantalla: barra lateral, barra superior y un
+    // contenedor de tamaño fijo que hace scroll por dentro (no crece con el contenido).
+    // En móvil se mantiene el scroll normal de la página.
+    <div className="min-h-dvh bg-background lg:grid lg:h-dvh lg:grid-cols-[260px_1fr] lg:overflow-hidden">
       <aside className="sticky top-0 hidden h-dvh bg-[#0b1f3a] lg:block dark:bg-[#081527]">
         <SidebarContent props={props} />
       </aside>
@@ -329,18 +332,21 @@ export function AppShell(props: ShellProps) {
         ) : null}
       </AnimatePresence>
 
-      <div className="min-w-0">
+      <div className="min-w-0 lg:flex lg:h-dvh lg:flex-col">
         <Topbar props={props} onMenu={() => setMobileOpen(true)} />
-        <main className="p-3 sm:p-5">
+        <main className="p-3 sm:p-5 lg:min-h-0 lg:flex-1">
           {/* Contenedor de la página: las tarjetas van adentro, no sueltas en el espacio */}
           <motion.div
             key={pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease: EASE }}
-            className="mx-auto max-w-[1400px] rounded-[22px] border border-border bg-muted/60 p-4 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.6)] sm:p-7 dark:bg-muted/30 dark:shadow-none"
+            className="overflow-hidden rounded-[22px] border border-border bg-muted/60 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.6)] lg:h-full dark:bg-muted/30 dark:shadow-none"
           >
-            {props.children}
+            {/* Al cambiar de página el contenedor se vuelve a montar: el scroll arranca arriba */}
+            <div className="p-4 sm:p-7 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
+              <div className="mx-auto max-w-[1400px] lg:h-full">{props.children}</div>
+            </div>
           </motion.div>
         </main>
       </div>
