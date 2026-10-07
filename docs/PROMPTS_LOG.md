@@ -589,3 +589,14 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** 15 pgTAP (permisos del superadmin y del CEO, quién configura la estructura, quién reporta y quién lee errores, resolución), unitarios de normalización de errores y E2E del superadmin y del CEO.
 
+---
+
+## 2026-10-07 El superadmin tiene acceso a todo
+
+**Prompt (resumen):** al entrar como el desarrollador no se veían los logs ni la auditoría (faltaba aplicar la migración `0023` en la base) y los avisos aparecían bloqueados; el desarrollador tiene que tener acceso a todo.
+
+**Decisiones:**
+- **El superadmin vuelve a tener todos los permisos** (`0024`), más los de plataforma, que siguen siendo solo suyos: registro de errores y estructura de permisos por rama y departamento. El CEO tiene todo lo de la empresa, pero no la plataforma.
+- **Es el único que elige sus propios avisos;** al resto se los configura administración.
+- **Se mantiene** que no aprueba vacaciones ni aparece en los listados de la empresa.
+
