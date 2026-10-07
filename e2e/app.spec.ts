@@ -810,8 +810,7 @@ test("una OT se copia a otro mes desde su botón", async ({ page }) => {
   // En el proyecto, la OT más reciente siempre se puede copiar (las del mes en curso ya
   // pueden tener su continuación por un test anterior)
   await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
-  // El menú se cierra con cualquier scroll: si un scroll tardío lo cierra (o el click llega
-  // antes de hidratar), se vuelve a abrir
+  // Si el click llega antes de hidratar, el menú no se abre: se reintenta
   const option = page.getByRole("menuitem").last();
   await expect(async () => {
     await page.getByRole("button", { name: "Copiar a otro mes" }).first().click();
