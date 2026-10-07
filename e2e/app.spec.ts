@@ -743,3 +743,29 @@ test("el responsable de un proyecto invita a alguien; el equipo se ve también e
   await expect(page.getByRole("listitem").filter({ hasText: "Iván Soler" })).toBeVisible();
 });
 
+
+test("el superadmin solo ve la plataforma: auditoría, errores y estructura", async ({ page }) => {
+  await login(page, "dev@demo.com");
+  // No tiene "Inicio": entra directo al registro de errores
+  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/errors`));
+  await expect(page.getByRole("heading", { name: /Registro/ })).toBeVisible();
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await expect(nav.getByRole("link")).toHaveText([/^Auditoría/, /^Errores/, /^Estructura/]);
+  // La gestión de la empresa no le corresponde
+  await page.goto(`/app/${NEBULA}/forum`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+
+  await page.goto(`/app/${NEBULA}/structure`);
+  await expect(page.getByRole("heading", { name: /Estructura/ })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Personas para Administración y RRHH" })).toBeChecked();
+});
+
+test("el CEO no configura la plataforma", async ({ page }) => {
+  await login(page, "laura@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await expect(nav.getByRole("link", { name: /^Auditoría/ })).toBeVisible();
+  await expect(nav.getByRole("link", { name: /^Errores/ })).toHaveCount(0);
+  await page.goto(`/app/${NEBULA}/structure`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});
