@@ -31,6 +31,7 @@ export default async function OrgLayout({ children, params }: LayoutProps<"/app/
         name: displayName(profile ? { full_name: profile.full_name, email: profile.email } : null),
         email: profile?.email ?? "",
         position: ctx.membership.position,
+        avatar: profile?.avatar_url ?? null,
       }}
       badges={{ inbox: pending.length + unread, forum: forumUnread, contact: contactNew }}
       aiEnabled={aiEnabled()}

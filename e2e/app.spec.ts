@@ -640,3 +640,32 @@ test("una empleada no ve los mensajes de la web", async ({ page }) => {
   await page.goto(`/app/${NEBULA}/contact`);
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
+
+// PNG de 8×8 px: alcanza para probar el recorte y la subida de la foto
+const TINY_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAJUlEQVR4nGPglrfilvfjlk/ili/jlu/ilp/HLb+JW/4Yw9CSAAAvuCqBc4oJSwAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+test("una empleada entra a su perfil desde el avatar y sube su foto; nombre y avisos los gestiona administración", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await page.getByRole("button", { name: "Menú de usuario" }).click();
+  await page.getByRole("link", { name: "Mi perfil" }).click();
+  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/profile$`));
+  await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
+  await expect(page.getByText("Técnica de climatización")).toBeVisible();
+
+  await page.locator('input[type="file"]').setInputFiles({ name: "yo.png", mimeType: "image/png", buffer: TINY_PNG });
+  await expect(page.getByText("Foto actualizada.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Menú de usuario" }).locator("img")).toBeVisible();
+
+  // Nombre y avisos los gestiona administración: se ven, pero no se pueden cambiar
+  await expect(page.getByRole("textbox", { name: "Nombre y apellido" })).toHaveCount(0);
+  const reminders = page.getByRole("switch", { name: "Recordatorios" });
+  await expect(reminders).toHaveAttribute("aria-disabled", "true");
+  await reminders.click({ force: true });
+  await expect(reminders).toHaveAttribute("aria-checked", "true");
+  // Lo que pide una acción ni siquiera aparece: no se puede silenciar
+  await expect(page.getByRole("switch", { name: /vacaciones/i })).toHaveCount(0);
+});

@@ -31,6 +31,8 @@ export default async function PeoplePage({ params }: PageProps<"/app/[orgId]/emp
     .map((e) => ({
       id: e.id,
       name: displayName(e.profile),
+      avatar: e.profile?.avatar_url ?? null,
+      fullName: e.profile?.full_name ?? null,
       email: e.profile?.email ?? null,
       role: e.role_id,
       position: e.position,

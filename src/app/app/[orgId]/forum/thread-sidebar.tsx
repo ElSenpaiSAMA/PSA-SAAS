@@ -99,7 +99,7 @@ export function ThreadSidebar({
           <ul className="grid gap-2.5">
             {participants.map((p) => (
               <li key={p.id} className="flex items-center gap-2.5 text-[13px]">
-                <Avatar name={p.name} size={26} />
+                <Avatar name={p.name} src={p.avatar} size={26} />
                 <span className="min-w-0 flex-1 truncate">{p.name}</span>
                 {p.isAuthor ? (
                   <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">Autor</span>

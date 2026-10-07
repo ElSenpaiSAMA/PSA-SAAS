@@ -60,7 +60,11 @@ export function ReplyForm({
       ) : null}
       <div className="flex justify-end gap-2">
         {onDone ? (
-          <button type="button" onClick={onDone} className="h-10 rounded-xl px-4 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+          <button
+            type="button"
+            onClick={onDone}
+            className="h-10 rounded-xl px-4 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
             Cancelar
           </button>
         ) : null}
