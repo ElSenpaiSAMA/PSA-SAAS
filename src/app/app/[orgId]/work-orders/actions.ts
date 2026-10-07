@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
-import { addMonths, monthEnd, monthStart, nextPeriod, parseMonthParam } from "@/lib/domain/periods";
+import { addMonths, monthEnd, monthStart, nextPeriod, parseMonthParam, shiftPeriod } from "@/lib/domain/periods";
 import { missingContinuations, titleForPeriod } from "@/lib/domain/work-orders";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -96,9 +96,10 @@ export async function duplicateWorkOrder(orgId: string, _prev: ActionState, form
   redirect(`/app/${orgId}/work-orders/${newId}`);
 }
 
-/** "Copiar al mes siguiente": mismo período corrido un mes, título actualizado. */
-export async function copyToNextPeriod(orgId: string, workOrderId: string): Promise<ActionState> {
+/** "Copiar a otro mes": mismo período corrido N meses (1 = el siguiente), título actualizado. */
+export async function copyToNextPeriod(orgId: string, workOrderId: string, months = 1): Promise<ActionState> {
   await getOrgContext(orgId);
+  const shift = z.number().int().min(1).max(12).parse(months);
   const supabase = await createClient();
   const { data: source } = await supabase
     .from("work_orders")
@@ -107,7 +108,7 @@ export async function copyToNextPeriod(orgId: string, workOrderId: string): Prom
     .maybeSingle();
   if (!source) return fail("OT no encontrada.");
 
-  const next = nextPeriod(source.period_start, source.period_end);
+  const next = shiftPeriod(source.period_start, source.period_end, shift);
   const { data: newId, error } = await supabase.rpc("duplicate_work_order", {
     p_work_order_id: source.id,
     p_title: titleForPeriod(source.title, source.period_start, next.start),

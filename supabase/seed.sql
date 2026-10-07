@@ -316,3 +316,6 @@ insert into public.project_members (project_id, membership_id, role) values
   ('cccccccc-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000107', 'observer'),
   ('cccccccc-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000108', 'member')
 on conflict (project_id, membership_id) do update set role = excluded.role;
+
+-- El mantenimiento del Princess es mensual: su OT se renueva sola cada mes (0026)
+update public.projects set recurring_work_orders = true where id = 'cccccccc-0000-0000-0000-000000000001';
