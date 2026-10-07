@@ -83,7 +83,12 @@ export function WorkOrderRow({ orgId, row }: { orgId: string; row: WorkOrderRowD
             Sigue en {formatMonth(next.start)} <ArrowRight className="size-3.5" />
           </Link>
         ) : (
-          <CopyNextButton orgId={orgId} workOrderId={row.id} targetLabel={formatMonth(next.start)} />
+          <CopyNextButton
+            orgId={orgId}
+            workOrderId={row.id}
+            targetLabel={formatMonth(next.start)}
+            period={{ start: row.periodStart, end: row.periodEnd }}
+          />
         )}
         </div>
       ) : null}
