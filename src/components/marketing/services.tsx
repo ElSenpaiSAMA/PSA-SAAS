@@ -5,7 +5,16 @@ import { SpotlightCard } from "./spotlight-card";
 // Propulsor de proa: no hay ícono equivalente en lucide, se dibuja uno simple
 function ThrusterIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
       <path d="M3 9h12l5 3-5 3H3z" />
       <path d="M9 9v6" />
       <path d="M6.5 5.5 9 9l2.5-3.5M6.5 18.5 9 15l2.5 3.5" />
@@ -54,7 +63,10 @@ const SERVICES = [
 
 export function Services() {
   return (
-    <section id="servicios" className="scroll-mt-24 bg-[linear-gradient(180deg,#ffffff_0%,#f5f9ff_100%)] py-24 sm:py-32">
+    <section
+      id="servicios"
+      className="relative z-10 scroll-mt-24 bg-[linear-gradient(180deg,transparent_0%,transparent_35%,#f5f9ff_100%)] py-24 sm:py-32"
+    >
       <div className="mx-auto max-w-6xl px-6">
         <Reveal className="max-w-2xl">
           <RevealItem>
@@ -62,12 +74,14 @@ export function Services() {
           </RevealItem>
           <RevealItem>
             <h2 className="mt-3 text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.05] font-semibold tracking-[-0.04em] text-balance text-slate-950">
-              Energía, clima y agua a bordo, <span className="font-serif font-normal text-blue-700 italic">resueltos por especialistas.</span>
+              Energía, clima y agua a bordo,{" "}
+              <span className="font-serif font-normal text-blue-700 italic">resueltos por especialistas.</span>
             </h2>
           </RevealItem>
           <RevealItem>
             <p className="mt-4 text-[16px] leading-relaxed text-slate-600">
-              Instalamos, reparamos y mantenemos los equipos eléctricos y de confort de yates y embarcaciones, con proyectos a medida y tecnología de punta.
+              Instalamos, reparamos y mantenemos los equipos eléctricos y de confort de yates y embarcaciones, con proyectos a medida y
+              tecnología de punta.
             </p>
           </RevealItem>
         </Reveal>
