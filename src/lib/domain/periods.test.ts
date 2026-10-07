@@ -7,6 +7,7 @@ import {
   monthEnd,
   monthStart,
   nextPeriod,
+  shiftPeriod,
   parseMonthParam,
   weeksOfMonth,
 } from "./periods";
@@ -51,5 +52,16 @@ describe("weeksOfMonth", () => {
     expect(weeks[0]).toEqual({ start: "2026-09-28", end: "2026-10-04" });
     expect(weeks.at(-1)).toEqual({ start: "2026-10-26", end: "2026-11-01" });
     expect(weeks).toHaveLength(5);
+  });
+});
+
+describe("shiftPeriod", () => {
+  it("corre un mes completo N meses (también cruzando el año)", () => {
+    expect(shiftPeriod("2026-10-01", "2026-10-31", 2)).toEqual({ start: "2026-12-01", end: "2026-12-31" });
+    expect(shiftPeriod("2026-11-01", "2026-11-30", 3)).toEqual({ start: "2027-02-01", end: "2027-02-28" });
+  });
+
+  it("con un mes es lo mismo que nextPeriod", () => {
+    expect(shiftPeriod("2026-10-05", "2026-10-16", 1)).toEqual(nextPeriod("2026-10-05", "2026-10-16"));
   });
 });

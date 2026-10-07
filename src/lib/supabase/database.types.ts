@@ -87,6 +87,8 @@ export type Project = {
   department_id: string | null;
   status: ProjectStatus;
   created_at: Timestamp;
+  /** OT mensual: el día 1 se crea sola la del mes nuevo */
+  recurring_work_orders: boolean;
 };
 
 export type Task = {
