@@ -365,10 +365,10 @@ Cubierto por `supabase/tests/contact_messages.test.sql` (12 tests).
 ## Perfil: foto y preferencias de avisos (`0021_profile_preferences.sql`)
 
 - **Foto de perfil** en Supabase Storage, bucket `avatars` (lectura pública, máximo 2 MB, PNG/JPEG/WebP). Cada persona solo escribe, reemplaza o borra en su carpeta (`<user_id>/…`).
-- **Guard de `profiles`:** desde la app solo se cambian el nombre, la foto y las preferencias. El email no se puede tocar (antes, la política "update own" lo permitía y se mostraba a los compañeros) y la foto tiene que ser de la carpeta propia: nada de URLs externas.
-- **Avisos silenciados:** `profiles.muted_notifications` guarda los tipos que la persona apagó, limitado por `mutable_notification_kinds()` a los informativos. `notify()` los respeta. Lo que pide una acción (aprobar vacaciones o correcciones) siempre llega.
+- **Guard de `profiles`:** desde la app cada persona solo cambia su foto, que tiene que estar en su carpeta: nada de URLs externas. El nombre lo elige una sola vez, al activar la cuenta; después lo corrige administración con `set_member_name` (`employees.manage` y rango mayor). El email no se puede tocar: antes, la política "update own" lo permitía, y se muestra a los compañeros.
+- **Avisos silenciados:** `profiles.muted_notifications` guarda los tipos que no recibe la persona, limitado por `mutable_notification_kinds()` a los informativos. `notify()` los respeta. Lo que pide una acción (aprobar vacaciones o correcciones) siempre llega. Lo configura administración: la persona no puede cambiarlo.
 
-Cubierto por `supabase/tests/profile_preferences.test.sql` (12 tests).
+Cubierto por `supabase/tests/profile_preferences.test.sql` (18 tests).
 
 ## Desarrollo local
 
