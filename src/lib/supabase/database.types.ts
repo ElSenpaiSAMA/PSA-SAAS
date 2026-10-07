@@ -19,6 +19,8 @@ export type Profile = {
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
+  /** Avisos que la persona eligió no recibir (ver notification-prefs.ts) */
+  muted_notifications: string[];
   created_at: Timestamp;
   updated_at: Timestamp;
 };
