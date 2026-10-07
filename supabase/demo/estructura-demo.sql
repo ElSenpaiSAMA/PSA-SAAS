@@ -64,7 +64,7 @@ select (select comercial from t_branch), k from unnest(array['projects.manage', 
 union all
 select (select admin from t_branch), k from unnest(array[
   'employees.manage', 'people.sensitive', 'departments.manage', 'holidays.manage', 'automations.manage',
-  'billing.manage', 'projects.manage', 'tasks.manage_all', 'contact.manage', 'forum.moderate'
+  'billing.manage', 'projects.manage', 'tasks.manage_all', 'contact.manage', 'forum.moderate', 'audit.view'
 ]) k
 on conflict do nothing;
 
@@ -104,7 +104,7 @@ on conflict do nothing;
 insert into public.department_permissions (department_id, permission_key)
 select 'eeeeeeee-0000-0000-0000-000000000004'::uuid, k from unnest(array['projects.manage', 'contact.manage']) k
 union all
-select 'eeeeeeee-0000-0000-0000-000000000005'::uuid, k from unnest(array['employees.manage', 'people.sensitive', 'holidays.manage']) k
+select 'eeeeeeee-0000-0000-0000-000000000005'::uuid, k from unnest(array['employees.manage', 'people.sensitive', 'holidays.manage', 'audit.view']) k
 union all
 select 'eeeeeeee-0000-0000-0000-000000000003'::uuid, k from unnest(array['billing.manage']) k
 on conflict do nothing;

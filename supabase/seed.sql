@@ -65,7 +65,7 @@ select 'dddddddd-0000-0000-0000-000000000002'::uuid, k from unnest(array['projec
 union all
 select 'dddddddd-0000-0000-0000-000000000003'::uuid, k from unnest(array[
   'employees.manage', 'people.sensitive', 'departments.manage', 'holidays.manage', 'automations.manage',
-  'billing.manage', 'projects.manage', 'tasks.manage_all', 'contact.manage', 'forum.moderate'
+  'billing.manage', 'projects.manage', 'tasks.manage_all', 'contact.manage', 'forum.moderate', 'audit.view'
 ]) k;
 
 -- Diplonautic:
@@ -103,7 +103,7 @@ insert into public.departments (id, org_id, name, head_id, branch_id) values
 insert into public.department_permissions (department_id, permission_key)
 select 'eeeeeeee-0000-0000-0000-000000000004'::uuid, k from unnest(array['projects.manage', 'contact.manage']) k
 union all
-select 'eeeeeeee-0000-0000-0000-000000000005'::uuid, k from unnest(array['employees.manage', 'people.sensitive', 'holidays.manage']) k
+select 'eeeeeeee-0000-0000-0000-000000000005'::uuid, k from unnest(array['employees.manage', 'people.sensitive', 'holidays.manage', 'audit.view']) k
 union all
 select 'eeeeeeee-0000-0000-0000-000000000003'::uuid, k from unnest(array['billing.manage']) k;
 
