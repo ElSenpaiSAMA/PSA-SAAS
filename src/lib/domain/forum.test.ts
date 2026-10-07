@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { buildPostTree, excerpt, filterThreads, sortThreads, threadAbilities, type ThreadSummary } from "./forum";
+import {
+  buildPostTree,
+  excerpt,
+  filterThreads,
+  relatedThreads,
+  sortThreads,
+  threadAbilities,
+  threadParticipants,
+  type ThreadSummary,
+} from "./forum";
 
 const thread = (id: string, over: Partial<ThreadSummary> = {}): ThreadSummary => ({
   id,
@@ -62,8 +71,16 @@ describe("permisos sobre un hilo", () => {
       canModerate: false,
       canResolve: true,
     });
-    expect(threadAbilities(t, { isAuthor: false, isModerator: true })).toMatchObject({ canEdit: false, canDelete: true, canModerate: true });
-    expect(threadAbilities(t, { isAuthor: false, isModerator: false })).toMatchObject({ canEdit: false, canDelete: false, canResolve: false });
+    expect(threadAbilities(t, { isAuthor: false, isModerator: true })).toMatchObject({
+      canEdit: false,
+      canDelete: true,
+      canModerate: true,
+    });
+    expect(threadAbilities(t, { isAuthor: false, isModerator: false })).toMatchObject({
+      canEdit: false,
+      canDelete: false,
+      canResolve: false,
+    });
   });
 
   it("los avisos no se marcan como resueltos", () => {
@@ -79,7 +96,11 @@ describe("extracto", () => {
 });
 
 describe("árbol de respuestas", () => {
-  const post = (id: string, parent_id: string | null, minute: number) => ({ id, parent_id, created_at: `2026-10-07T10:${String(minute).padStart(2, "0")}:00Z` });
+  const post = (id: string, parent_id: string | null, minute: number) => ({
+    id,
+    parent_id,
+    created_at: `2026-10-07T10:${String(minute).padStart(2, "0")}:00Z`,
+  });
 
   it("cuelga cada respuesta de su madre, en orden, y cuenta las descendientes", () => {
     const tree = buildPostTree([post("c", "a", 3), post("a", null, 1), post("b", null, 2), post("d", "c", 4)]);
@@ -92,5 +113,52 @@ describe("árbol de respuestas", () => {
 
   it("si la madre ya no está, la respuesta va al primer nivel", () => {
     expect(buildPostTree([post("x", "borrada", 1)]).map((n) => n.post.id)).toEqual(["x"]);
+  });
+});
+
+describe("threadParticipants", () => {
+  const reply = (author_id: string | null, author: string, min: number) => ({
+    author_id,
+    author,
+    created_at: new Date(Date.UTC(2026, 0, 1, 10, min)).toISOString(),
+  });
+
+  it("el autor primero y cada persona una sola vez, en el orden en que respondió", () => {
+    const people = threadParticipants({ id: "sofia", name: "Sofía" }, [
+      reply("diego", "Diego", 5),
+      reply("ana", "Ana", 2),
+      reply("sofia", "Sofía", 7),
+      reply("ana", "Ana", 9),
+    ]);
+    expect(people.map((p) => [p.name, p.replies, p.isAuthor])).toEqual([
+      ["Sofía", 1, true],
+      ["Ana", 2, false],
+      ["Diego", 1, false],
+    ]);
+  });
+
+  it("no cuenta a quien ya no está en la empresa", () => {
+    expect(threadParticipants({ id: null, name: "Ex miembro" }, [reply(null, "Ex miembro", 1)])).toEqual([]);
+  });
+});
+
+describe("relatedThreads", () => {
+  const threads = [
+    thread("actual", { category: "notice" }),
+    thread("duda-reciente", { category: "question", last_activity_at: "2026-01-05T00:00:00Z" }),
+    thread("aviso-viejo", { category: "notice", last_activity_at: "2026-01-01T00:00:00Z" }),
+    thread("aviso-nuevo", { category: "notice", last_activity_at: "2026-01-03T00:00:00Z" }),
+  ];
+
+  it("primero la misma categoría (más reciente arriba), después el resto, sin el hilo actual", () => {
+    expect(relatedThreads(threads, { id: "actual", category: "notice" }).map((t) => t.id)).toEqual([
+      "aviso-nuevo",
+      "aviso-viejo",
+      "duda-reciente",
+    ]);
+  });
+
+  it("respeta el límite", () => {
+    expect(relatedThreads(threads, { id: "actual", category: "notice" }, 1).map((t) => t.id)).toEqual(["aviso-nuevo"]);
   });
 });
