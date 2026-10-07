@@ -172,6 +172,7 @@ Variables opcionales en `.env.local`:
 |---|---|
 | `OPENROUTER_API_KEY` | Activa el asistente IA |
 | `SUPABASE_SERVICE_ROLE_KEY` | Envía el email de invitación de empleados (solo servidor) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | Email de confirmación a quien escribe en el formulario de contacto. Cualquier SMTP: Brevo (gratis) o Gmail |
 
 Con Docker Compose: `docker compose up --build`.
 
