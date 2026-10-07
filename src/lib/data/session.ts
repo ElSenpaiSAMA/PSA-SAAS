@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { hasPermission, isRole, type Permission, type Role } from "@/lib/domain/permissions";
+import { hasPermission, isRole, PERMISSIONS, type Permission, type Role } from "@/lib/domain/permissions";
 import type { Membership, Organization, Profile } from "@/lib/supabase/database.types";
 
 export const getUser = cache(async () => {
@@ -55,12 +55,17 @@ export const getOrgContext = cache(async (orgId: string): Promise<OrgContext> =>
 
   const { organization, ...membership } = current;
   const role = current.role_id;
+  // Permisos efectivos: los calcula la base (nivel + rama que dirige + departamento que
+  // encabeza). Si la consulta falla, se cae a los permisos base del nivel.
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("my_permissions", { p_org_id: orgId });
+  const granted = new Set<string>(data ?? PERMISSIONS.filter((p) => hasPermission(role, p)));
   return {
     userId: user.id,
     membership,
     organization,
     role,
-    can: (permission) => hasPermission(role, permission),
+    can: (permission) => granted.has(permission),
   };
 });
 

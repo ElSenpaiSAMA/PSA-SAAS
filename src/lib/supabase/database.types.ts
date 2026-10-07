@@ -2,7 +2,7 @@
 // Con Supabase local se pueden regenerar con:
 //   npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
 
-import type { Permission, Role } from "@/lib/domain/permissions";
+import type { Permission, ProjectRole, Role } from "@/lib/domain/permissions";
 import type { VacationStatus } from "@/lib/domain/vacations";
 import type { BillingStatus, WorkOrderStatus } from "@/lib/domain/work-orders";
 
@@ -41,10 +41,23 @@ export type Membership = {
   role_id: Role;
   manager_id: string | null;
   department_id: string | null;
+  /** Solo para "Dirección de rama": qué rama dirige */
+  directs_branch_id: string | null;
   position: string | null;
   weekly_hours: number;
   annual_vacation_days: number;
   status: MembershipStatus;
+  created_at: Timestamp;
+};
+
+export type BranchColor = "blue" | "green" | "violet" | "amber" | "rose" | "teal";
+
+/** Rama de la empresa (agrupa departamentos: Técnica, Comercial, Administración y RRHH…). */
+export type Branch = {
+  id: string;
+  org_id: string;
+  name: string;
+  color: BranchColor;
   created_at: Timestamp;
 };
 
@@ -103,9 +116,10 @@ export type Invitation = {
   id: string;
   org_id: string;
   email: string;
-  role_id: Exclude<Role, "owner">;
+  role_id: Exclude<Role, "owner" | "superadmin">;
   manager_id: string | null;
   department_id: string | null;
+  directs_branch_id: string | null;
   position: string | null;
   invited_by: string | null;
   accepted_at: Timestamp | null;
@@ -117,6 +131,7 @@ export type Department = {
   org_id: string;
   name: string;
   head_id: string | null;
+  branch_id: string | null;
   created_at: Timestamp;
 };
 
@@ -187,6 +202,8 @@ export type WorkloadItemRow = {
 export type ProjectMember = {
   project_id: string;
   membership_id: string;
+  role: ProjectRole;
+  added_by: string | null;
   added_at: Timestamp;
 };
 
@@ -369,6 +386,9 @@ export type Database = {
       invitations: Table<Invitation, "org_id" | "email">;
       departments: Table<Department, "org_id" | "name">;
       project_members: Table<ProjectMember, "project_id" | "membership_id">;
+      branches: Table<Branch, "org_id" | "name">;
+      branch_permissions: Table<{ branch_id: string; permission_key: Permission }, "branch_id" | "permission_key">;
+      department_permissions: Table<{ department_id: string; permission_key: Permission }, "department_id" | "permission_key">;
       work_orders: Table<WorkOrder, "project_id" | "title" | "period_start" | "period_end">;
       holidays: Table<Holiday, "org_id" | "date" | "name">;
       employee_records: Table<EmployeeRecord, "membership_id" | "effective_from">;
@@ -411,6 +431,7 @@ export type Database = {
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
       forum_unread_count: { Args: { p_org_id: string }; Returns: number };
       contact_new_count: { Args: { p_org_id: string }; Returns: number };
+      my_permissions: { Args: { p_org_id: string }; Returns: string[] };
       set_member_name: { Args: { p_membership_id: string; p_name: string }; Returns: undefined };
       submit_contact_message: {
         Args: {
