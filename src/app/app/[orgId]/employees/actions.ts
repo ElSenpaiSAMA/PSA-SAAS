@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getEmployees } from "@/lib/data/employees";
 import { getOrgContext } from "@/lib/data/session";
 import { wouldCreateCycle } from "@/lib/domain/hierarchy";
@@ -44,7 +45,7 @@ export async function inviteEmployee(orgId: string, _prev: ActionState, formData
   });
   if (error) {
     if (error.code === "23505") return fail("Ya hay una invitación pendiente para ese email.", { email: ["Invitación pendiente"] });
-    return fail(dbErrorMessage(error));
+    return fail(await reportDbError(error));
   }
   refresh(orgId);
 
@@ -73,7 +74,7 @@ export async function revokeInvitation(orgId: string, invitationId: string): Pro
   if (!ctx.can("employees.manage")) return fail("No tenés permisos.");
   const supabase = await createClient();
   const { error } = await supabase.from("invitations").delete().eq("id", z.guid().parse(invitationId)).eq("org_id", orgId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Invitación revocada");
 }
@@ -114,7 +115,7 @@ export async function updateMember(orgId: string, _prev: ActionState, formData: 
     })
     .eq("id", membershipId)
     .eq("org_id", orgId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   // "Responsable de departamento": de cuál. Queda como responsable (la base lo suma al
   // departamento y le pasa el equipo)
   if (role === "manager" && headOf) {
@@ -122,13 +123,13 @@ export async function updateMember(orgId: string, _prev: ActionState, formData: 
     if (headError) {
       return headError.code === "23505"
         ? fail("Esa persona ya es responsable de otro departamento.", { headOf: ["Ya es responsable de otro"] })
-        : fail(dbErrorMessage(headError));
+        : fail(await reportDbError(headError));
     }
   }
   // El nombre vive en el perfil (no en la membresía): lo cambia la base, que vuelve a validar permiso y rango
   if (fullName && fullName !== (target.profile?.full_name ?? "")) {
     const { error: nameError } = await supabase.rpc("set_member_name", { p_membership_id: membershipId, p_name: fullName });
-    if (nameError) return fail(dbErrorMessage(nameError));
+    if (nameError) return fail(await reportDbError(nameError));
   }
   refresh(orgId);
   return ok("Cambios guardados");
@@ -153,7 +154,7 @@ export async function saveDepartment(orgId: string, _prev: ActionState, formData
         ? fail("Esa persona ya es responsable de otro departamento.", { headId: ["Ya es responsable de otro"] })
         : fail("Ya existe un departamento con ese nombre.", { name: ["Nombre repetido"] });
     }
-    return fail(dbErrorMessage(error));
+    return fail(await reportDbError(error));
   }
   refresh(orgId);
   return ok(departmentId ? "Departamento actualizado" : `Departamento "${parsed.data.name}" creado`);
@@ -164,7 +165,7 @@ export async function deleteDepartment(orgId: string, departmentId: string): Pro
   if (!ctx.can("departments.manage")) return fail("No tenés permisos para gestionar departamentos.");
   const supabase = await createClient();
   const { error } = await supabase.from("departments").delete().eq("id", z.guid().parse(departmentId)).eq("org_id", orgId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Departamento eliminado");
 }

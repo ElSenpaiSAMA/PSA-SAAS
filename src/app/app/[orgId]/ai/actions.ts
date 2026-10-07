@@ -1,11 +1,12 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { answerQuestion } from "@/lib/ai/assistant";
 import { suggestAllocation, teamSummary } from "@/lib/ai/features";
 import { AiError, aiEnabled } from "@/lib/ai/openrouter";
-import { dbErrorMessage } from "@/lib/actions";
+
 import { getOrgContext } from "@/lib/data/session";
 import type { AllocationItem } from "@/lib/domain/ai";
 import { todayISO } from "@/lib/domain/periods";
@@ -68,7 +69,7 @@ export async function applyAllocation(orgId: string, items: Pick<AllocationItem,
     return row;
   });
   const { error } = await supabase.from("time_entries").insert(rows);
-  if (error) return { ok: false, error: dbErrorMessage(error) };
+  if (error) return { ok: false, error: await reportDbError(error) };
   revalidatePath(`/app/${orgId}`, "layout");
   return { ok: true, data: rows.length };
 }

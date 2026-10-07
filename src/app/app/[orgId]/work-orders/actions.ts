@@ -1,9 +1,10 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { addMonths, monthEnd, monthStart, nextPeriod, parseMonthParam } from "@/lib/domain/periods";
 import { missingContinuations, titleForPeriod } from "@/lib/domain/work-orders";
@@ -40,7 +41,7 @@ export async function createWorkOrder(orgId: string, _prev: ActionState, formDat
     })
     .select("id")
     .single();
-  if (error || !data) return fail(dbErrorMessage(error));
+  if (error || !data) return fail(await reportDbError(error));
   refresh(orgId);
   redirect(`/app/${orgId}/work-orders/${data.id}`);
 }
@@ -56,7 +57,7 @@ export async function setWorkOrderStatus(orgId: string, workOrderId: string, sta
     .eq("id", z.guid().parse(workOrderId))
     .eq("org_id", orgId)
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No tenés permisos para cambiar esta OT.");
   refresh(orgId);
   return ok("Estado actualizado");
@@ -73,7 +74,7 @@ export async function setBillingStatus(orgId: string, workOrderId: string, billi
     .update({ billing_status: parsed.data })
     .eq("id", z.guid().parse(workOrderId))
     .eq("org_id", orgId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok(parsed.data === "invoiced" ? "OT marcada como facturada" : "Facturación revertida");
 }
@@ -90,7 +91,7 @@ export async function duplicateWorkOrder(orgId: string, _prev: ActionState, form
     p_period_start: parsed.data.periodStart,
     p_period_end: parsed.data.periodEnd,
   });
-  if (error || !newId) return fail(dbErrorMessage(error));
+  if (error || !newId) return fail(await reportDbError(error));
   refresh(orgId);
   redirect(`/app/${orgId}/work-orders/${newId}`);
 }
@@ -113,7 +114,7 @@ export async function copyToNextPeriod(orgId: string, workOrderId: string): Prom
     p_period_start: next.start,
     p_period_end: next.end,
   });
-  if (error || !newId) return fail(dbErrorMessage(error));
+  if (error || !newId) return fail(await reportDbError(error));
   refresh(orgId);
   redirect(`/app/${orgId}/work-orders/${newId}`);
 }
@@ -133,7 +134,7 @@ export async function copyPreviousMonth(orgId: string, month: string): Promise<A
     supabase.from("work_orders").select("*").eq("org_id", orgId).gte("period_start", previous).lte("period_start", monthEnd(previous)),
     supabase.from("work_orders").select("project_id, period_start").eq("org_id", orgId).gte("period_start", target).lte("period_start", monthEnd(target)),
   ]);
-  if (prev.error || current.error) return fail(dbErrorMessage(prev.error ?? current.error));
+  if (prev.error || current.error) return fail(await reportDbError(prev.error ?? current.error));
 
   const pending = missingContinuations(prev.data ?? [], current.data ?? [], monthStart(target));
   if (!pending.length) return ok("No hay OT pendientes de copiar.");
@@ -173,7 +174,7 @@ export async function duplicateTask(orgId: string, taskId: string): Promise<Acti
     start_date: task.start_date,
     due_date: task.due_date,
   });
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Tarea duplicada");
 }

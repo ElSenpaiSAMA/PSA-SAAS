@@ -50,6 +50,22 @@ export type Membership = {
   created_at: Timestamp;
 };
 
+/** Registro de errores de la app (lo lee el superadmin). */
+export type ErrorLog = {
+  id: string;
+  created_at: Timestamp;
+  source: "server" | "action" | "client" | "data";
+  message: string;
+  digest: string | null;
+  stack: string | null;
+  path: string | null;
+  context: Record<string, unknown>;
+  user_id: string | null;
+  org_id: string | null;
+  resolved_at: Timestamp | null;
+  resolved_by: string | null;
+};
+
 export type BranchColor = "blue" | "green" | "violet" | "amber" | "rose" | "teal";
 
 /** Rama de la empresa (agrupa departamentos: Técnica, Comercial, Administración y RRHH…). */
@@ -387,6 +403,7 @@ export type Database = {
       departments: Table<Department, "org_id" | "name">;
       project_members: Table<ProjectMember, "project_id" | "membership_id">;
       branches: Table<Branch, "org_id" | "name">;
+      error_logs: Table<ErrorLog, "source" | "message">;
       branch_permissions: Table<{ branch_id: string; permission_key: Permission }, "branch_id" | "permission_key">;
       department_permissions: Table<{ department_id: string; permission_key: Permission }, "department_id" | "permission_key">;
       work_orders: Table<WorkOrder, "project_id" | "title" | "period_start" | "period_end">;
@@ -432,6 +449,19 @@ export type Database = {
       forum_unread_count: { Args: { p_org_id: string }; Returns: number };
       contact_new_count: { Args: { p_org_id: string }; Returns: number };
       my_permissions: { Args: { p_org_id: string }; Returns: string[] };
+      is_platform_admin: { Args: Record<string, never>; Returns: boolean };
+      log_error: {
+        Args: {
+          p_source: ErrorLog["source"];
+          p_message: string;
+          p_digest?: string | null;
+          p_stack?: string | null;
+          p_path?: string | null;
+          p_context?: Record<string, unknown>;
+          p_org_id?: string | null;
+        };
+        Returns: undefined;
+      };
       set_member_name: { Args: { p_membership_id: string; p_name: string }; Returns: undefined };
       submit_contact_message: {
         Args: {

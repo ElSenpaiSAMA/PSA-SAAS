@@ -13,7 +13,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { isRole, ROLE_LABEL, type Permission, type Role } from "@/lib/domain/permissions";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
-import { NAV, NAV_GROUPS, NAV_ICONS } from "./nav";
+import { NAV, NAV_GROUPS, NAV_ICONS, visibleNav } from "./nav";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -112,7 +112,7 @@ function Workspace({ orgId, orgName, role, organizations }: Pick<ShellProps, "or
 
 function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?: () => void }) {
   const pathname = usePathname();
-  const items = NAV.filter((n) => !n.permission || props.permissions.includes(n.permission));
+  const items = visibleNav(props.permissions);
 
   return (
     <div className="flex h-full flex-col">

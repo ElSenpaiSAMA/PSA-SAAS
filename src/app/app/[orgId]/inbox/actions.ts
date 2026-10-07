@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,7 +38,7 @@ export async function markAllRead(orgId: string): Promise<ActionState> {
     .update({ read_at: new Date().toISOString() })
     .eq("recipient_id", ctx.membership.id)
     .is("read_at", null);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Todo marcado como leído");
 }

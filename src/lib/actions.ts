@@ -18,8 +18,11 @@ export function ok(message?: string): ActionState {
   return { status: "success", message, submittedAt: Date.now() };
 }
 
-/** Traduce errores de Postgres/RLS lanzados por los triggers a mensajes para el usuario. */
-export function dbErrorMessage(error: { message?: string; code?: string } | null): string {
+/**
+ * Mensaje para el usuario de un error ESPERADO de la base (una regla de negocio de un trigger,
+ * un duplicado, falta de permisos). Si no es ninguno conocido, devuelve null: es un fallo.
+ */
+export function knownDbError(error: { message?: string; code?: string } | null): string | null {
   const msg = error?.message ?? "";
   const known: Record<string, string> = {
     "cannot change your own role or status": "No podés cambiar tu propio rol o estado.",
@@ -53,5 +56,12 @@ export function dbErrorMessage(error: { message?: string; code?: string } | null
   for (const [key, text] of Object.entries(known)) if (msg.includes(key)) return text;
   if (error?.code === "23505") return "Ya existe un registro igual.";
   if (error?.code === "42501") return "No tenés permisos para esta acción.";
-  return "Algo salió mal. Probá de nuevo.";
+  return null;
+}
+
+export const UNEXPECTED_ERROR = "Algo salió mal. Probá de nuevo.";
+
+/** Traduce errores de Postgres/RLS lanzados por los triggers a mensajes para el usuario. */
+export function dbErrorMessage(error: { message?: string; code?: string } | null): string {
+  return knownDbError(error) ?? UNEXPECTED_ERROR;
 }

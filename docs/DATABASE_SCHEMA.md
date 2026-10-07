@@ -385,6 +385,15 @@ Dos estructuras conviven:
 
 Cubierto por `supabase/tests/org_structure.test.sql` (27 tests).
 
+## Superadmin de plataforma y registro de errores (`0023_platform_admin.sql`)
+
+- **El superadmin es solo plataforma:** tiene `audit.view` (auditoría) y `platform.manage` (estructura y errores); ya no ve la gestión de la empresa. El CEO tiene todo lo de la empresa menos `platform.manage`.
+- **Qué gestiona cada rama o departamento** (`branch_permissions` / `department_permissions`) lo configura la plataforma, no el CEO. Los cambios quedan en la auditoría.
+- **`audit.view`** es un permiso propio: lo tienen el CEO, el superadmin y quien gestiona personas. Quien ve la auditoría ve los nombres del directorio.
+- **`error_logs`:** errores de servidor, acciones, navegador y datos, con ruta, digest, stack y contexto. Se reportan con `log_error()` (también sin sesión, con recortes y límite de frecuencia); solo el superadmin los lee y los marca como resueltos (la base registra quién y cuándo).
+
+Cubierto por `supabase/tests/platform_admin.test.sql` (15 tests).
+
 ## Desarrollo local
 
 ```bash

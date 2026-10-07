@@ -25,11 +25,12 @@ describe("niveles", () => {
 });
 
 describe("permisos base", () => {
-  it("CEO y superadmin tienen todos", () => {
-    for (const p of PERMISSIONS) {
-      expect(hasPermission("owner", p)).toBe(true);
-      expect(hasPermission("superadmin", p)).toBe(true);
-    }
+  it("el CEO tiene todo lo de la empresa, pero no la plataforma", () => {
+    for (const p of PERMISSIONS) expect(hasPermission("owner", p)).toBe(p !== "platform.manage");
+  });
+
+  it("el superadmin solo ve la auditoría y configura la plataforma", () => {
+    expect(PERMISSIONS.filter((p) => hasPermission("superadmin", p))).toEqual(["audit.view", "platform.manage"]);
   });
 
   it("un empleado y una aprendiz solo acceden al espacio común", () => {

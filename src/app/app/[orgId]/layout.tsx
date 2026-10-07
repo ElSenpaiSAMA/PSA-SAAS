@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app/app-shell";
 import { aiEnabled } from "@/lib/ai/openrouter";
 import { getContactNewCount } from "@/lib/data/contact";
+import { fallback } from "@/lib/errors/server";
 import { getForumUnreadCount } from "@/lib/data/forum";
 import { getPending, getUnreadCount } from "@/lib/data/inbox";
 import { getMyMemberships, getOrgContext, getProfile } from "@/lib/data/session";
@@ -14,11 +15,11 @@ export default async function OrgLayout({ children, params }: LayoutProps<"/app/
   const [memberships, profile, pending, unread, forumUnread, contactNew] = await Promise.all([
     getMyMemberships(),
     getProfile(ctx.userId),
-    // El contador nunca debe tumbar la app: ante un error, simplemente no se muestra
-    getPending(orgId).catch(() => []),
-    getUnreadCount(ctx.membership.id).catch(() => 0),
-    getForumUnreadCount(orgId).catch(() => 0),
-    ctx.can("contact.manage") ? getContactNewCount(orgId).catch(() => 0) : 0,
+    // Un contador nunca tumba la app: si falla, no se muestra (y queda en el registro de errores)
+    getPending(orgId).catch(fallback([], "pendientes de la bandeja")),
+    getUnreadCount(ctx.membership.id).catch(fallback(0, "avisos sin leer")),
+    getForumUnreadCount(orgId).catch(fallback(0, "novedades del foro")),
+    ctx.can("contact.manage") ? getContactNewCount(orgId).catch(fallback(0, "mensajes web nuevos")) : 0,
   ]);
 
   return (

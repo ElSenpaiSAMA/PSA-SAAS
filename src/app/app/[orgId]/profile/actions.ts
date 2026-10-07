@@ -1,7 +1,8 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
@@ -17,7 +18,7 @@ export async function setAvatar(orgId: string, url: string | null): Promise<Acti
 
   const supabase = await createClient();
   const { error } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", ctx.userId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   revalidatePath(`/app/${orgId}`, "layout");
   return ok(url ? "Foto actualizada." : "Foto quitada.");
 }

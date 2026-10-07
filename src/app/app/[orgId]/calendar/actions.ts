@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors } from "@/lib/validation/schemas";
@@ -29,7 +30,7 @@ export async function moveTask(orgId: string, taskId: string, startDate: string 
     .eq("id", parsed.data.id)
     .eq("org_id", orgId)
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No podés mover esta tarea.");
   refresh(orgId);
   return ok("Tarea reprogramada");
@@ -50,7 +51,7 @@ export async function addHoliday(orgId: string, _prev: ActionState, formData: Fo
   const { error } = await supabase.from("holidays").insert({ org_id: orgId, ...parsed.data });
   if (error) {
     if (error.code === "23505") return fail("Ya hay un festivo ese día.", { date: ["Día ocupado"] });
-    return fail(dbErrorMessage(error));
+    return fail(await reportDbError(error));
   }
   refresh(orgId);
   return ok(`Festivo "${parsed.data.name}" agregado`);
@@ -61,7 +62,7 @@ export async function deleteHoliday(orgId: string, holidayId: string): Promise<A
   if (!ctx.can("holidays.manage")) return fail("No tenés permisos para gestionar festivos.");
   const supabase = await createClient();
   const { error } = await supabase.from("holidays").delete().eq("id", z.guid().parse(holidayId)).eq("org_id", orgId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Festivo eliminado");
 }
