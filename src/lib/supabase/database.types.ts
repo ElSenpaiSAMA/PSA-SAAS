@@ -248,6 +248,8 @@ export type ForumThread = {
 export type ForumPost = {
   id: string;
   thread_id: string;
+  /** Respuesta a la que contesta (null = directa al hilo) */
+  parent_id: string | null;
   org_id: string;
   author_id: string | null;
   body: string;
