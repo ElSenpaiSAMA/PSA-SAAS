@@ -600,3 +600,16 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Es el único que elige sus propios avisos;** al resto se los configura administración.
 - **Se mantiene** que no aprueba vacaciones ni aparece en los listados de la empresa.
 
+---
+
+## 2026-10-07 Eliminar personas
+
+**Prompt (resumen):** faltaba poder eliminar personas desde Personas, borrándolas también de la base.
+
+**Decisiones:**
+- **Se borra la cuenta y todos sus datos** (fichajes, vacaciones, ficha, avisos), en una función de la base que valida permiso y nivel. Confirmación en dos pasos, porque no se puede deshacer.
+- **Queda constancia en la auditoría** de quién era y quién lo eliminó.
+- **Lo que decidió esa persona se conserva:** las vacaciones aprobadas quedan sin firmante en lugar de impedir el borrado.
+
+**Pruebas:** 10 pgTAP (quién puede, nivel, a sí mismo, borrado de cuenta y perfil, auditoría, persona con historia) y E2E de eliminar y de que ya no puede entrar.
+
