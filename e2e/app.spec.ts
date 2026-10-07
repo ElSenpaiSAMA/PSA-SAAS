@@ -43,7 +43,7 @@ test("empleada ficha entrada, pausa para almorzar, reanuda y ficha salida", asyn
   await page.getByRole("button", { name: "Reanudar" }).click();
   await expect(page.getByText("Jornada reanudada")).toBeVisible();
   await expect(page.getByText(/Trabajando desde las/)).toBeVisible();
-  await expect(page.getByText(/^Pausa \d/)).toBeVisible();
+  await expect(page.getByText(/^Pausa \d/).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Fichar salida" }).click();
   await expect(page.getByText("Salida registrada")).toBeVisible();
@@ -203,6 +203,8 @@ test("el responsable repite el mes: copia en bloque las OT sin continuación", a
 test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
+  // El formulario aparece con el registro semanal, que espera a hidratar (zona horaria del navegador)
+  await expect(page.getByLabel("Tarea")).toBeVisible();
   const options = await page.getByLabel("Tarea").locator("option").allTextContents();
   expect(options).toContain("Dashboard de cliente");
   // OT facturada (mes anterior) y copias en borrador (test anterior) no admiten horas
@@ -401,7 +403,11 @@ test("la persona ve el motivo del rechazo", async ({ page }) => {
 
 test("un empleado pide corregir un fichaje pasado", async ({ page }) => {
   await login(page, "diego@demo.com");
+  // Los fichajes de días anteriores están en el registro semanal: semana pasada, detalle del lunes
   await page.goto(`/app/${NEBULA}/time-tracking`);
+  await page.getByRole("link", { name: "Semana anterior" }).click();
+  await expect(page).toHaveURL(/semana=/);
+  await page.getByRole("button", { name: /Ver el detalle del lunes/ }).click();
   const row = page
     .getByRole("listitem")
     .filter({ hasText: /^Jornada/ })
@@ -420,8 +426,8 @@ test("su responsable aprueba la corrección y se aplica", async ({ page }) => {
   await login(page, "carlos@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
   const card = page.locator("#correcciones");
-  await expect(card.getByText("Entré a las 8 y fiché tarde")).toBeVisible();
-  await card.getByRole("button", { name: "Aprobar" }).click();
+  await expect(card.getByText("Entré a las 8 y fiché tarde").first()).toBeVisible();
+  await card.getByRole("button", { name: "Aprobar" }).first().click();
   await expect(page.getByText("Corrección aprobada y aplicada al fichaje")).toBeVisible();
 });
 
