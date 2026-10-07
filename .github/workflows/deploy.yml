@@ -1,0 +1,89 @@
+name: Deploy
+
+# dev  -> staging    (Vercel preview + Supabase staging)
+# main -> production (Vercel prod    + Supabase prod)
+on:
+  push:
+    branches: [dev, main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  migrate:
+    name: Supabase migrations
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip if Supabase is not configured for this environment
+        id: check
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
+            echo "::warning::Supabase secrets missing for this environment — skipping migrations"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: supabase/setup-cli@v1
+        if: steps.check.outputs.skip != 'true'
+        with:
+          version: latest
+      - if: steps.check.outputs.skip != 'true'
+        run: |
+          supabase link --project-ref "$SUPABASE_PROJECT_REF"
+          supabase db push
+
+  deploy:
+    name: Vercel
+    needs: migrate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
+      url: ${{ steps.alias.outputs.url || steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_ENV: ${{ github.ref_name == 'main' && 'production' || 'preview' }}
+      PROD_FLAG: ${{ github.ref_name == 'main' && '--prod' || '' }}
+      # Variable (no secreto) del environment staging: dominio fijo para staging,
+      # p. ej. kairos-staging.vercel.app. Sin ella, cada deploy queda en su URL única.
+      STAGING_DOMAIN: ${{ vars.STAGING_DOMAIN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip if Vercel is not configured
+        id: check
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::warning::VERCEL_TOKEN missing — skipping deploy"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.skip != 'true'
+        with:
+          node-version: 22
+      - if: steps.check.outputs.skip != 'true'
+        run: npm i -g vercel@latest
+      - if: steps.check.outputs.skip != 'true'
+        run: vercel pull --yes --environment=$VERCEL_ENV --token=$VERCEL_TOKEN
+      - if: steps.check.outputs.skip != 'true'
+        run: vercel build $PROD_FLAG --token=$VERCEL_TOKEN
+      - id: deploy
+        if: steps.check.outputs.skip != 'true'
+        run: echo "url=$(vercel deploy --prebuilt $PROD_FLAG --token=$VERCEL_TOKEN)" >> "$GITHUB_OUTPUT"
+      # Staging con URL fija: el login de Supabase necesita conocer la URL de antemano
+      - id: alias
+        if: steps.check.outputs.skip != 'true' && github.ref_name == 'dev' && env.STAGING_DOMAIN != ''
+        run: |
+          vercel alias set "${{ steps.deploy.outputs.url }}" "$STAGING_DOMAIN" --token=$VERCEL_TOKEN
+          echo "url=https://$STAGING_DOMAIN" >> "$GITHUB_OUTPUT"
