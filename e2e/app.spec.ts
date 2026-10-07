@@ -793,3 +793,26 @@ test("una persona eliminada ya no puede entrar", async ({ page }) => {
   await page.getByRole("button", { name: /ingresar/i }).click();
   await expect(page.getByText("Email o contraseña incorrectos.")).toBeVisible();
 });
+
+test("el responsable marca un proyecto como mensual: su OT se renueva sola", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
+  const recurring = page.getByRole("switch", { name: "Renovar la OT cada mes" });
+  await expect(recurring).toHaveAttribute("aria-checked", "false");
+  await recurring.click();
+  await expect(page.getByText("Listo: su OT se renueva sola cada mes")).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("switch", { name: "Renovar la OT cada mes" })).toHaveAttribute("aria-checked", "true");
+});
+
+test("una OT se copia a otro mes desde la lista", async ({ page }) => {
+  await login(page, "carlos@demo.com");
+  await page.goto(`/app/${NEBULA}/work-orders`);
+  await page.getByRole("button", { name: "Copiar a otro mes" }).first().click();
+  const option = page.getByRole("menuitem").last();
+  const month = (await option.innerText()).trim();
+  await option.click();
+  // Se abre la OT nueva, con el mes elegido en el título
+  await expect(page).toHaveURL(/\/work-orders\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(month.split(" ")[0]);
+});
