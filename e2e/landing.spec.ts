@@ -17,6 +17,20 @@ test.describe("web pública", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("le pasa a tu barco");
   });
 
+  test("la banda ElectroMotor lleva a su página y el presupuesto llega con el servicio elegido", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("#servicios").getByRole("link", { name: /ElectroMotor/ }).click();
+    await expect(page).toHaveURL(/\/electromotor$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("por dentro");
+
+    await page.getByRole("tab", { name: "Motores de arranque" }).click();
+    await expect(page.getByText("Cuando el motor hace clic y no gira")).toBeVisible();
+
+    await page.getByRole("main").getByRole("link", { name: /pedir presupuesto/i }).first().click();
+    await expect(page).toHaveURL(/\/contacto\?servicio=electromotor$/);
+    await expect(page.getByLabel("Servicio")).toHaveValue("ElectroMotor: arranque, alternador o dinamo");
+  });
+
   test("el acceso de empleados lleva al login", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("banner").getByRole("link", { name: /acceso/i }).click();
