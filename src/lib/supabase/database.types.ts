@@ -223,9 +223,28 @@ export type NotificationKind =
   | "time.correction_decided"
   | "forum.reply"
   | "forum.notice"
-  | "forum.mention";
+  | "forum.mention"
+  | "contact.received";
 
 export type ForumCategory = "question" | "notice" | "incident";
+
+export type ContactStatus = "new" | "in_progress" | "closed";
+
+export type ContactMessage = {
+  id: string;
+  org_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  boat_type: string;
+  boat_model: string | null;
+  service: string;
+  message: string;
+  status: ContactStatus;
+  handled_by: string | null;
+  handled_at: Timestamp | null;
+  created_at: Timestamp;
+};
 
 export type ForumThread = {
   id: string;
@@ -358,6 +377,7 @@ export type Database = {
       automation_runs: Table<AutomationRun, "org_id" | "rule_key" | "dedupe_key">;
       forum_threads: Table<ForumThread, "author_id" | "category" | "title" | "body">;
       forum_posts: Table<ForumPost, "thread_id" | "author_id" | "body">;
+      contact_messages: Table<ContactMessage, "org_id" | "name" | "email" | "boat_type" | "service" | "message">;
       forum_reads: Table<ForumRead, "membership_id">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
@@ -388,6 +408,19 @@ export type Database = {
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
       forum_unread_count: { Args: { p_org_id: string }; Returns: number };
+      contact_new_count: { Args: { p_org_id: string }; Returns: number };
+      submit_contact_message: {
+        Args: {
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_boat_type: string;
+          p_boat_model: string | null;
+          p_service: string;
+          p_message: string;
+        };
+        Returns: string;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
