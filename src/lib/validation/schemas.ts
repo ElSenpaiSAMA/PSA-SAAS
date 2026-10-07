@@ -88,6 +88,8 @@ export const invitationSchema = z.object({
 
 export const memberUpdateSchema = z.object({
   membershipId: id,
+  // Vacío = no se toca (la persona todavía no eligió su nombre)
+  fullName: emptyToUndefined.or(z.string().trim().min(2, "Mínimo 2 caracteres").max(80, "Máximo 80 caracteres")).optional(),
   role: assignableRole,
   managerId: emptyToUndefined.or(id).optional(),
   departmentId: emptyToUndefined.or(id).optional(),

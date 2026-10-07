@@ -22,6 +22,8 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export interface Person {
   id: string;
   name: string;
+  /** Nombre tal como está en el perfil (null si la persona todavía no lo eligió) */
+  fullName: string | null;
   avatar: string | null;
   email: string | null;
   role: Role;
@@ -86,6 +88,9 @@ function EditMember({
     >
       <input type="hidden" name="membershipId" value={person.id} />
       <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
+        <Field label="Nombre y apellido" error={state.fieldErrors?.fullName} className="sm:col-span-2">
+          <Input name="fullName" defaultValue={person.fullName ?? ""} placeholder="Como figura en la ficha" maxLength={80} />
+        </Field>
         <Field label="Rol" error={state.fieldErrors?.role}>
           <Select name="role" defaultValue={person.role}>
             {roles.map((r) => (
