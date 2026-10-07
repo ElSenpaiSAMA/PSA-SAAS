@@ -2,19 +2,15 @@
 
 import { Camera, Laptop, Moon, Sun, Trash2 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useActionState, useRef, useState, useTransition } from "react";
+import { useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { SubmitButton } from "@/components/ui/submit-button";
-import { idle } from "@/lib/actions";
 import { isGroupEnabled, NOTIFICATION_GROUPS } from "@/lib/domain/notification-prefs";
 import { createClient } from "@/lib/supabase/client";
 import { useHydrated } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
-import { setAvatar, setNotificationPrefs, updateProfile } from "./actions";
+import { setAvatar } from "./actions";
 
 const MAX_INPUT_BYTES = 8 * 1024 * 1024;
 const OUTPUT_SIZE = 320;
@@ -111,27 +107,6 @@ export function AvatarEditor({ orgId, userId, name, avatar }: { orgId: string; u
   );
 }
 
-export function NameForm({ orgId, fullName, email }: { orgId: string; fullName: string; email: string }) {
-  const [state, action] = useActionState(updateProfile.bind(null, orgId), idle);
-  return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2" noValidate>
-      <Field label="Nombre y apellido" error={state.fieldErrors?.fullName} className="content-start">
-        <Input name="fullName" defaultValue={fullName} autoComplete="name" maxLength={80} />
-      </Field>
-      <Field label="Email" hint="Es tu usuario para entrar. Lo cambia administración." className="content-start">
-        <Input value={email} readOnly disabled />
-      </Field>
-      <div className="flex items-center justify-end gap-3 sm:col-span-2">
-        {state.status === "success" ? <p className="text-[12.5px] text-success">{state.message}</p> : null}
-        {state.status === "error" && !state.fieldErrors ? <p className="text-[12.5px] text-danger">{state.message}</p> : null}
-        <SubmitButton size="sm" pendingLabel="Guardando…">
-          Guardar cambios
-        </SubmitButton>
-      </div>
-    </form>
-  );
-}
-
 const THEMES = [
   { value: "system", label: "Automático", hint: "Como tu sistema", icon: Laptop },
   { value: "light", label: "Claro", hint: "Fondo blanco", icon: Sun },
@@ -170,51 +145,32 @@ export function ThemePreference() {
   );
 }
 
-export function NotificationPrefs({ orgId, muted, permissions }: { orgId: string; muted: string[]; permissions: string[] }) {
+/** Avisos que recibe la persona. Solo lectura: los configura administración. */
+export function NotificationPrefs({ muted, permissions }: { muted: string[]; permissions: string[] }) {
   const groups = NOTIFICATION_GROUPS.filter((g) => !g.permission || permissions.includes(g.permission));
-  const [disabled, setDisabled] = useState(() => groups.filter((g) => !isGroupEnabled(g, muted)).map((g) => g.key));
-  const [pending, start] = useTransition();
-
-  const toggle = (key: string) => {
-    const next = disabled.includes(key) ? disabled.filter((k) => k !== key) : [...disabled, key];
-    setDisabled(next);
-    start(async () => {
-      const r = await setNotificationPrefs(orgId, next);
-      if (r.status === "error") {
-        setDisabled(disabled);
-        toast.error(r.message);
-      }
-    });
-  };
-
   return (
-    <ul className="divide-y divide-border" aria-busy={pending}>
+    <ul className="divide-y divide-border">
       {groups.map((g) => {
-        const on = !disabled.includes(g.key);
+        const on = isGroupEnabled(g, muted);
         return (
           <li key={g.key} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0">
             <div className="min-w-0">
               <p className="text-[13.5px] font-medium">{g.label}</p>
               <p className="text-[12.5px] text-muted-foreground">{g.description}</p>
             </div>
-            <button
-              type="button"
+            <span
               role="switch"
               aria-checked={on}
+              aria-disabled
               aria-label={g.label}
-              onClick={() => toggle(g.key)}
+              title="Lo configura administración"
               className={cn(
-                "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
+                "relative inline-flex h-6 w-11 shrink-0 cursor-not-allowed items-center rounded-full opacity-60",
                 on ? "bg-accent" : "bg-muted-foreground/30",
               )}
             >
-              <span
-                className={cn(
-                  "inline-block size-5 rounded-full bg-white shadow transition-transform",
-                  on ? "translate-x-5.5" : "translate-x-0.5",
-                )}
-              />
-            </button>
+              <span className={cn("inline-block size-5 rounded-full bg-white shadow", on ? "translate-x-5.5" : "translate-x-0.5")} />
+            </span>
           </li>
         );
       })}

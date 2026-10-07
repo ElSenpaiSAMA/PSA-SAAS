@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isGroupEnabled, MUTABLE_KINDS, mutedFromDisabledGroups, NOTIFICATION_GROUPS } from "./notification-prefs";
+import { isGroupEnabled, MUTABLE_KINDS, NOTIFICATION_GROUPS } from "./notification-prefs";
 
 const group = (key: string) => NOTIFICATION_GROUPS.find((g) => g.key === key)!;
 
@@ -16,14 +16,6 @@ describe("preferencias de avisos", () => {
     for (const kind of ["vacation.requested", "vacation.escalated", "time.correction_requested", "vacation.decided"]) {
       expect(MUTABLE_KINDS).not.toContain(kind);
     }
-  });
-
-  it("apagar un grupo silencia todos sus avisos", () => {
-    expect(mutedFromDisabledGroups(["forum", "mentions"]).sort()).toEqual(["forum.mention", "forum.notice", "forum.reply"]);
-  });
-
-  it("ignora grupos desconocidos", () => {
-    expect(mutedFromDisabledGroups(["vacaciones", "nada"])).toEqual([]);
   });
 
   it("un grupo está activo mientras no se silencie ninguno de sus avisos", () => {

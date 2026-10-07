@@ -10,7 +10,8 @@ import { getEmployees } from "@/lib/data/employees";
 import { getOrgContext, getProfile } from "@/lib/data/session";
 import { displayName } from "@/lib/domain/hierarchy";
 import { PERMISSIONS, ROLE_LABEL } from "@/lib/domain/permissions";
-import { AvatarEditor, NameForm, NotificationPrefs, ThemePreference } from "./profile-forms";
+import { Lock } from "lucide-react";
+import { AvatarEditor, NotificationPrefs, ThemePreference } from "./profile-forms";
 
 export const metadata: Metadata = { title: "Mi perfil" };
 
@@ -42,16 +43,15 @@ export default async function ProfilePage({ params }: PageProps<"/app/[orgId]/pr
     <>
       <PageHeader
         title="Mi perfil"
-        description="Tu foto, tu nombre y cómo querés usar la intranet. Lo ven tus compañeros en el foro y en Personas."
+        description="Tu foto y cómo querés ver la intranet. Tus datos y tus avisos los gestiona administración."
       />
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="grid gap-5">
           <Card>
-            <CardHeader title="Foto y nombre" description="Así te ven en el foro, en Personas y en las tareas." />
-            <CardBody className="grid gap-6">
+            <CardHeader title="Foto de perfil" description="Así te ven tus compañeros en el foro, en Personas y en las tareas." />
+            <CardBody>
               <AvatarEditor orgId={orgId} userId={ctx.userId} name={name} avatar={profile?.avatar_url ?? null} />
-              <NameForm orgId={orgId} fullName={profile?.full_name ?? ""} email={profile?.email ?? ""} />
             </CardBody>
           </Card>
 
@@ -65,22 +65,31 @@ export default async function ProfilePage({ params }: PageProps<"/app/[orgId]/pr
           <Card>
             <CardHeader
               title="Avisos"
-              description="Elegí qué te llega a la campana. Lo que necesita tu aprobación (vacaciones, correcciones de fichaje) llega siempre."
+              description="Lo que te llega a la campana. Lo configura administración; lo que necesita tu aprobación llega siempre."
+              action={
+                <span className="inline-flex shrink-0 items-center gap-1 text-[12px] whitespace-nowrap text-muted-foreground">
+                  <Lock className="size-3.5" /> Solo lectura
+                </span>
+              }
             />
             <CardBody>
-              <NotificationPrefs
-                orgId={orgId}
-                muted={profile?.muted_notifications ?? []}
-                permissions={PERMISSIONS.filter((p) => ctx.can(p))}
-              />
+              <NotificationPrefs muted={profile?.muted_notifications ?? []} permissions={PERMISSIONS.filter((p) => ctx.can(p))} />
             </CardBody>
           </Card>
         </div>
 
         <Card className="lg:sticky lg:top-0">
-          <CardHeader title="Tu puesto" description="Lo define administración." />
+          <CardHeader
+            title="Tus datos"
+            description="Los gestiona administración. Si algo está mal, avisá a RRHH."
+            action={<Lock className="size-4 text-muted-foreground" aria-label="Solo lectura" />}
+          />
           <CardBody className="pt-3">
             <dl className="divide-y divide-border">
+              <Row label="Nombre">{name}</Row>
+              <Row label="Email">
+                <span className="break-all">{profile?.email ?? "—"}</span>
+              </Row>
               <Row label="Rol">
                 <Badge tone={ctx.role === "owner" || ctx.role === "admin" ? "accent" : "neutral"}>{ROLE_LABEL[ctx.role]}</Badge>
               </Row>

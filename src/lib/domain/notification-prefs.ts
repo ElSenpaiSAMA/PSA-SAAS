@@ -1,6 +1,6 @@
-// Preferencias de avisos del perfil. Espejo de public.mutable_notification_kinds():
-// solo se silencia lo informativo; lo que pide una acción (aprobar vacaciones o
-// correcciones de fichaje) siempre llega.
+// Avisos que se pueden silenciar por persona. Espejo de public.mutable_notification_kinds():
+// solo lo informativo; lo que pide una acción (aprobar vacaciones o correcciones de
+// fichaje) siempre llega. Lo configura administración: en el perfil se ve en solo lectura.
 
 export interface NotificationGroup {
   key: string;
@@ -57,10 +57,4 @@ export const MUTABLE_KINDS: readonly string[] = NOTIFICATION_GROUPS.flatMap((g) 
 /** Un grupo está activo si no se silenció ninguno de sus avisos. */
 export function isGroupEnabled(group: NotificationGroup, muted: readonly string[]): boolean {
   return !group.kinds.some((k) => muted.includes(k));
-}
-
-/** Lista de avisos silenciados a partir de los grupos apagados (solo tipos válidos, sin repetir). */
-export function mutedFromDisabledGroups(disabled: readonly string[]): string[] {
-  const kinds = NOTIFICATION_GROUPS.filter((g) => disabled.includes(g.key)).flatMap((g) => g.kinds);
-  return [...new Set(kinds)];
 }
