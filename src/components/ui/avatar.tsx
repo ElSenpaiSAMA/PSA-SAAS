@@ -8,7 +8,23 @@ function hue(name: string) {
   return h;
 }
 
-export function Avatar({ name, size = 32, className }: { name: string; size?: number; className?: string }) {
+export function Avatar({ name, src, size = 32, className }: { name: string; src?: string | null; size?: number; className?: string }) {
+  if (src) {
+    return (
+      // Foto de perfil desde Supabase Storage: tamaño chico y fijo, no hace falta next/image
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt=""
+        aria-hidden
+        width={size}
+        height={size}
+        loading="lazy"
+        className={cn("inline-block shrink-0 rounded-full object-cover ring-2 ring-background", className)}
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   const h = hue(name);
   return (
     <span

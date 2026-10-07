@@ -41,6 +41,7 @@ export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staf
     .map((e) => ({
       id: e.id,
       name: displayName(e.profile),
+      avatar: e.profile?.avatar_url ?? null,
       email: e.profile?.email ?? null,
       position: e.position,
       roleLabel: isRole(e.role_id) ? ROLE_LABEL[e.role_id] : e.role_id,

@@ -166,7 +166,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
 
       <header className="mb-8 flex flex-wrap items-end justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Avatar name={name} size={64} />
+          <Avatar name={name} src={person.profile?.avatar_url} size={64} />
           <div>
             <h1 className="flex flex-wrap items-center gap-2 text-[28px] leading-tight font-semibold tracking-tight">
               {name}

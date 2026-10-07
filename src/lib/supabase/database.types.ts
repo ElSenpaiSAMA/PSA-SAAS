@@ -19,6 +19,8 @@ export type Profile = {
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
+  /** Avisos que la persona eligió no recibir (ver notification-prefs.ts) */
+  muted_notifications: string[];
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -409,6 +411,7 @@ export type Database = {
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
       forum_unread_count: { Args: { p_org_id: string }; Returns: number };
       contact_new_count: { Args: { p_org_id: string }; Returns: number };
+      set_member_name: { Args: { p_membership_id: string; p_name: string }; Returns: undefined };
       submit_contact_message: {
         Args: {
           p_name: string;

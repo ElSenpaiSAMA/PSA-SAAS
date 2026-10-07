@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Bell, Check, ChevronDown, ChevronsUpDown, LogOut, Menu, Search, X } from "lucide-react";
+import { Bell, Check, ChevronDown, ChevronsUpDown, LogOut, Menu, Search, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { LogoMark } from "@/components/logo";
@@ -22,7 +22,7 @@ export interface ShellProps {
   orgName: string;
   role: Role;
   permissions: Permission[];
-  user: { name: string; email: string; position: string | null };
+  user: { name: string; email: string; position: string | null; avatar: string | null };
   organizations: { id: string; name: string; role: string }[];
   /** Contadores de la navegación (pendientes + avisos sin leer) */
   badges?: { inbox?: number; forum?: number; contact?: number };
@@ -180,8 +180,8 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
   );
 }
 
-/** Avatar de la barra superior: nombre, puesto y cerrar sesión. */
-function UserMenu({ user }: { user: ShellProps["user"] }) {
+/** Avatar de la barra superior: nombre, puesto, acceso a "Mi perfil" y cerrar sesión. */
+function UserMenu({ orgId, user }: { orgId: string; user: ShellProps["user"] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(open, ref, () => setOpen(false));
@@ -194,7 +194,7 @@ function UserMenu({ user }: { user: ShellProps["user"] }) {
         aria-label="Menú de usuario"
         className="flex items-center gap-2 rounded-xl p-1 pr-2 transition-colors hover:bg-muted"
       >
-        <Avatar name={user.name} size={30} />
+        <Avatar name={user.name} src={user.avatar} size={30} />
         <ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" />
       </button>
       <AnimatePresence>
@@ -203,11 +203,26 @@ function UserMenu({ user }: { user: ShellProps["user"] }) {
             {...menuMotion}
             className="absolute top-full right-0 z-50 mt-1 w-60 origin-top-right rounded-xl border border-border bg-card p-1 shadow-[0_16px_48px_-12px_rgb(0_0_0/0.25)]"
           >
-            <div className="px-3 py-2.5">
-              <p className="truncate text-[13.5px] font-medium">{user.name}</p>
-              <p className="truncate text-[12px] text-muted-foreground">{user.position ?? user.email}</p>
-            </div>
+            <Link
+              href={`/app/${orgId}/profile`}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted"
+            >
+              <Avatar name={user.name} src={user.avatar} size={36} />
+              <span className="min-w-0">
+                <span className="block truncate text-[13.5px] font-medium">{user.name}</span>
+                <span className="block truncate text-[12px] text-muted-foreground">{user.position ?? user.email}</span>
+              </span>
+            </Link>
             <div className="my-1 h-px bg-border" />
+            <Link
+              href={`/app/${orgId}/profile`}
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <UserRound className="size-4" strokeWidth={1.75} />
+              Mi perfil
+            </Link>
             <form action={signOut}>
               <button
                 type="submit"
@@ -227,10 +242,14 @@ function UserMenu({ user }: { user: ShellProps["user"] }) {
 /** Barra superior: dónde estoy, buscador, avisos, tema y usuario. */
 function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
   const pathname = usePathname();
-  const current = NAV.find((n) => {
-    const href = `/app/${props.orgId}/${n.href}`;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  });
+  // "Mi perfil" no está en el menú lateral: se entra desde el avatar
+  const current =
+    pathname === `/app/${props.orgId}/profile`
+      ? { group: "Cuenta", label: "Mi perfil" }
+      : NAV.find((n) => {
+          const href = `/app/${props.orgId}/${n.href}`;
+          return pathname === href || pathname.startsWith(`${href}/`);
+        });
   const inbox = props.badges?.inbox ?? 0;
 
   return (
@@ -282,7 +301,7 @@ function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
           {inbox ? <span className="absolute top-2 right-2 size-2 rounded-full bg-blue-500 ring-2 ring-background" /> : null}
         </Link>
         <ThemeToggle />
-        <UserMenu user={props.user} />
+        <UserMenu orgId={props.orgId} user={props.user} />
       </div>
     </header>
   );

@@ -83,7 +83,7 @@ export async function updateMember(orgId: string, _prev: ActionState, formData: 
   const parsed = memberUpdateSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fail("Revisá los campos marcados.", fieldErrors(parsed.error));
 
-  const { membershipId, role, managerId, departmentId, position, weeklyHours } = parsed.data;
+  const { membershipId, fullName, role, managerId, departmentId, position, weeklyHours } = parsed.data;
   if (membershipId === ctx.membership.id) return fail("No podés editar tu propio rol desde acá.");
 
   const employees = await getEmployees(orgId);
@@ -112,6 +112,11 @@ export async function updateMember(orgId: string, _prev: ActionState, formData: 
     .eq("id", membershipId)
     .eq("org_id", orgId);
   if (error) return fail(dbErrorMessage(error));
+  // El nombre vive en el perfil (no en la membresía): lo cambia la base, que vuelve a validar permiso y rango
+  if (fullName && fullName !== (target.profile?.full_name ?? "")) {
+    const { error: nameError } = await supabase.rpc("set_member_name", { p_membership_id: membershipId, p_name: fullName });
+    if (nameError) return fail(dbErrorMessage(nameError));
+  }
   refresh(orgId);
   return ok("Cambios guardados");
 }

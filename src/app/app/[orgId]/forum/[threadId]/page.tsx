@@ -73,7 +73,7 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
               </div>
               <h1 className="mt-3 text-[24px] leading-tight font-semibold tracking-[-0.03em] sm:text-[28px]">{thread.title}</h1>
               <div className="mt-3 flex items-center gap-2.5 text-[13px] text-muted-foreground">
-                <Avatar name={thread.author.name} size={28} />
+                <Avatar name={thread.author.name} src={thread.author.avatar} size={28} />
                 <span className="font-medium text-foreground/80">{thread.author.name}</span>
                 <span aria-hidden>·</span>
                 <TimeAgo iso={thread.created_at} />
@@ -137,6 +137,7 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
                     parent_id: p.parent_id,
                     author_id: p.author_id,
                     author: p.author.name,
+                    avatar: p.author.avatar,
                     body: p.body,
                     created_at: p.created_at,
                     mentioned: mentioned(p.mentions),
@@ -161,7 +162,7 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
             }}
             participants={threadParticipants(
               thread.author,
-              posts.map((p) => ({ author_id: p.author_id, author: p.author.name, created_at: p.created_at })),
+              posts.map((p) => ({ author_id: p.author_id, author: p.author.name, avatar: p.author.avatar, created_at: p.created_at })),
             )}
             related={relatedThreads(threads, thread).map((t) => ({
               id: t.id,

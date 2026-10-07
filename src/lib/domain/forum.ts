@@ -123,6 +123,7 @@ export function buildPostTree<T extends { id: string; parent_id: string | null; 
 export interface Participant {
   id: string | null;
   name: string;
+  avatar: string | null;
   /** Respuestas que dejó en el hilo */
   replies: number;
   isAuthor: boolean;
@@ -133,16 +134,16 @@ export interface Participant {
  * en que respondió, sin repetir. Quien ya no está en la empresa (id nulo) no se cuenta.
  */
 export function threadParticipants(
-  author: { id: string | null; name: string },
-  posts: readonly { author_id: string | null; author: string; created_at: string }[],
+  author: { id: string | null; name: string; avatar?: string | null },
+  posts: readonly { author_id: string | null; author: string; avatar?: string | null; created_at: string }[],
 ): Participant[] {
   const byId = new Map<string, Participant>();
-  if (author.id) byId.set(author.id, { id: author.id, name: author.name, replies: 0, isAuthor: true });
+  if (author.id) byId.set(author.id, { id: author.id, name: author.name, avatar: author.avatar ?? null, replies: 0, isAuthor: true });
   for (const p of [...posts].sort((a, b) => a.created_at.localeCompare(b.created_at))) {
     if (!p.author_id) continue;
     const current = byId.get(p.author_id);
     if (current) current.replies += 1;
-    else byId.set(p.author_id, { id: p.author_id, name: p.author, replies: 1, isAuthor: false });
+    else byId.set(p.author_id, { id: p.author_id, name: p.author, avatar: p.avatar ?? null, replies: 1, isAuthor: false });
   }
   return [...byId.values()];
 }

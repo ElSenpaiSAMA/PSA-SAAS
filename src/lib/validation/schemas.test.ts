@@ -4,6 +4,7 @@ import {
   fieldErrors,
   forumThreadSchema,
   invitationSchema,
+  memberUpdateSchema,
   signUpSchema,
   timeCorrectionSchema,
   taskHoursSchema,
@@ -123,5 +124,24 @@ describe("hilo del foro", () => {
     );
     expect(forumThreadSchema.safeParse({ category: "notice", title: "Hola", body: "x" }).success).toBe(false);
     expect(forumThreadSchema.safeParse({ category: "spam", title: "Título válido", body: "x" }).success).toBe(false);
+  });
+});
+
+describe("edición de una persona (administración)", () => {
+  const base = {
+    membershipId: "bbbbbbbb-0000-0000-0000-000000000003",
+    role: "employee",
+    position: "Técnica",
+    weeklyHours: "40",
+  };
+
+  it("el nombre vacío no se toca (la persona todavía no lo eligió)", () => {
+    const r = memberUpdateSchema.safeParse({ ...base, fullName: "" });
+    expect(r.success && r.data.fullName).toBe(undefined);
+  });
+
+  it("recorta espacios y exige al menos 2 caracteres", () => {
+    expect(memberUpdateSchema.safeParse({ ...base, fullName: "  Ana Torres  " }).data?.fullName).toBe("Ana Torres");
+    expect(memberUpdateSchema.safeParse({ ...base, fullName: "A" }).success).toBe(false);
   });
 });

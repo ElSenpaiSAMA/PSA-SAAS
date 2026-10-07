@@ -28,6 +28,7 @@ export default async function ForumPage({ params }: PageProps<"/app/[orgId]/foru
     created_at: t.created_at,
     last_activity_at: t.last_activity_at,
     author: t.author.name,
+    authorAvatar: t.author.avatar,
     // Novedad: actividad de otra persona desde mi última visita
     unread: t.last_activity_at > seenAt && t.last_author_id !== ctx.membership.id,
   }));
