@@ -8,6 +8,7 @@ import {
   Inbox,
   IdCard,
   LayoutDashboard,
+  Mail,
   MessagesSquare,
   Palmtree,
   Settings,
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports" | "forum";
+export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports" | "forum" | "contact";
 
 export type NavGroup = "Mi día" | "Trabajo" | "Personas" | "Gestión";
 
@@ -34,7 +35,7 @@ export interface NavItem {
   /** Sección de la barra lateral */
   group: NavGroup;
   /** Muestra un contador (p. ej. pendientes de la bandeja) */
-  badge?: "inbox" | "forum";
+  badge?: "inbox" | "forum" | "contact";
 }
 
 export const NAV: NavItem[] = [
@@ -45,6 +46,7 @@ export const NAV: NavItem[] = [
   { href: "forum", group: "Mi día", label: "Foro", icon: "forum", badge: "forum", keywords: ["dudas", "avisos", "incidencias", "hilos", "comunidad", "preguntas"] },
   { href: "projects", group: "Trabajo", label: "Proyectos", icon: "projects", keywords: ["clientes", "presupuesto"] },
   { href: "work-orders", group: "Trabajo", label: "Órdenes de trabajo", icon: "workOrders", keywords: ["ot", "mes", "facturación", "tareas"] },
+  { href: "contact", group: "Trabajo", label: "Mensajes web", icon: "contact", badge: "contact", permission: "contact.manage", keywords: ["contacto", "consultas", "clientes", "presupuestos", "formulario", "leads"] },
   { href: "planning", group: "Trabajo", label: "Planificación", icon: "planning", keywords: ["carga", "capacidad", "semanas", "recursos"] },
   { href: "vacations", group: "Personas", label: "Vacaciones", icon: "vacations", keywords: ["ausencias", "días libres"] },
   { href: "staff", group: "Personas", label: "Empleados", icon: "staff", keywords: ["perfil", "ficha", "dni", "sueldo", "contrato", "rrhh"] },
@@ -71,4 +73,5 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   settings: Settings,
   reports: BarChart3,
   forum: MessagesSquare,
+  contact: Mail,
 };
