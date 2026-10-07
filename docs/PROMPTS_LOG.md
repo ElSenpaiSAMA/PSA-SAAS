@@ -652,3 +652,14 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Integrada al sitio:** link en el header y en el footer, banda de la home clicable y ruta pública. "Pedir presupuesto" abre Contacto con el servicio ElectroMotor ya elegido (`/contacto?servicio=electromotor`).
 
 **Pruebas:** unitario de la ruta pública y E2E (home → ElectroMotor → contacto con el servicio preseleccionado).
+
+---
+
+## 2026-10-08 Limpieza de ramas y versión 1.0.0
+
+**Prompt (resumen):** borrar las ramas obsoletas, en local y en GitHub, y decidir qué hacer con `release/v1.0.0`.
+
+**Decisiones:**
+- **Se borraron las ramas ya mergeadas en `main`:** 65 en GitHub y 70 en local. Quedan `main` y `dev`.
+- **`release/v1.0.0` nunca se había mergeado ni etiquetado.** Tenía un CHANGELOG del 5 de octubre y la versión 1.0.0, pero quedó desactualizada después de todo lo construido para Diplonautic.
+- **Se trajo su contenido a `main` actualizado:** la versión pasa a 1.0.0 y el CHANGELOG suma la entrega de Diplonautic. Lo anterior queda como 0.1.0, que era la versión real del `package.json` en ese momento. Se crea el tag `v1.0.0` en `main` y se borra la rama.

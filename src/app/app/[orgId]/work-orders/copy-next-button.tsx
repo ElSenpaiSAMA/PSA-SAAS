@@ -39,15 +39,19 @@ export function CopyNextButton({
   const wrapper = useRef<HTMLDivElement>(null);
   const menu = useRef<HTMLDivElement>(null);
 
-  // El menú queda fijo en pantalla: si algo hace scroll o cambia el tamaño, se cierra
+  // El menú va fijo en pantalla: si algo hace scroll o cambia el tamaño, acompaña al botón
+  // (cerrarlo hacía que un scroll automático, como el de llevar el botón a la vista, lo ocultara)
   useEffect(() => {
     if (!open) return;
-    const close = () => setMenuAt(null);
-    window.addEventListener("scroll", close, true);
-    window.addEventListener("resize", close);
+    const follow = () => {
+      const rect = wrapper.current?.getBoundingClientRect();
+      if (rect) setMenuAt({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+    };
+    window.addEventListener("scroll", follow, true);
+    window.addEventListener("resize", follow);
     return () => {
-      window.removeEventListener("scroll", close, true);
-      window.removeEventListener("resize", close);
+      window.removeEventListener("scroll", follow, true);
+      window.removeEventListener("resize", follow);
     };
   }, [open]);
 
