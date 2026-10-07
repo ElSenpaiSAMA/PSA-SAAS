@@ -81,7 +81,7 @@ export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staf
         <StatCard index={1} label="Con personas a cargo" value={active.filter((r) => r.reports > 0).length} icon={UserCheck} />
         <StatCard index={2} label="Departamentos" value={departments.length} icon={Building2} />
       </div>
-      <StaffTable orgId={orgId} rows={rows} departments={departments.map((d) => ({ id: d.id, name: d.name }))} showHireDate={sensitive} />
+      <StaffTable rows={rows} departments={departments.map((d) => ({ id: d.id, name: d.name }))} showHireDate={sensitive} />
     </>
   );
 }

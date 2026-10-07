@@ -77,7 +77,7 @@ export default async function WorkOrdersPage({ params, searchParams }: PageProps
     month,
   );
 
-  const basePath = `/app/${orgId}/work-orders`;
+  const basePath = `/app/work-orders`;
   const hrefFor = (f: WorkOrderFilter) => {
     const q = new URLSearchParams({ month: toMonthParam(month) });
     if (f !== "all") q.set("status", f);

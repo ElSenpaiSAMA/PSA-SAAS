@@ -38,12 +38,10 @@ const fmtDate = (iso: string) => {
 };
 
 export function StaffTable({
-  orgId,
   rows,
   departments,
   showHireDate,
 }: {
-  orgId: string;
   rows: StaffRow[];
   departments: { id: string; name: string }[];
   showHireDate: boolean;
@@ -132,7 +130,7 @@ export function StaffTable({
                   <td className="px-5 py-3">
                     {r.canOpen ? (
                       <Link
-                        href={`/app/${orgId}/staff/${r.id}`}
+                        href={`/app/staff/${r.id}`}
                         className="flex items-center gap-3 after:absolute after:inset-0 after:content-['']"
                         aria-label={`Ver perfil de ${r.name}`}
                       >

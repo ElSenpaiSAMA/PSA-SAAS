@@ -48,7 +48,7 @@ export async function createThread(orgId: string, _prev: ActionState, formData: 
     .single();
   if (error) return fail(await reportDbError(error));
   refresh(orgId);
-  redirect(`/app/${orgId}/forum/${data.id}`);
+  redirect(`/app/forum/${data.id}`);
 }
 
 export async function replyToThread(orgId: string, threadId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -130,7 +130,7 @@ export async function deleteThread(orgId: string, threadId: string): Promise<Act
   if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No tenés permisos para borrar este hilo.");
   refresh(orgId);
-  redirect(`/app/${orgId}/forum`);
+  redirect(`/app/forum`);
 }
 
 export async function deletePost(orgId: string, postId: string): Promise<ActionState> {

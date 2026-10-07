@@ -41,7 +41,7 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
     // dentro: el hilo no crece con cada respuesta. Al costado, "Sobre este hilo".
     <div className="mx-auto max-w-6xl lg:flex lg:h-full lg:flex-col">
       <Link
-        href={`/app/${orgId}/forum`}
+        href={`/app/forum`}
         className="mb-4 inline-flex shrink-0 items-center gap-1.5 self-start text-[13px] text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-3.5" /> Volver al foro
@@ -150,7 +150,6 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
 
         <div className="lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain">
           <ThreadSidebar
-            orgId={orgId}
             thread={{
               category: thread.category,
               pinned: thread.pinned,

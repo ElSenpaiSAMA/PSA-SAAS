@@ -42,7 +42,7 @@ export default async function ErrorsPage({ params, searchParams }: PageProps<"/a
           {FILTERS.map((f) => (
             <Link
               key={f.key}
-              href={`/app/${orgId}/errors?estado=${f.key}`}
+              href={`/app/errors?estado=${f.key}`}
               aria-current={f.key === filter ? "page" : undefined}
               className={cn(
                 "inline-flex h-8 items-center rounded-lg px-3 text-[13px] font-medium transition-colors",

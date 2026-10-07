@@ -23,7 +23,7 @@ function dayLabel(date: ISODate, today: ISODate) {
 }
 
 /** Agenda de los próximos 7 días: vencimientos propios, ausencias del equipo y festivos. */
-export function Upcoming({ orgId, today, items }: { orgId: string; today: ISODate; items: UpcomingItem[] }) {
+export function Upcoming({ today, items }: { today: ISODate; items: UpcomingItem[] }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(today, i)).filter((d) => items.some((it) => it.date === d));
 
   return (
@@ -31,7 +31,7 @@ export function Upcoming({ orgId, today, items }: { orgId: string; today: ISODat
       <CardHeader
         title="Próximos 7 días"
         action={
-          <Link href={`/app/${orgId}/calendar`} className="inline-flex items-center gap-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground">
+          <Link href={`/app/calendar`} className="inline-flex items-center gap-1 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground">
             Calendario <ArrowRight className="size-3.5" />
           </Link>
         }

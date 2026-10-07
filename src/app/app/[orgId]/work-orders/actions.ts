@@ -43,7 +43,7 @@ export async function createWorkOrder(orgId: string, _prev: ActionState, formDat
     .single();
   if (error || !data) return fail(await reportDbError(error));
   refresh(orgId);
-  redirect(`/app/${orgId}/work-orders/${data.id}`);
+  redirect(`/app/work-orders/${data.id}`);
 }
 
 export async function setWorkOrderStatus(orgId: string, workOrderId: string, status: string): Promise<ActionState> {
@@ -93,7 +93,7 @@ export async function duplicateWorkOrder(orgId: string, _prev: ActionState, form
   });
   if (error || !newId) return fail(await reportDbError(error));
   refresh(orgId);
-  redirect(`/app/${orgId}/work-orders/${newId}`);
+  redirect(`/app/work-orders/${newId}`);
 }
 
 /** "Copiar a otro mes": mismo período corrido N meses (1 = el siguiente), título actualizado. */
@@ -117,7 +117,7 @@ export async function copyToNextPeriod(orgId: string, workOrderId: string, month
   });
   if (error || !newId) return fail(await reportDbError(error));
   refresh(orgId);
-  redirect(`/app/${orgId}/work-orders/${newId}`);
+  redirect(`/app/work-orders/${newId}`);
 }
 
 /**

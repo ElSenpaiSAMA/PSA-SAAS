@@ -73,7 +73,7 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
   return (
     <>
       <Link
-        href={`/app/${orgId}/projects`}
+        href={`/app/projects`}
         className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> Proyectos
