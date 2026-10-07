@@ -24,6 +24,7 @@ export interface ThreadItem {
   created_at: string;
   last_activity_at: string;
   author: string;
+  authorAvatar: string | null;
   /** Actividad de otra persona desde mi última visita */
   unread: boolean;
 }
@@ -91,11 +92,8 @@ export function ThreadList({ orgId, threads }: { orgId: string; threads: ThreadI
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card" aria-label="Hilos del foro">
           {visible.map((t) => (
             <li key={t.id}>
-              <Link
-                href={`/app/${orgId}/forum/${t.id}`}
-                className="group flex gap-4 px-5 py-4 transition-colors hover:bg-muted/50"
-              >
-                <Avatar name={t.author} size={36} className="mt-0.5 hidden sm:inline-flex" />
+              <Link href={`/app/${orgId}/forum/${t.id}`} className="group flex gap-4 px-5 py-4 transition-colors hover:bg-muted/50">
+                <Avatar name={t.author} src={t.authorAvatar} size={36} className="mt-0.5 hidden sm:inline-flex" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     {unread.has(t.id) ? (

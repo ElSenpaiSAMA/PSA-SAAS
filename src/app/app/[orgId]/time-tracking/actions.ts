@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
 import { decisionNoteSchema, fieldErrors, taskHoursSchema, timeCorrectionSchema } from "@/lib/validation/schemas";
@@ -18,7 +19,7 @@ export async function clockIn(orgId: string): Promise<ActionState> {
   if (error) {
     if (error.code === "23505") return fail("Ya tenés un fichaje abierto.");
     if (error.message.includes("cannot be open at the same time")) return fail("Estás en pausa: reanudá la jornada.");
-    return fail(dbErrorMessage(error));
+    return fail(await reportDbError(error));
   }
   refresh(orgId);
   return ok("Entrada registrada");
@@ -28,7 +29,7 @@ export async function pauseClock(orgId: string): Promise<ActionState> {
   await getOrgContext(orgId);
   const supabase = await createClient();
   const { error } = await supabase.rpc("clock_pause", { p_org_id: orgId });
-  if (error) return fail(error.message.includes("not clocked in") ? "No tenés un fichaje abierto." : dbErrorMessage(error));
+  if (error) return fail(error.message.includes("not clocked in") ? "No tenés un fichaje abierto." : await reportDbError(error));
   refresh(orgId);
   return ok("Pausa iniciada");
 }
@@ -37,7 +38,7 @@ export async function resumeClock(orgId: string): Promise<ActionState> {
   await getOrgContext(orgId);
   const supabase = await createClient();
   const { error } = await supabase.rpc("clock_resume", { p_org_id: orgId });
-  if (error) return fail(error.message.includes("not on break") ? "No estás en pausa." : dbErrorMessage(error));
+  if (error) return fail(error.message.includes("not on break") ? "No estás en pausa." : await reportDbError(error));
   refresh(orgId);
   return ok("Jornada reanudada");
 }
@@ -52,7 +53,7 @@ export async function clockOut(orgId: string): Promise<ActionState> {
     .in("entry_type", ["clock", "break"])
     .is("ended_at", null)
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No tenés un fichaje abierto.");
   refresh(orgId);
   return ok("Salida registrada");
@@ -79,7 +80,7 @@ export async function logTaskHours(orgId: string, _prev: ActionState, formData: 
     started_at: start.toISOString(),
     ended_at: end.toISOString(),
   });
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok(`${hours}h registradas`);
 }
@@ -89,7 +90,7 @@ export async function deleteTaskEntry(orgId: string, entryId: string): Promise<A
   const id = z.guid().parse(entryId);
   const supabase = await createClient();
   const { error } = await supabase.from("time_entries").delete().eq("id", id).eq("entry_type", "task");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Registro eliminado");
 }
@@ -122,7 +123,7 @@ export async function requestCorrection(orgId: string, _prev: ActionState, formD
     proposed_end: end,
     reason,
   });
-  if (error) return fail(correctionError(error.message) ?? dbErrorMessage(error));
+  if (error) return fail(correctionError(error.message) ?? await reportDbError(error));
   refresh(orgId);
   return ok("Corrección enviada. Te avisamos cuando la revisen.");
 }
@@ -137,7 +138,7 @@ export async function cancelCorrection(orgId: string, id: string): Promise<Actio
     .eq("membership_id", membership.id)
     .eq("status", "pending")
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("La corrección ya no está pendiente.");
   refresh(orgId);
   return ok("Corrección cancelada");
@@ -158,7 +159,7 @@ export async function decideCorrection(orgId: string, id: string, decision: "app
     .eq("id", z.guid().parse(id))
     .eq("status", "pending")
     .select("id");
-  if (error) return fail(correctionError(error.message) ?? dbErrorMessage(error));
+  if (error) return fail(correctionError(error.message) ?? await reportDbError(error));
   if (!data?.length) return fail("La corrección ya no está pendiente o no podés decidirla.");
   refresh(orgId);
   return ok(status === "approved" ? "Corrección aprobada y aplicada al fichaje" : "Corrección rechazada");

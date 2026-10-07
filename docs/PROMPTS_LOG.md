@@ -528,3 +528,75 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** 10 unitarios del registro semanal, 2 del árbol de respuestas, 5 pgTAP de respuestas anidadas, y E2E de fichaje (con detalle por día y navegación de semanas), corrección de fichajes, imputación y respuesta a una respuesta con plegado.
 
+---
+
+## 2026-10-07 Formulario de contacto funcional
+
+**Prompt (resumen):** el formulario de contacto era solo visual (validaba pero no guardaba nada). Se pidió que funcione de verdad.
+
+**Decisiones:**
+- **Se guarda en la base y se gestiona en la intranet**, en lugar de enviarlo por email: no depende de un servicio externo, funciona igual en local y en producción, y conecta la web pública con la intranet.
+- **La web no escribe en la tabla:** llama a una función de la base que valida, guarda la consulta en Diplonautic y frena envíos repetidos (3 por email y 60 en total por hora). Se mantiene el campo trampa para bots.
+- **Solo administración la ve** (permiso nuevo `contact.manage`, owner y admin), con aviso en la campana y un contador en el menú.
+- **Bandeja "Mensajes web":** lista y detalle con estados nuevo → en curso → cerrado. La base registra quién y cuándo la tomó, y el mensaje del cliente no se puede editar. Se responde con un email ya armado (asunto y consulta citada) o por teléfono.
+
+**Pruebas:** 12 pgTAP (envío anónimo, sin acceso directo a la tabla, aviso solo a administración, permisos, solo cambia el estado, freno a envíos repetidos), 8 unitarios del dominio y E2E: una consulta enviada desde la web llega a Sofía, que la toma, y una empleada no ve la sección.
+
+---
+
+## 2026-10-07 Foro en una tarjeta, contenedor fijo y perfil de usuario
+
+**Prompt (resumen):** el hilo del foro se veía partido en tarjetas sueltas; se pidió todo en una sola, como en Reddit, y que el contenedor de la intranet no crezca con el contenido (scroll interno). Después, aprovechar los costados vacíos del hilo y sumar una sección de perfil, entrando desde el avatar, donde cada persona suba su foto. El nombre, el puesto y los avisos no los cambia la persona: los gestiona administración.
+
+**Decisiones:**
+- **Hilo en una tarjeta:** publicación, barra de acciones, caja de respuesta y conversación separada por líneas. Al costado, "Sobre este hilo": estado, fechas, participantes y otros hilos de la misma categoría (funciones puras con tests).
+- **Contenedor fijo en escritorio:** barra lateral, barra superior y contenedor ocupan la pantalla y el contenido hace scroll por dentro. En móvil se mantiene el scroll de la página, que es lo esperable en un teléfono.
+- **Foto de perfil en Supabase Storage**, recortada en cuadrado y achicada en el navegador antes de subirla (WebP de 320 px). Cada persona solo escribe en su carpeta, y la base rechaza URLs externas.
+- **Qué es de cada persona y qué es de administración:** cada uno cambia su foto y el tema. El nombre, el puesto y los avisos se ven en solo lectura, porque los gestiona administración. El nombre se elige al activar la cuenta y después lo corrige administración desde Personas; la base lo exige, no solo la pantalla.
+- **Avisos silenciables por persona, pero no todos:** solo los informativos; lo que pide una acción llega siempre. La base filtra en `notify()`, así ninguna parte de la app se olvida de respetar la configuración.
+- **Arreglo de seguridad de paso:** la política "update own" de `profiles` permitía cambiar el propio email, que se muestra a los compañeros. Ahora un guard lo impide.
+
+**Pruebas:** 18 pgTAP (solo la foto es editable, nombre solo al activar o por administración con rango, fotos solo en la carpeta propia, avisos silenciados y menciones que siguen llegando), unitarios de avisos (incluido que la lista coincida con la de la base) y del formulario de administración, y E2E: entrar desde el avatar, subir una foto y ver nombre y avisos bloqueados.
+
+---
+
+## 2026-10-07 Roles y jerarquía: organización matricial
+
+**Prompt (resumen):** no todos los empleados pueden ver lo mismo. Un técnico ve su inicio, su bandeja, sus fichajes y sus horas, el calendario con lo suyo y su departamento, el foro y solo los proyectos u OT donde está. No ve Planificación, Personas, Empleados, Informes, Automatizaciones, Ajustes ni Auditoría. Se pidieron más roles, tomando como ejemplo dos organigramas: uno por áreas y departamentos y otro por niveles (C-level, VP, team lead, equipo). También un superadmin para el desarrollador, un CEO, poder elegir exactamente qué rama dirige cada director, y que dentro de un proyecto u OT el responsable pueda invitar a quien necesite.
+
+**Decisiones:**
+- **Dos estructuras en lugar de una escalera:** la *organización* (nivel + rama/departamento) gestiona personas y el *trabajo* (rol en cada proyecto) gestiona proyectos y OT. Así "jefe de proyecto" no es un nivel: cualquiera puede ser responsable de un proyecto concreto.
+- **Ocho niveles:** superadmin, CEO, dirección de rama, responsable de departamento, coordinador, empleado, aprendiz y externo. **Ramas** que dicen qué gestiona cada dirección para toda la empresa: RRHH gestiona personas, Comercial proyectos y mensajes web, Técnica las tareas del taller.
+- **La base calcula los permisos** (`has_permission`): nivel + rama que dirige + departamento que encabeza. Las políticas RLS existentes no cambiaron, porque preguntan por permisos y ahora la respuesta es más fina. La app arma el menú con `my_permissions()`.
+- **Invitar en vez de "apoyo puntual":** el responsable de un proyecto invita a cualquier persona desde el proyecto o desde la OT, que entra al instante; todo el equipo lo ve con su rol. Nombrar responsables queda para quien gestiona por encima.
+- **Directorio básico:** un empleado ve nombre, foto, puesto y departamento de todos, pero no abre perfiles ajenos.
+- **Migración sin pérdidas:** el viejo rol *admin* pasa a dirigir la rama "Administración y RRHH", que conserva todos sus permisos.
+- **Un usuario de demo por puesto** para probar cada caso.
+
+**Pruebas:** 27 pgTAP (qué da cada nivel y rama, alcance de supervisión, externos, invitar sin nombrar responsables, observadores y aprendices que no imputan, calendario por departamento, rangos y superadmin), unitarios de niveles y del equipo de un proyecto, y E2E: menú de un técnico, externo sin foro, director técnico, CEO que asigna una rama y responsable de proyecto que invita desde la OT.
+
+---
+
+## 2026-10-07 Superadmin de plataforma y registro de errores
+
+**Prompt (resumen):** configurar qué gestiona cada rama no debería hacerlo el CEO sino el desarrollador; el desarrollador solo debería ver la auditoría; y hace falta un sistema de log para encontrar errores, en una tabla aparte, que capture lo que falla en toda la app.
+
+**Decisiones:**
+- **El superadmin pasa a ser solo plataforma:** auditoría, registro de errores y estructura de permisos. No ve el día a día de la empresa (foro, proyectos, personas) y entra directo a "Errores". La estructura de permisos por rama y departamento la configura él; el CEO gestiona la empresa, pero no se puede dar permisos a sí mismo ni a otros por esta vía.
+- **Registro de errores centralizado en lugar de try/catch en cada función:** capturar en los puntos por donde pasa todo es más simple y no se olvida ningún caso. Son cuatro puntos: `onRequestError` (servidor), `reportDbError` en las acciones, las pantallas de error y un escucha global en el navegador. Los try/catch quedan donde hay que seguir funcionando aunque algo falle (contadores del menú), y ahí el fallo se registra.
+- **Solo se registra lo que es un fallo:** las reglas de negocio conocidas, como "no podés aprobar tus propias vacaciones", no ensucian el registro.
+- **Protección del registro:** textos recortados y límite de frecuencia en la base, para que un bug en bucle no la llene.
+
+**Pruebas:** 15 pgTAP (permisos del superadmin y del CEO, quién configura la estructura, quién reporta y quién lee errores, resolución), unitarios de normalización de errores y E2E del superadmin y del CEO.
+
+---
+
+## 2026-10-07 El superadmin tiene acceso a todo
+
+**Prompt (resumen):** al entrar como el desarrollador no se veían los logs ni la auditoría (faltaba aplicar la migración `0023` en la base) y los avisos aparecían bloqueados; el desarrollador tiene que tener acceso a todo.
+
+**Decisiones:**
+- **El superadmin vuelve a tener todos los permisos** (`0024`), más los de plataforma, que siguen siendo solo suyos: registro de errores y estructura de permisos por rama y departamento. El CEO tiene todo lo de la empresa, pero no la plataforma.
+- **Es el único que elige sus propios avisos;** al resto se los configura administración.
+- **Se mantiene** que no aprueba vacaciones ni aparece en los listados de la empresa.
+

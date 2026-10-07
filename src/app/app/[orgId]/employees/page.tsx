@@ -3,10 +3,10 @@ import { Building2, Mail, Users } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { StatCard } from "@/components/app/stat-card";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { getDepartments } from "@/lib/data/departments";
+import { getBranches, getDepartments } from "@/lib/data/departments";
 import { getEmployees, getPendingInvitations } from "@/lib/data/employees";
 import { getProjects } from "@/lib/data/projects";
-import { getOrgContext } from "@/lib/data/session";
+import { requirePermission } from "@/lib/data/session";
 import { displayName } from "@/lib/domain/hierarchy";
 import { isRole } from "@/lib/domain/permissions";
 import type { DepartmentInfo } from "./departments-view";
@@ -17,25 +17,30 @@ export const metadata: Metadata = { title: "Personas" };
 
 export default async function PeoplePage({ params }: PageProps<"/app/[orgId]/employees">) {
   const { orgId } = await params;
-  const ctx = await getOrgContext(orgId);
+  const ctx = await requirePermission(orgId, "employees.manage");
   const canManage = ctx.can("employees.manage");
-  const [employees, invitations, departments, projects] = await Promise.all([
+  const [employees, invitations, departments, projects, branchRows] = await Promise.all([
     getEmployees(orgId),
     canManage ? getPendingInvitations(orgId) : Promise.resolve([]),
     getDepartments(orgId),
     getProjects(orgId),
+    getBranches(orgId),
   ]);
+  const branches = branchRows.map((b) => ({ id: b.id, name: b.name }));
 
   const people: Person[] = employees
     .filter((e) => e.status === "active" && isRole(e.role_id))
     .map((e) => ({
       id: e.id,
       name: displayName(e.profile),
+      avatar: e.profile?.avatar_url ?? null,
+      fullName: e.profile?.full_name ?? null,
       email: e.profile?.email ?? null,
       role: e.role_id,
       position: e.position,
       managerId: e.manager_id,
       departmentId: e.department_id,
+      directsBranchId: e.directs_branch_id,
       weeklyHours: e.weekly_hours,
       isMe: e.id === ctx.membership.id,
     }))
@@ -46,6 +51,7 @@ export default async function PeoplePage({ params }: PageProps<"/app/[orgId]/emp
     id: d.id,
     name: d.name,
     headId: d.head_id,
+    branchId: d.branch_id,
     projectCount: projects.filter((p) => p.department_id === d.id).length,
   }));
 
@@ -73,6 +79,7 @@ export default async function PeoplePage({ params }: PageProps<"/app/[orgId]/emp
           canManage={canManage}
           canManageDepartments={ctx.can("departments.manage")}
           departments={departmentInfo}
+          branches={branches}
         />
         {canManage ? (
           <Card className="h-fit lg:sticky lg:top-6">
@@ -83,6 +90,7 @@ export default async function PeoplePage({ params }: PageProps<"/app/[orgId]/emp
                 myRole={ctx.role}
                 managers={people.map((p) => ({ id: p.id, name: p.name }))}
                 departments={departmentInfo.map((d) => ({ id: d.id, name: d.name, hasHead: !!d.headId }))}
+                branches={branches}
                 pending={invitations.filter((i) => isRole(i.role_id)).map((i) => ({
                   id: i.id,
                   email: i.email,

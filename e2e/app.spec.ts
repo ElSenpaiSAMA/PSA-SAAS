@@ -29,7 +29,7 @@ test("al iniciar sesión se entra directo a la intranet de Diplonautic", async (
   await login(page, "carlos@demo.com");
   await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/dashboard`));
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Hola, Carlos");
-  await expect(page.getByText("Intranet · Manager")).toBeVisible();
+  await expect(page.getByText("Intranet · Responsable de departamento")).toBeVisible();
 });
 test("empleada ficha entrada, pausa para almorzar, reanuda y ficha salida", async ({ page }) => {
   await login(page, "ana@demo.com");
@@ -147,9 +147,9 @@ test("el responsable ve los proyectos de su departamento y suma miembros", async
   expect((await projectNames(page)).sort()).toEqual(["Climatización Princess V58", "Refit eléctrico Lagoon 46"]);
 
   await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
-  await page.getByLabel("Persona a sumar").selectOption({ label: "Ana Torres" });
-  await page.getByRole("button", { name: "Sumar al proyecto" }).click();
-  await expect(page.getByText("Miembro agregado")).toBeVisible();
+  await page.getByLabel("Persona a invitar").selectOption({ label: "Ana Torres" });
+  await page.getByRole("button", { name: "Invitar al proyecto" }).click();
+  await expect(page.getByText("Invitación hecha: ya está en el proyecto")).toBeVisible();
 });
 
 test("la empleada pasa a ver el proyecto al que la sumaron", async ({ page }) => {
@@ -201,7 +201,7 @@ test("el responsable repite el mes: copia en bloque las OT sin continuación", a
   await expect(page.getByRole("link", { name: /^Princess V58 · / })).toBeVisible();
 });
 
-test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo", async ({ page }) => {
+test("una empleada solo puede imputar horas en OT abiertas y no ve la planificación", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
   // El formulario aparece con el registro semanal, que espera a hidratar (zona horaria del navegador)
@@ -212,10 +212,10 @@ test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo",
   expect(options).not.toContain("Revisión del aire acondicionado");
   expect(options.filter((o) => o === "Instalación de unidades de 16.000 BTU")).toHaveLength(1);
 
+  // La planificación es de quien organiza el trabajo de otros
+  await expect(page.getByRole("link", { name: "Planificación" })).toHaveCount(0);
   await page.goto(`/app/${NEBULA}/planning`);
-  await expect(page.getByRole("heading", { name: "Planificación" })).toBeVisible();
-  await expect(page.locator("tbody tr").filter({ hasText: "(vos)" })).toHaveCount(1);
-  await expect(page.getByText("Diego Fernández")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
 
 test("una admin cierra y factura una OT", async ({ page }) => {
@@ -233,7 +233,8 @@ const isoDay = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 test("el calendario muestra festivos y las vacaciones aprobadas del equipo", async ({ page }) => {
-  await login(page, "diego@demo.com");
+  // Carlos es el responsable del Taller: ve las vacaciones de su departamento (Diego ya encabeza otro)
+  await login(page, "carlos@demo.com");
   const year = new Date().getFullYear();
   await page.goto(`/app/${NEBULA}/calendar?month=${year}-10`);
   await expect(page.getByText("Fiesta Nacional")).toBeVisible();
@@ -322,18 +323,20 @@ test("una admin abre la ficha de un empleado, navega en el tiempo y registra un 
   await expect(page.getByText("Revisión salarial")).toBeVisible();
 });
 
-test("un empleado ve su propia ficha pero no los datos sensibles de otros", async ({ page }) => {
+test("un empleado ve su propia ficha, pero no el perfil de otros", async ({ page }) => {
   await login(page, "diego@demo.com");
   await page.goto(`/app/${NEBULA}/staff/bbbbbbbb-0000-0000-0000-000000000004`);
   await expect(page.getByText("Ficha personal", { exact: true })).toBeVisible();
   await expect(page.getByText("45678901G")).toBeVisible();
   await expect(page.getByRole("button", { name: "Registrar un cambio" })).toHaveCount(0);
 
+  // Diego no supervisa a Ana: en el directorio la ve, pero no puede abrir su perfil
+  await page.goto(`/app/${NEBULA}/staff`);
+  await expect(page.getByRole("cell", { name: /Ana Torres/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ver perfil de Ana Torres" })).toHaveCount(0);
   await page.goto(`/app/${NEBULA}/staff/bbbbbbbb-0000-0000-0000-000000000003`);
-  await expect(page.getByRole("heading", { name: "Ana Torres" })).toBeVisible();
-  await expect(page.getByText("Ficha personal", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
   await expect(page.getByText("34567890V")).toHaveCount(0);
-  await expect(page.getByText(/solo las ven la propia persona/)).toBeVisible();
 });
 
 test("una admin configura y ejecuta una automatización", async ({ page }) => {
@@ -596,7 +599,11 @@ test("un técnico contesta una respuesta y la conversación se puede plegar", as
   await page.goto(`/app/${NEBULA}/forum/99999999-0000-0000-0000-000000000002`);
   await page.getByRole("button", { name: "Responder a Carlos Ruiz" }).first().click();
   await page.getByLabel("Respuesta a Carlos Ruiz").fill("E2E: a mí me pasó igual en un Lagoon 40, gracias.");
-  await page.getByRole("button", { name: "Responder", exact: true }).first().click();
+  // El botón del formulario anidado (la caja principal del hilo también dice "Responder")
+  await page
+    .locator("form", { has: page.getByLabel("Respuesta a Carlos Ruiz") })
+    .getByRole("button", { name: "Responder", exact: true })
+    .click();
   await expect(page.getByText("Respuesta publicada")).toBeVisible();
   await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
 
@@ -604,4 +611,166 @@ test("un técnico contesta una respuesta y la conversación se puede plegar", as
   await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toHaveCount(0);
   await page.getByRole("button", { name: /Ver \d+ respuesta/ }).first().click();
   await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
+});
+
+test("una consulta de la web llega a Mensajes web y la administración la toma", async ({ page }) => {
+  const name = `Capitán E2E ${Date.now()}`;
+  await page.goto("/contacto");
+  await page.getByLabel("Nombre y apellido").fill(name);
+  await page.getByLabel("Email").fill(`capitan+${Date.now()}@correo.com`);
+  await page.getByLabel("Tipo de barco").selectOption("Catamarán");
+  await page.getByLabel("Servicio").selectOption("Potabilizadoras");
+  await page.getByLabel("Mensaje").fill("E2E: quiero instalar una potabilizadora antes del verano.");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Enviar consulta" }).click();
+  await expect(page.getByRole("status")).toContainText("Gracias, Capitán");
+
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await page.getByRole("link", { name: /Mensajes web/ }).click();
+  await page.getByRole("link", { name: new RegExp(name) }).click();
+  await expect(page.getByRole("heading", { name })).toBeVisible();
+  await expect(page.getByText("E2E: quiero instalar una potabilizadora antes del verano.").last()).toBeVisible();
+  await page.getByRole("button", { name: "Me ocupo yo" }).click();
+  await expect(page.getByText("Consulta en curso")).toBeVisible();
+  await expect(page.getByText(/La gestiona Sofía/)).toBeVisible();
+});
+
+test("una empleada no ve los mensajes de la web", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await expect(page.getByRole("link", { name: /Mensajes web/ })).toHaveCount(0);
+  await page.goto(`/app/${NEBULA}/contact`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});
+
+// PNG de 8×8 px: alcanza para probar el recorte y la subida de la foto
+const TINY_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAJUlEQVR4nGPglrfilvfjlk/ili/jlu/ilp/HLb+JW/4Yw9CSAAAvuCqBc4oJSwAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+test("una empleada entra a su perfil desde el avatar y sube su foto; nombre y avisos los gestiona administración", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  await page.getByRole("button", { name: "Menú de usuario" }).click();
+  await page.getByRole("link", { name: "Mi perfil" }).click();
+  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/profile$`));
+  await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
+  await expect(page.getByText("Técnica de climatización")).toBeVisible();
+
+  await page.locator('input[type="file"]').setInputFiles({ name: "yo.png", mimeType: "image/png", buffer: TINY_PNG });
+  await expect(page.getByText("Foto actualizada.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Menú de usuario" }).locator("img")).toBeVisible();
+
+  // Nombre y avisos los gestiona administración: se ven, pero no se pueden cambiar
+  await expect(page.getByRole("textbox", { name: "Nombre y apellido" })).toHaveCount(0);
+  const reminders = page.getByRole("switch", { name: "Recordatorios" });
+  await expect(reminders).toHaveAttribute("aria-disabled", "true");
+  await reminders.click({ force: true });
+  await expect(reminders).toHaveAttribute("aria-checked", "true");
+  // Lo que pide una acción ni siquiera aparece: no se puede silenciar
+  await expect(page.getByRole("switch", { name: /vacaciones/i })).toHaveCount(0);
+});
+
+// ── Estructura: niveles, ramas y rol en cada proyecto ─────────
+
+test("un técnico solo ve su día, el trabajo donde está y el espacio común", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  for (const visible of ["Inicio", "Bandeja", "Fichaje y horas", "Calendario", "Foro", "Proyectos", "Órdenes de trabajo", "Vacaciones"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${visible}`) })).toBeVisible();
+  }
+  for (const hidden of ["Planificación", "Personas", "Informes", "Automatizaciones", "Ajustes", "Auditoría", "Mensajes web"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${hidden}`) })).toHaveCount(0);
+  }
+  // "Empleados" es solo un directorio
+  await nav.getByRole("link", { name: /^Empleados/ }).click();
+  await expect(page.getByRole("heading", { name: "Directorio" })).toBeVisible();
+});
+
+test("un externo no ve el foro, el calendario ni el directorio", async ({ page }) => {
+  await login(page, "gestoria@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  for (const hidden of ["Foro", "Calendario", "Empleados"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${hidden}`) })).toHaveCount(0);
+  }
+  await page.goto(`/app/${NEBULA}/forum`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});
+
+test("el director técnico ve los proyectos de su rama y la planificación, pero no gestiona personas", async ({ page }) => {
+  await login(page, "jorge@demo.com");
+  await page.goto(`/app/${NEBULA}/projects`);
+  await expect(page.getByText("Climatización Princess V58")).toBeVisible();
+  await expect(page.getByText("Formación interna")).toHaveCount(0);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await expect(nav.getByRole("link", { name: /^Planificación/ })).toBeVisible();
+  await expect(nav.getByRole("link", { name: /^Personas/ })).toHaveCount(0);
+});
+
+test("la CEO asigna la dirección de una rama: elige exactamente cuál", async ({ page }) => {
+  await login(page, "laura@demo.com");
+  await page.goto(`/app/${NEBULA}/employees`);
+  await page.getByRole("button", { name: "Editar a Toni Ferrer" }).click();
+  // El formulario de edición (en la misma página está también el de invitar)
+  const form = page.locator("form").filter({ has: page.locator('input[name="membershipId"]') });
+  await form.getByLabel("Nivel").selectOption("director");
+  await form.getByRole("button", { name: "Guardar" }).click();
+  await expect(form.getByText("Elegí qué rama dirige")).toBeVisible();
+  await form.getByLabel("Rama que dirige").selectOption({ label: "Técnica" });
+  await form.getByRole("button", { name: "Guardar" }).click();
+  await expect(page.getByText("Cambios guardados")).toBeVisible();
+  await expect(page.getByText("Dirección · Técnica").first()).toBeVisible();
+});
+
+test("el responsable de un proyecto invita a alguien; el equipo se ve también en sus OT", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
+  await page.getByLabel("Persona a invitar").selectOption({ label: "Iván Soler" });
+  // Quien solo lleva el proyecto no nombra responsables
+  await expect(page.getByLabel("Rol en el proyecto").locator("option", { hasText: "Responsable" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Invitar al proyecto" }).click();
+  await expect(page.getByText("Invitación hecha: ya está en el proyecto")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Iván Soler" })).toContainText("Miembro");
+
+  // En las OT del proyecto aparece el mismo equipo (y, si la OT no está facturada, se invita desde ahí)
+  await page.goto(`/app/${NEBULA}/work-orders`);
+  await page.getByRole("link", { name: /^Lagoon 46 · / }).first().click();
+  await expect(page.getByText(/^Equipo · /)).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Iván Soler" })).toBeVisible();
+});
+
+
+test("el superadmin tiene acceso a todo, más errores y estructura", async ({ page }) => {
+  await login(page, "dev@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  for (const visible of ["Inicio", "Foro", "Proyectos", "Personas", "Ajustes", "Auditoría", "Errores", "Estructura"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${visible}`) })).toBeVisible();
+  }
+  await nav.getByRole("link", { name: /^Errores/ }).click();
+  await expect(page.getByRole("heading", { name: /Registro/ })).toBeVisible();
+
+  await page.goto(`/app/${NEBULA}/structure`);
+  await expect(page.getByRole("checkbox", { name: "Personas para Administración y RRHH" })).toBeChecked();
+
+  // Elige sus propios avisos (al resto se los configura administración)
+  await page.goto(`/app/${NEBULA}/profile`);
+  const reminders = page.getByRole("switch", { name: "Recordatorios" });
+  await expect(reminders).toHaveAttribute("aria-disabled", "false");
+  await reminders.click();
+  await expect(reminders).toHaveAttribute("aria-checked", "false");
+});
+
+test("el CEO no configura la plataforma", async ({ page }) => {
+  await login(page, "laura@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await expect(nav.getByRole("link", { name: /^Auditoría/ })).toBeVisible();
+  await expect(nav.getByRole("link", { name: /^Errores/ })).toHaveCount(0);
+  await page.goto(`/app/${NEBULA}/structure`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });

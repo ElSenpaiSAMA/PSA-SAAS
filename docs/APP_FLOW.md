@@ -14,7 +14,7 @@ src/
   proxy.ts                     # refresca la sesión y redirige rutas protegidas (Next 16: ex-middleware)
   app/
     (marketing)/page.tsx       # web pública de Diplonautic: empresa, servicios y forma de trabajar
-    (marketing)/contacto/      # contacto: datos del taller y formulario (validado en el servidor, no se envía)
+    (marketing)/contacto/      # contacto: datos del taller y formulario (se guarda y llega a Mensajes web)
     (auth)/                    # login y registro + Server Actions de auth
     auth/callback/route.ts     # confirmación de email (PKCE)
     select-organization/       # resuelve a qué empresa entrar (con una sola, redirige directo al panel)
@@ -27,6 +27,10 @@ src/
       work-orders/[workOrderId]/ # OT por mes: tareas con fechas, estados, copiar al mes siguiente, facturación
       inbox/                   # bandeja: pendientes de acción (OT, tareas, fichaje) + notificaciones
       forum/                   # foro interno: hilos (duda, incidencia, aviso), respuestas y moderación
+      contact/                 # mensajes de la web: consultas del formulario de contacto (contact.manage)
+      profile/                 # mi perfil: foto, nombre, tema, avisos y resumen del puesto (desde el avatar)
+      errors/                  # registro de errores (solo superadmin)
+      structure/               # qué gestiona cada rama y departamento (solo superadmin)
       calendar/                # calendario general: tareas, OT, ausencias y festivos (mes/semana)
       planning/                # carga de trabajo persona × semana vs. capacidad
       staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada
@@ -51,6 +55,8 @@ src/
 
 ## Visibilidad por rol
 
+> Desde `0022_org_structure.sql` hay más niveles (CEO, dirección de rama, responsable, coordinador, empleado, aprendiz, externo y superadmin), ramas y un rol por proyecto: ver la sección siguiente. Esta tabla resume los casos más comunes.
+
 "Responsable" es quien encabeza un departamento (sube automáticamente a rol manager).
 
 | Función | Empleado | Responsable de depto. | Admin | Owner |
@@ -70,3 +76,14 @@ src/
 | Leer el foro, abrir hilos y responder | ✓ | ✓ | ✓ | ✓ |
 | Fijar, cerrar y borrar hilos ajenos en el foro | | | ✓ | ✓ |
 | Ver auditoría de la organización | | | ✓ | ✓ |
+
+### Qué ve cada nivel en el menú
+
+| Sección | Empleado / Aprendiz | Externo | Coordinador | Responsable | Dirección de rama | CEO |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| Inicio, Bandeja, Fichaje, Vacaciones, Proyectos, OT | ✓ (lo suyo) | ✓ (lo suyo) | ✓ | ✓ | ✓ | ✓ |
+| Calendario | lo suyo + su departamento | | su grupo | su departamento | su rama | todo |
+| Foro | ✓ | | ✓ | ✓ | ✓ | ✓ |
+| Empleados | directorio básico | | su grupo | su departamento | su rama | todo |
+| Planificación, Informes | | | su grupo | su departamento | su rama | todo |
+| Personas, Ajustes, Auditoría, Automatizaciones, Mensajes web | | | | según la función de su departamento | según la función de su rama | ✓ |

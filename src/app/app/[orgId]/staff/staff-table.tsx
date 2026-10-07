@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 export interface StaffRow {
   id: string;
   name: string;
+  avatar: string | null;
   email: string | null;
   position: string | null;
   roleLabel: string;
@@ -22,6 +23,8 @@ export interface StaffRow {
   /** Solo si quien mira tiene acceso a la ficha */
   hireDate: string | null;
   isMe: boolean;
+  /** Puede abrir su perfil: el propio, o alguien a quien supervisa (si no, es solo directorio) */
+  canOpen: boolean;
 }
 
 const fmtDate = (iso: string) => {
@@ -122,23 +125,24 @@ export function StaffTable({
             </thead>
             <tbody>
               {visible.map((r) => (
-                <tr key={r.id} className="group relative border-b border-border transition-colors last:border-b-0 hover:bg-muted/40">
+                <tr
+                  key={r.id}
+                  className={cn("group relative border-b border-border transition-colors last:border-b-0", r.canOpen && "hover:bg-muted/40")}
+                >
                   <td className="px-5 py-3">
-                    <Link
-                      href={`/app/${orgId}/staff/${r.id}`}
-                      className="flex items-center gap-3 after:absolute after:inset-0 after:content-['']"
-                      aria-label={`Ver perfil de ${r.name}`}
-                    >
-                      <Avatar name={r.name} size={34} />
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-2 font-medium group-hover:text-accent">
-                          {r.name}
-                          {r.isMe ? <span className="text-[12px] font-normal text-muted-foreground">(vos)</span> : null}
-                          {r.status === "inactive" ? <Badge tone="neutral">Baja</Badge> : null}
-                        </span>
-                        <span className="block truncate text-[12px] text-muted-foreground">{r.email}</span>
-                      </span>
-                    </Link>
+                    {r.canOpen ? (
+                      <Link
+                        href={`/app/${orgId}/staff/${r.id}`}
+                        className="flex items-center gap-3 after:absolute after:inset-0 after:content-['']"
+                        aria-label={`Ver perfil de ${r.name}`}
+                      >
+                        <PersonCell r={r} />
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <PersonCell r={r} />
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-3">
                     <span className="block">{r.position ?? "—"}</span>
@@ -157,7 +161,7 @@ export function StaffTable({
                     <td className="px-3 py-3 tabular text-muted-foreground">{r.hireDate ? fmtDate(r.hireDate) : "—"}</td>
                   ) : null}
                   <td className="px-3 py-3 text-muted-foreground">
-                    <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                    {r.canOpen ? <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" /> : null}
                   </td>
                 </tr>
               ))}
@@ -169,5 +173,21 @@ export function StaffTable({
         {visible.length} de {rows.filter((r) => showInactive || r.status === "active").length} personas
       </p>
     </div>
+  );
+}
+
+function PersonCell({ r }: { r: StaffRow }) {
+  return (
+    <>
+      <Avatar name={r.name} src={r.avatar} size={34} />
+      <span className="min-w-0">
+        <span className={cn("flex items-center gap-2 font-medium", r.canOpen && "group-hover:text-accent")}>
+          {r.name}
+          {r.isMe ? <span className="text-[12px] font-normal text-muted-foreground">(vos)</span> : null}
+          {r.status === "inactive" ? <Badge tone="neutral">Baja</Badge> : null}
+        </span>
+        <span className="block truncate text-[12px] text-muted-foreground">{r.email}</span>
+      </span>
+    </>
   );
 }

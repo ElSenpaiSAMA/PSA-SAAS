@@ -1,9 +1,10 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors, forumPostSchema, forumThreadSchema } from "@/lib/validation/schemas";
@@ -45,7 +46,7 @@ export async function createThread(orgId: string, _prev: ActionState, formData: 
     .insert({ author_id: ctx.membership.id, ...parsed.data, mentions: parseMentions(formData) })
     .select("id")
     .single();
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   redirect(`/app/${orgId}/forum/${data.id}`);
 }
@@ -66,7 +67,7 @@ export async function replyToThread(orgId: string, threadId: string, _prev: Acti
       body: parsed.data.body,
       mentions: parseMentions(formData),
     });
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Respuesta publicada");
 }
@@ -82,7 +83,7 @@ export async function editThread(orgId: string, threadId: string, _prev: ActionS
     .update(parsed.data)
     .eq("id", z.guid().parse(threadId))
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("Solo quien escribió el hilo puede editarlo.");
   refresh(orgId);
   return ok("Hilo actualizado");
@@ -115,7 +116,7 @@ export async function setThreadFlags(
     .update(parsed.data)
     .eq("id", z.guid().parse(threadId))
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No tenés permisos para este cambio.");
   refresh(orgId);
   const [key, value] = Object.entries(parsed.data)[0] as [keyof typeof FLAG_MESSAGE, boolean];
@@ -126,7 +127,7 @@ export async function deleteThread(orgId: string, threadId: string): Promise<Act
   await getOrgContext(orgId);
   const supabase = await createClient();
   const { data, error } = await supabase.from("forum_threads").delete().eq("id", z.guid().parse(threadId)).select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No tenés permisos para borrar este hilo.");
   refresh(orgId);
   redirect(`/app/${orgId}/forum`);
@@ -136,7 +137,7 @@ export async function deletePost(orgId: string, postId: string): Promise<ActionS
   await getOrgContext(orgId);
   const supabase = await createClient();
   const { data, error } = await supabase.from("forum_posts").delete().eq("id", z.guid().parse(postId)).select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No tenés permisos para borrar esta respuesta.");
   refresh(orgId);
   return ok("Respuesta borrada");

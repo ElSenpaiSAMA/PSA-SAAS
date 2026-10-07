@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { Bell, Check, ChevronDown, ChevronsUpDown, LogOut, Menu, Search, X } from "lucide-react";
+import { Bell, Check, ChevronDown, ChevronsUpDown, LogOut, Menu, Search, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import { LogoMark } from "@/components/logo";
@@ -13,7 +13,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { isRole, ROLE_LABEL, type Permission, type Role } from "@/lib/domain/permissions";
 import { cn } from "@/lib/utils";
 import { CommandPalette } from "./command-palette";
-import { NAV, NAV_GROUPS, NAV_ICONS } from "./nav";
+import { NAV, NAV_GROUPS, NAV_ICONS, visibleNav } from "./nav";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -22,10 +22,10 @@ export interface ShellProps {
   orgName: string;
   role: Role;
   permissions: Permission[];
-  user: { name: string; email: string; position: string | null };
+  user: { name: string; email: string; position: string | null; avatar: string | null };
   organizations: { id: string; name: string; role: string }[];
   /** Contadores de la navegación (pendientes + avisos sin leer) */
-  badges?: { inbox?: number; forum?: number };
+  badges?: { inbox?: number; forum?: number; contact?: number };
   /** La IA está configurada en el servidor (OPENROUTER_API_KEY) */
   aiEnabled?: boolean;
   children: ReactNode;
@@ -112,7 +112,7 @@ function Workspace({ orgId, orgName, role, organizations }: Pick<ShellProps, "or
 
 function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?: () => void }) {
   const pathname = usePathname();
-  const items = NAV.filter((n) => !n.permission || props.permissions.includes(n.permission));
+  const items = visibleNav(props.permissions);
 
   return (
     <div className="flex h-full flex-col">
@@ -180,8 +180,8 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
   );
 }
 
-/** Avatar de la barra superior: nombre, puesto y cerrar sesión. */
-function UserMenu({ user }: { user: ShellProps["user"] }) {
+/** Avatar de la barra superior: nombre, puesto, acceso a "Mi perfil" y cerrar sesión. */
+function UserMenu({ orgId, user }: { orgId: string; user: ShellProps["user"] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(open, ref, () => setOpen(false));
@@ -194,7 +194,7 @@ function UserMenu({ user }: { user: ShellProps["user"] }) {
         aria-label="Menú de usuario"
         className="flex items-center gap-2 rounded-xl p-1 pr-2 transition-colors hover:bg-muted"
       >
-        <Avatar name={user.name} size={30} />
+        <Avatar name={user.name} src={user.avatar} size={30} />
         <ChevronDown className="hidden size-3.5 text-muted-foreground sm:block" />
       </button>
       <AnimatePresence>
@@ -203,11 +203,26 @@ function UserMenu({ user }: { user: ShellProps["user"] }) {
             {...menuMotion}
             className="absolute top-full right-0 z-50 mt-1 w-60 origin-top-right rounded-xl border border-border bg-card p-1 shadow-[0_16px_48px_-12px_rgb(0_0_0/0.25)]"
           >
-            <div className="px-3 py-2.5">
-              <p className="truncate text-[13.5px] font-medium">{user.name}</p>
-              <p className="truncate text-[12px] text-muted-foreground">{user.position ?? user.email}</p>
-            </div>
+            <Link
+              href={`/app/${orgId}/profile`}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted"
+            >
+              <Avatar name={user.name} src={user.avatar} size={36} />
+              <span className="min-w-0">
+                <span className="block truncate text-[13.5px] font-medium">{user.name}</span>
+                <span className="block truncate text-[12px] text-muted-foreground">{user.position ?? user.email}</span>
+              </span>
+            </Link>
             <div className="my-1 h-px bg-border" />
+            <Link
+              href={`/app/${orgId}/profile`}
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <UserRound className="size-4" strokeWidth={1.75} />
+              Mi perfil
+            </Link>
             <form action={signOut}>
               <button
                 type="submit"
@@ -227,14 +242,18 @@ function UserMenu({ user }: { user: ShellProps["user"] }) {
 /** Barra superior: dónde estoy, buscador, avisos, tema y usuario. */
 function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
   const pathname = usePathname();
-  const current = NAV.find((n) => {
-    const href = `/app/${props.orgId}/${n.href}`;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  });
+  // "Mi perfil" no está en el menú lateral: se entra desde el avatar
+  const current =
+    pathname === `/app/${props.orgId}/profile`
+      ? { group: "Cuenta", label: "Mi perfil" }
+      : NAV.find((n) => {
+          const href = `/app/${props.orgId}/${n.href}`;
+          return pathname === href || pathname.startsWith(`${href}/`);
+        });
   const inbox = props.badges?.inbox ?? 0;
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl sm:px-6">
+    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-xl sm:px-6">
       <button
         type="button"
         onClick={onMenu}
@@ -282,7 +301,7 @@ function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
           {inbox ? <span className="absolute top-2 right-2 size-2 rounded-full bg-blue-500 ring-2 ring-background" /> : null}
         </Link>
         <ThemeToggle />
-        <UserMenu user={props.user} />
+        <UserMenu orgId={props.orgId} user={props.user} />
       </div>
     </header>
   );
@@ -293,7 +312,10 @@ export function AppShell(props: ShellProps) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-dvh bg-background lg:grid lg:grid-cols-[260px_1fr]">
+    // En escritorio el marco ocupa justo la pantalla: barra lateral, barra superior y un
+    // contenedor de tamaño fijo que hace scroll por dentro (no crece con el contenido).
+    // En móvil se mantiene el scroll normal de la página.
+    <div className="min-h-dvh bg-background lg:grid lg:h-dvh lg:grid-cols-[260px_1fr] lg:overflow-hidden">
       <aside className="sticky top-0 hidden h-dvh bg-[#0b1f3a] lg:block dark:bg-[#081527]">
         <SidebarContent props={props} />
       </aside>
@@ -329,18 +351,21 @@ export function AppShell(props: ShellProps) {
         ) : null}
       </AnimatePresence>
 
-      <div className="min-w-0">
+      <div className="min-w-0 lg:flex lg:h-dvh lg:flex-col">
         <Topbar props={props} onMenu={() => setMobileOpen(true)} />
-        <main className="p-3 sm:p-5">
+        <main className="p-3 sm:p-5 lg:min-h-0 lg:flex-1">
           {/* Contenedor de la página: las tarjetas van adentro, no sueltas en el espacio */}
           <motion.div
             key={pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, ease: EASE }}
-            className="mx-auto max-w-[1400px] rounded-[22px] border border-border bg-muted/60 p-4 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.6)] sm:p-7 dark:bg-muted/30 dark:shadow-none"
+            className="overflow-hidden rounded-[22px] border border-border bg-muted/60 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.6)] lg:h-full dark:bg-muted/30 dark:shadow-none"
           >
-            {props.children}
+            {/* Al cambiar de página el contenedor se vuelve a montar: el scroll arranca arriba */}
+            <div className="p-4 sm:p-7 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
+              <div className="mx-auto max-w-[1400px] lg:h-full">{props.children}</div>
+            </div>
           </motion.div>
         </main>
       </div>

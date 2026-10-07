@@ -208,7 +208,7 @@ export default async function DashboardPage({ params }: PageProps<"/app/[orgId]/
                   {workingNow.map((e) => (
                     <li key={e.id} className="flex items-center gap-3">
                       <div className="relative">
-                        <Avatar name={displayName(e.profile)} size={34} />
+                        <Avatar name={displayName(e.profile)} src={e.profile?.avatar_url} size={34} />
                         <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-card bg-success" />
                       </div>
                       <div className="min-w-0">

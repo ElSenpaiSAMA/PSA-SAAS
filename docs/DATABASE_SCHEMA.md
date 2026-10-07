@@ -352,6 +352,52 @@ Cubierto por `supabase/tests/forum_mentions.test.sql` (10 tests).
 
 `forum_posts.parent_id` apunta a la respuesta que se contesta (`null` = directa al hilo). Un trigger valida que la madre sea del mismo hilo y no deja cambiarla después. Si se borra la madre, las respuestas que la contestaban quedan como directas (`on delete set null`): no se pierde la conversación. Cubierto por `supabase/tests/forum_nested.test.sql` (5 tests).
 
+## Mensajes de la web (`0020_contact_messages.sql`)
+
+El formulario de contacto de la web pública guarda cada consulta en `contact_messages` (datos de contacto, tipo y modelo de barco, servicio, mensaje y estado `new` → `in_progress` → `closed`).
+
+- **Entrada:** la web (anónima) no escribe en la tabla: llama a `submit_contact_message`, `security definer`, que la guarda en Diplonautic, la empresa de esta instalación. Frena envíos repetidos: 3 por email y 60 en total por hora.
+- **Lectura y gestión:** permiso nuevo `contact.manage` (owner y admin). Un trigger solo deja cambiar el estado y registra quién y cuándo (`handled_by`, `handled_at`). Cambios y borrados quedan en la auditoría.
+- **Aviso:** cada mensaje nuevo genera una notificación `contact.received` para quienes tienen `contact.manage`. `contact_new_count(org)` alimenta el contador del menú.
+
+Cubierto por `supabase/tests/contact_messages.test.sql` (12 tests).
+
+## Perfil: foto y preferencias de avisos (`0021_profile_preferences.sql`)
+
+- **Foto de perfil** en Supabase Storage, bucket `avatars` (lectura pública, máximo 2 MB, PNG/JPEG/WebP). Cada persona solo escribe, reemplaza o borra en su carpeta (`<user_id>/…`).
+- **Guard de `profiles`:** desde la app cada persona solo cambia su foto, que tiene que estar en su carpeta: nada de URLs externas. El nombre lo elige una sola vez, al activar la cuenta; después lo corrige administración con `set_member_name` (`employees.manage` y rango mayor). El email no se puede tocar: antes, la política "update own" lo permitía, y se muestra a los compañeros.
+- **Avisos silenciados:** `profiles.muted_notifications` guarda los tipos que no recibe la persona, limitado por `mutable_notification_kinds()` a los informativos. `notify()` los respeta. Lo que pide una acción (aprobar vacaciones o correcciones) siempre llega. Lo configura administración: la persona no puede cambiarlo.
+
+Cubierto por `supabase/tests/profile_preferences.test.sql` (18 tests).
+
+## Estructura de la empresa: niveles, ramas y rol por proyecto (`0022_org_structure.sql`)
+
+Dos estructuras conviven:
+
+- **Organización** (gestiona personas). `roles.level`: superadmin 8, owner/CEO 7, director (dirección de rama) 6, manager (responsable de departamento) 5, coordinator 4, employee 3, intern 2, external 1. `branches` agrupa departamentos (`departments.branch_id`); `memberships.directs_branch_id` dice qué rama dirige cada director (y las invitaciones lo llevan).
+- **Trabajo** (gestiona proyectos y OT). `project_members.role`: `lead` (responsable: gestiona e invita), `member` o `observer` (solo mira); `added_by` registra quién invitó.
+
+**Permisos efectivos.** `membership_can()` / `has_permission()` = permisos base del nivel (`role_permissions`) + los de la rama que dirige (`branch_permissions`) + los del departamento que encabeza (`department_permissions`); owner y superadmin, todos. `my_permissions(org)` los devuelve para armar el menú. Asignar permisos a ramas o departamentos lo hace solo el CEO o el superadmin.
+
+**Alcance sobre personas.** `can_supervise()` suma a la línea de reporte el departamento que encabeza y la rama que dirige. **Proyectos:** `can_manage_project()` suma el director de la rama del departamento y el responsable del proyecto; un responsable invita miembros u observadores, pero solo quien gestiona por encima nombra responsables.
+
+**Reglas nuevas.** Los observadores no imputan horas y los aprendices solo en sus tareas (trigger en `time_entries`). Los externos no ven el foro, el directorio ni el calendario de la empresa (`workspace.access`). El calendario muestra las vacaciones aprobadas del propio departamento (o de quienes supervisa / RRHH). El superadmin no se crea ni se toca desde la empresa, no aprueba vacaciones y no aparece en listados. Los datos existentes migran solos: el viejo rol *admin* pasa a dirigir la rama "Administración y RRHH", que conserva todos sus permisos.
+
+Cubierto por `supabase/tests/org_structure.test.sql` (27 tests).
+
+## Superadmin de plataforma y registro de errores (`0023_platform_admin.sql`)
+
+- **El superadmin es solo plataforma:** tiene `audit.view` (auditoría) y `platform.manage` (estructura y errores); ya no ve la gestión de la empresa. El CEO tiene todo lo de la empresa menos `platform.manage`.
+- **Qué gestiona cada rama o departamento** (`branch_permissions` / `department_permissions`) lo configura la plataforma, no el CEO. Los cambios quedan en la auditoría.
+- **`audit.view`** es un permiso propio: lo tienen el CEO, el superadmin y quien gestiona personas. Quien ve la auditoría ve los nombres del directorio.
+- **`error_logs`:** errores de servidor, acciones, navegador y datos, con ruta, digest, stack y contexto. Se reportan con `log_error()` (también sin sesión, con recortes y límite de frecuencia); solo el superadmin los lee y los marca como resueltos (la base registra quién y cuándo).
+
+Cubierto por `supabase/tests/platform_admin.test.sql` (15 tests).
+
+## El superadmin tiene acceso a todo (`0024_superadmin_full_access.sql`)
+
+Corrige el alcance de `0023`: el superadmin ve y gestiona toda la empresa, además de la plataforma (`platform.manage`: errores y estructura de permisos, que sigue siendo solo suya). Vuelve a recibir avisos y es el único que elige los suyos (al resto se los configura administración). No cambia: no aprueba vacaciones, no aparece en listados y nadie de la empresa lo toca.
+
 ## Desarrollo local
 
 ```bash
@@ -359,7 +405,7 @@ npx supabase start      # Postgres + Auth + Studio en Docker
 npx supabase db reset   # aplica migraciones + supabase/seed.sql
 ```
 
-El seed crea dos organizaciones demo (*Nébula Studio* y *Orbital Labs*) con jerarquía owner → manager → empleados, proyectos, fichajes de dos semanas, vacaciones pendientes de aprobar y una invitación. Usuarios: `laura@`, `carlos@`, `ana@`, `diego@`, `sofia@demo.com`, contraseña `Demo1234!`. Laura y Carlos pertenecen a ambas orgs con roles distintos, para probar el selector de organización.
+El seed crea la empresa *Diplonautic* (y una segunda organización sin miembros, solo para los tests de aislamiento) con jerarquía owner → manager → empleados, barcos de clientes como proyectos, órdenes de trabajo, fichajes, vacaciones pendientes, hilos del foro, mensajes de la web y una invitación pendiente. Usuarios: `laura@`, `sofia@`, `carlos@`, `ana@`, `diego@demo.com`, contraseña `Demo1234!`.
 
 ## Migraciones
 

@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Auditoría" };
 
 export default async function AuditPage({ params }: PageProps<"/app/[orgId]/audit">) {
   const { orgId } = await params;
-  await requirePermission(orgId, "employees.manage");
+  await requirePermission(orgId, "audit.view");
   const [entries, employees] = await Promise.all([getAuditLog(orgId, 200), getEmployees(orgId)]);
   const names = Object.fromEntries(employees.map((e) => [e.user_id, displayName(e.profile)]));
 

@@ -9,9 +9,10 @@ export const FORUM_CATEGORIES: { value: ForumCategory; label: string; hint: stri
   { value: "notice", label: "Aviso", hint: "Le llega a toda la empresa como notificación." },
 ];
 
-export const CATEGORY_LABEL: Record<ForumCategory, string> = Object.fromEntries(
-  FORUM_CATEGORIES.map((c) => [c.value, c.label]),
-) as Record<ForumCategory, string>;
+export const CATEGORY_LABEL: Record<ForumCategory, string> = Object.fromEntries(FORUM_CATEGORIES.map((c) => [c.value, c.label])) as Record<
+  ForumCategory,
+  string
+>;
 
 export function isForumCategory(value: unknown): value is ForumCategory {
   return FORUM_CATEGORIES.some((c) => c.value === value);
@@ -44,9 +45,7 @@ const normalize = (s: string) =>
 
 /** Fijados primero; después, los que tuvieron actividad más reciente. */
 export function sortThreads<T extends ThreadSummary>(threads: readonly T[]): T[] {
-  return [...threads].sort(
-    (a, b) => Number(b.pinned) - Number(a.pinned) || b.last_activity_at.localeCompare(a.last_activity_at),
-  );
+  return [...threads].sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.last_activity_at.localeCompare(a.last_activity_at));
 }
 
 /** Filtra por categoría, estado (solo aplica a incidencias y dudas) y texto (sin tildes ni mayúsculas). */
@@ -119,4 +118,47 @@ export function buildPostTree<T extends { id: string; parent_id: string | null; 
   const count = (n: PostNode<T>): number => (n.descendants = n.children.reduce((s, c) => s + 1 + count(c), 0));
   roots.forEach(count);
   return roots;
+}
+
+export interface Participant {
+  id: string | null;
+  name: string;
+  avatar: string | null;
+  /** Respuestas que dejó en el hilo */
+  replies: number;
+  isAuthor: boolean;
+}
+
+/**
+ * Quiénes participan en un hilo: el autor primero y después cada persona en el orden
+ * en que respondió, sin repetir. Quien ya no está en la empresa (id nulo) no se cuenta.
+ */
+export function threadParticipants(
+  author: { id: string | null; name: string; avatar?: string | null },
+  posts: readonly { author_id: string | null; author: string; avatar?: string | null; created_at: string }[],
+): Participant[] {
+  const byId = new Map<string, Participant>();
+  if (author.id) byId.set(author.id, { id: author.id, name: author.name, avatar: author.avatar ?? null, replies: 0, isAuthor: true });
+  for (const p of [...posts].sort((a, b) => a.created_at.localeCompare(b.created_at))) {
+    if (!p.author_id) continue;
+    const current = byId.get(p.author_id);
+    if (current) current.replies += 1;
+    else byId.set(p.author_id, { id: p.author_id, name: p.author, avatar: p.avatar ?? null, replies: 1, isAuthor: false });
+  }
+  return [...byId.values()];
+}
+
+/**
+ * Otros hilos para seguir leyendo: primero los de la misma categoría y, si no alcanzan,
+ * los más recientes del foro. Nunca el hilo actual.
+ */
+export function relatedThreads<T extends ThreadSummary>(
+  threads: readonly T[],
+  current: { id: string; category: ForumCategory },
+  limit = 4,
+): T[] {
+  const others = [...threads].filter((t) => t.id !== current.id).sort((a, b) => b.last_activity_at.localeCompare(a.last_activity_at));
+  const same = others.filter((t) => t.category === current.category);
+  const rest = others.filter((t) => t.category !== current.category);
+  return [...same, ...rest].slice(0, limit);
 }

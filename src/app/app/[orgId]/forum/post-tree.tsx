@@ -16,6 +16,7 @@ export interface PostView {
   parent_id: string | null;
   author_id: string | null;
   author: string;
+  avatar: string | null;
   body: string;
   created_at: string;
   /** Personas mencionadas de verdad en esta respuesta (para resaltarlas) */
@@ -46,7 +47,7 @@ function PostItem({ node, depth, props }: { node: PostNode<PostView>; depth: num
   const body = (
     <>
       <div className="flex items-center gap-2.5 text-[13px] text-muted-foreground">
-        <Avatar name={post.author} size={nested ? 22 : 26} />
+        <Avatar name={post.author} src={post.avatar} size={nested ? 22 : 26} />
         <span className="font-medium text-foreground/80">{post.author}</span>
         {isOp ? <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium">Autor</span> : null}
         <span aria-hidden>·</span>
@@ -112,9 +113,10 @@ function PostItem({ node, depth, props }: { node: PostNode<PostView>; depth: num
     </>
   );
 
-  // Solo la respuesta directa al hilo es una tarjeta; la conversación que cuelga de ella vive adentro
+  // Todo vive en la tarjeta del hilo: las respuestas directas se separan con una línea y la
+  // conversación que cuelga de cada una se corre a la derecha con una línea guía
   return (
-    <li id={`post-${post.id}`} className={nested ? "border-t border-border/70 pt-3 pb-1 first:border-t-0 first:pt-2" : "rounded-2xl border border-border bg-card p-4 sm:p-5"}>
+    <li id={`post-${post.id}`} className={nested ? "pt-3 pb-1" : "border-t border-border py-4 first:border-t-0 sm:py-5"}>
       {body}
     </li>
   );
@@ -124,7 +126,7 @@ function PostItem({ node, depth, props }: { node: PostNode<PostView>; depth: num
 export function PostTree({ posts, ...props }: TreeProps & { posts: PostView[] }) {
   const tree = useMemo(() => buildPostTree(posts), [posts]);
   return (
-    <ol className="grid gap-3">
+    <ol className="grid">
       {tree.map((node) => (
         <PostItem key={node.post.id} node={node} depth={0} props={props} />
       ))}

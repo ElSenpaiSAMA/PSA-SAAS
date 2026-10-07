@@ -2,7 +2,7 @@
 // Con Supabase local se pueden regenerar con:
 //   npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
 
-import type { Permission, Role } from "@/lib/domain/permissions";
+import type { Permission, ProjectRole, Role } from "@/lib/domain/permissions";
 import type { VacationStatus } from "@/lib/domain/vacations";
 import type { BillingStatus, WorkOrderStatus } from "@/lib/domain/work-orders";
 
@@ -19,6 +19,8 @@ export type Profile = {
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
+  /** Avisos que la persona eligió no recibir (ver notification-prefs.ts) */
+  muted_notifications: string[];
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -39,10 +41,39 @@ export type Membership = {
   role_id: Role;
   manager_id: string | null;
   department_id: string | null;
+  /** Solo para "Dirección de rama": qué rama dirige */
+  directs_branch_id: string | null;
   position: string | null;
   weekly_hours: number;
   annual_vacation_days: number;
   status: MembershipStatus;
+  created_at: Timestamp;
+};
+
+/** Registro de errores de la app (lo lee el superadmin). */
+export type ErrorLog = {
+  id: string;
+  created_at: Timestamp;
+  source: "server" | "action" | "client" | "data";
+  message: string;
+  digest: string | null;
+  stack: string | null;
+  path: string | null;
+  context: Record<string, unknown>;
+  user_id: string | null;
+  org_id: string | null;
+  resolved_at: Timestamp | null;
+  resolved_by: string | null;
+};
+
+export type BranchColor = "blue" | "green" | "violet" | "amber" | "rose" | "teal";
+
+/** Rama de la empresa (agrupa departamentos: Técnica, Comercial, Administración y RRHH…). */
+export type Branch = {
+  id: string;
+  org_id: string;
+  name: string;
+  color: BranchColor;
   created_at: Timestamp;
 };
 
@@ -101,9 +132,10 @@ export type Invitation = {
   id: string;
   org_id: string;
   email: string;
-  role_id: Exclude<Role, "owner">;
+  role_id: Exclude<Role, "owner" | "superadmin">;
   manager_id: string | null;
   department_id: string | null;
+  directs_branch_id: string | null;
   position: string | null;
   invited_by: string | null;
   accepted_at: Timestamp | null;
@@ -115,6 +147,7 @@ export type Department = {
   org_id: string;
   name: string;
   head_id: string | null;
+  branch_id: string | null;
   created_at: Timestamp;
 };
 
@@ -185,6 +218,8 @@ export type WorkloadItemRow = {
 export type ProjectMember = {
   project_id: string;
   membership_id: string;
+  role: ProjectRole;
+  added_by: string | null;
   added_at: Timestamp;
 };
 
@@ -223,9 +258,28 @@ export type NotificationKind =
   | "time.correction_decided"
   | "forum.reply"
   | "forum.notice"
-  | "forum.mention";
+  | "forum.mention"
+  | "contact.received";
 
 export type ForumCategory = "question" | "notice" | "incident";
+
+export type ContactStatus = "new" | "in_progress" | "closed";
+
+export type ContactMessage = {
+  id: string;
+  org_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  boat_type: string;
+  boat_model: string | null;
+  service: string;
+  message: string;
+  status: ContactStatus;
+  handled_by: string | null;
+  handled_at: Timestamp | null;
+  created_at: Timestamp;
+};
 
 export type ForumThread = {
   id: string;
@@ -348,6 +402,10 @@ export type Database = {
       invitations: Table<Invitation, "org_id" | "email">;
       departments: Table<Department, "org_id" | "name">;
       project_members: Table<ProjectMember, "project_id" | "membership_id">;
+      branches: Table<Branch, "org_id" | "name">;
+      error_logs: Table<ErrorLog, "source" | "message">;
+      branch_permissions: Table<{ branch_id: string; permission_key: Permission }, "branch_id" | "permission_key">;
+      department_permissions: Table<{ department_id: string; permission_key: Permission }, "department_id" | "permission_key">;
       work_orders: Table<WorkOrder, "project_id" | "title" | "period_start" | "period_end">;
       holidays: Table<Holiday, "org_id" | "date" | "name">;
       employee_records: Table<EmployeeRecord, "membership_id" | "effective_from">;
@@ -358,6 +416,7 @@ export type Database = {
       automation_runs: Table<AutomationRun, "org_id" | "rule_key" | "dedupe_key">;
       forum_threads: Table<ForumThread, "author_id" | "category" | "title" | "body">;
       forum_posts: Table<ForumPost, "thread_id" | "author_id" | "body">;
+      contact_messages: Table<ContactMessage, "org_id" | "name" | "email" | "boat_type" | "service" | "message">;
       forum_reads: Table<ForumRead, "membership_id">;
       audit_log: Table<AuditLog, "action">;
       roles: Table<{ id: Role; name: string; level: number }, "id" | "name" | "level">;
@@ -388,6 +447,34 @@ export type Database = {
       can_manage_project: { Args: { p_project_id: string }; Returns: boolean };
       task_logged_minutes: { Args: { p_org_id: string }; Returns: { task_id: string; minutes: number }[] };
       forum_unread_count: { Args: { p_org_id: string }; Returns: number };
+      contact_new_count: { Args: { p_org_id: string }; Returns: number };
+      my_permissions: { Args: { p_org_id: string }; Returns: string[] };
+      is_platform_admin: { Args: Record<string, never>; Returns: boolean };
+      log_error: {
+        Args: {
+          p_source: ErrorLog["source"];
+          p_message: string;
+          p_digest?: string | null;
+          p_stack?: string | null;
+          p_path?: string | null;
+          p_context?: Record<string, unknown>;
+          p_org_id?: string | null;
+        };
+        Returns: undefined;
+      };
+      set_member_name: { Args: { p_membership_id: string; p_name: string }; Returns: undefined };
+      submit_contact_message: {
+        Args: {
+          p_name: string;
+          p_email: string;
+          p_phone: string | null;
+          p_boat_type: string;
+          p_boat_model: string | null;
+          p_service: string;
+          p_message: string;
+        };
+        Returns: string;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

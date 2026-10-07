@@ -36,8 +36,8 @@ select is(
 );
 select is(
   (select array_agg(x order by x) from public.vacation_approvers('bbbbbbbb-0000-0000-0000-000000000001') x),
-  array['bbbbbbbb-0000-0000-0000-000000000005'::uuid],
-  'sin responsable por encima (la CEO), aprueba administración (Sofía)'
+  array['bbbbbbbb-0000-0000-0000-000000000005'::uuid, 'bbbbbbbb-0000-0000-0000-000000000105'::uuid],
+  'sin responsable por encima (la CEO), aprueba RRHH (Sofía e Irene), nunca el superadmin'
 );
 
 -- ── Diego pide vacaciones → avisa a Carlos ───────────────────
@@ -137,8 +137,8 @@ select is(pg_temp.count_for('bbbbbbbb-0000-0000-0000-000000000004', 'task.assign
 select is(
   (select count(distinct recipient_id)::int from public.notifications
    where kind = 'work_order.to_invoice' and created_at = now()),
-  2,
-  'una OT cerrada avisa a quienes facturan (owner y admin)'
+  4,
+  'una OT cerrada avisa a quienes facturan: la CEO, el superadmin y las ramas de Administración y Comercial'
 );
 
 select * from finish();

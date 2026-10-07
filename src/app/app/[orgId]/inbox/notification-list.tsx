@@ -10,6 +10,7 @@ import {
   Clock3,
   FileCheck2,
   FolderKanban,
+  Mail,
   Gauge,
   Megaphone,
   MessagesSquare,
@@ -48,6 +49,7 @@ const ICON: Record<string, LucideIcon> = {
   "forum.reply": MessagesSquare,
   "forum.notice": Megaphone,
   "forum.mention": AtSign,
+  "contact.received": Mail,
 };
 
 export function NotificationList({ orgId, items }: { orgId: string; items: Notification[] }) {

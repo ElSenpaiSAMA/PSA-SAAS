@@ -86,8 +86,10 @@ select set_config('request.jwt.claims', '', true);
 select is(
   (select count(distinct n.recipient_id)::int from public.notifications n join public.forum_threads t on t.id = n.entity_id
    where t.title = 'Aviso de prueba para todos' and n.kind = 'forum.notice'),
-  (select count(*)::int - 1 from public.memberships where org_id = 'aaaaaaaa-0000-0000-0000-000000000001' and status = 'active'),
-  'un aviso le llega a toda la empresa (menos a quien lo publica)'
+  (select count(*)::int - 1 from public.memberships
+   where org_id = 'aaaaaaaa-0000-0000-0000-000000000001' and status = 'active'
+     and public.membership_can(id, 'workspace.access')),
+  'un aviso le llega a toda la empresa (menos a quien lo publica y a los externos)'
 );
 
 -- ── Otra empresa no ve nada ──────────────────────────────────

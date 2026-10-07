@@ -37,7 +37,6 @@ export function ContactForm() {
           </div>
           <h2 className="mt-5 text-[22px] font-semibold tracking-tight">Mensaje recibido</h2>
           <p className="mt-2 max-w-sm text-[14.5px] text-muted-foreground">{state.message}</p>
-          <p className="mt-4 text-[12.5px] text-muted-foreground">Sitio demostrativo: el mensaje no se envía a ningún lado.</p>
           <Button variant="secondary" className="mt-8" onClick={() => setDismissed(state.submittedAt)}>
             Enviar otra consulta
           </Button>

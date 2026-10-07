@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ROLES } from "@/lib/domain/permissions";
+import { ROLES, PROJECT_ROLES } from "@/lib/domain/permissions";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida");
 const id = z.guid("Identificador inválido");
@@ -76,33 +76,53 @@ export const taskSchema = z
 
 export const taskStatusSchema = z.enum(["todo", "in_progress", "done"]);
 
-const assignableRole = z.enum(ROLES).exclude(["owner"]);
+// El CEO y el superadmin no se asignan desde la app
+const assignableRole = z.enum(ROLES).exclude(["owner", "superadmin"]);
 
-export const invitationSchema = z.object({
-  email,
-  role: assignableRole,
-  managerId: emptyToUndefined.or(id).optional(),
-  departmentId: emptyToUndefined.or(id).optional(),
-  position: optionalText(80),
-});
+/** "Dirección de rama" tiene que decir cuál rama dirige. */
+const directorNeedsBranch = (v: { role: string; branchId?: string }, ctx: z.RefinementCtx) => {
+  if (v.role === "director" && !v.branchId) {
+    ctx.addIssue({ code: "custom", message: "Elegí qué rama dirige", path: ["branchId"] });
+  }
+};
 
-export const memberUpdateSchema = z.object({
-  membershipId: id,
-  role: assignableRole,
-  managerId: emptyToUndefined.or(id).optional(),
-  departmentId: emptyToUndefined.or(id).optional(),
-  position: optionalText(80),
-  weeklyHours: z.coerce.number().min(1, "Mínimo 1 hora").max(60, "Máximo 60 horas"),
-});
+export const invitationSchema = z
+  .object({
+    email,
+    role: assignableRole,
+    branchId: emptyToUndefined.or(id).optional(),
+    managerId: emptyToUndefined.or(id).optional(),
+    departmentId: emptyToUndefined.or(id).optional(),
+    position: optionalText(80),
+  })
+  .superRefine(directorNeedsBranch);
+
+export const memberUpdateSchema = z
+  .object({
+    membershipId: id,
+    // Vacío = no se toca (la persona todavía no eligió su nombre)
+    fullName: emptyToUndefined.or(z.string().trim().min(2, "Mínimo 2 caracteres").max(80, "Máximo 80 caracteres")).optional(),
+    role: assignableRole,
+    branchId: emptyToUndefined.or(id).optional(),
+    /** "Responsable de departamento": de cuál (lo deja como responsable de ese departamento) */
+    headOf: emptyToUndefined.or(id).optional(),
+    managerId: emptyToUndefined.or(id).optional(),
+    departmentId: emptyToUndefined.or(id).optional(),
+    position: optionalText(80),
+    weeklyHours: z.coerce.number().min(1, "Mínimo 1 hora").max(60, "Máximo 60 horas"),
+  })
+  .superRefine(directorNeedsBranch);
 
 export const departmentSchema = z.object({
   name: z.string().trim().min(2, "Mínimo 2 caracteres").max(60, "Máximo 60 caracteres"),
   headId: emptyToUndefined.or(id).optional(),
+  branchId: emptyToUndefined.or(id).optional(),
 });
 
 export const projectMemberSchema = z.object({
   projectId: id,
   membershipId: id,
+  role: z.enum(PROJECT_ROLES).default("member"),
 });
 
 const period = {

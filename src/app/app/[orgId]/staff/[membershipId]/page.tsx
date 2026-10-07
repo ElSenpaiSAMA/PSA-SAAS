@@ -73,6 +73,8 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
   const isMe = person.id === ctx.membership.id;
   const canSeeWork =
     isMe || (ctx.can("time.view_team") && supervisedIds(employees, ctx.membership.id, ctx.can("employees.manage")).has(person.id));
+  // Un directorio no da acceso a perfiles ajenos: solo el propio o el de alguien que supervisa
+  if (!canSeeWork && !ctx.can("employees.manage")) notFound();
   const canEditRecord = ctx.can("people.sensitive");
   const canSeeRecord = isMe || canEditRecord;
   const canSeeAudit = ctx.can("employees.manage");
@@ -166,7 +168,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
 
       <header className="mb-8 flex flex-wrap items-end justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Avatar name={name} size={64} />
+          <Avatar name={name} src={person.profile?.avatar_url} size={64} />
           <div>
             <h1 className="flex flex-wrap items-center gap-2 text-[28px] leading-tight font-semibold tracking-tight">
               {name}

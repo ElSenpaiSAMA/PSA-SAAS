@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { ErrorReporter } from "@/components/error-reporter";
 import { Providers } from "@/components/theme";
 import { brand } from "@/lib/brand";
 import "./globals.css";
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full font-sans">
         <Providers>{children}</Providers>
+        <ErrorReporter />
       </body>
     </html>
   );

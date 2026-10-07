@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bug,
   CalendarDays,
   CalendarRange,
   ClipboardList,
@@ -8,7 +9,9 @@ import {
   Inbox,
   IdCard,
   LayoutDashboard,
+  Mail,
   MessagesSquare,
+  Network,
   Palmtree,
   Settings,
   ScrollText,
@@ -18,11 +21,11 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports" | "forum";
+export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports" | "forum" | "contact" | "errors" | "structure";
 
-export type NavGroup = "Mi día" | "Trabajo" | "Personas" | "Gestión";
+export type NavGroup = "Mi día" | "Trabajo" | "Personas" | "Gestión" | "Plataforma";
 
-export const NAV_GROUPS: NavGroup[] = ["Mi día", "Trabajo", "Personas", "Gestión"];
+export const NAV_GROUPS: NavGroup[] = ["Mi día", "Trabajo", "Personas", "Gestión", "Plataforma"];
 
 export interface NavItem {
   href: string;
@@ -34,25 +37,28 @@ export interface NavItem {
   /** Sección de la barra lateral */
   group: NavGroup;
   /** Muestra un contador (p. ej. pendientes de la bandeja) */
-  badge?: "inbox" | "forum";
+  badge?: "inbox" | "forum" | "contact";
 }
 
 export const NAV: NavItem[] = [
   { href: "dashboard", group: "Mi día", label: "Inicio", icon: "dashboard", keywords: ["resumen", "home"] },
   { href: "inbox", group: "Mi día", label: "Bandeja", icon: "inbox", badge: "inbox", keywords: ["pendientes", "notificaciones", "avisos", "aprobar"] },
   { href: "time-tracking", group: "Mi día", label: "Fichaje y horas", icon: "clock", keywords: ["fichar", "horas", "tiempo"] },
-  { href: "calendar", group: "Mi día", label: "Calendario", icon: "calendar", keywords: ["agenda", "festivos", "vencimientos", "ausencias"] },
-  { href: "forum", group: "Mi día", label: "Foro", icon: "forum", badge: "forum", keywords: ["dudas", "avisos", "incidencias", "hilos", "comunidad", "preguntas"] },
+  { href: "calendar", group: "Mi día", label: "Calendario", icon: "calendar", permission: "workspace.access", keywords: ["agenda", "festivos", "vencimientos", "ausencias"] },
+  { href: "forum", group: "Mi día", label: "Foro", icon: "forum", permission: "workspace.access", badge: "forum", keywords: ["dudas", "avisos", "incidencias", "hilos", "comunidad", "preguntas"] },
   { href: "projects", group: "Trabajo", label: "Proyectos", icon: "projects", keywords: ["clientes", "presupuesto"] },
   { href: "work-orders", group: "Trabajo", label: "Órdenes de trabajo", icon: "workOrders", keywords: ["ot", "mes", "facturación", "tareas"] },
-  { href: "planning", group: "Trabajo", label: "Planificación", icon: "planning", keywords: ["carga", "capacidad", "semanas", "recursos"] },
+  { href: "contact", group: "Trabajo", label: "Mensajes web", icon: "contact", badge: "contact", permission: "contact.manage", keywords: ["contacto", "consultas", "clientes", "presupuestos", "formulario", "leads"] },
+  { href: "planning", group: "Trabajo", label: "Planificación", icon: "planning", permission: "planning.view", keywords: ["carga", "capacidad", "semanas", "recursos"] },
   { href: "vacations", group: "Personas", label: "Vacaciones", icon: "vacations", keywords: ["ausencias", "días libres"] },
-  { href: "staff", group: "Personas", label: "Empleados", icon: "staff", keywords: ["perfil", "ficha", "dni", "sueldo", "contrato", "rrhh"] },
-  { href: "employees", group: "Personas", label: "Personas", icon: "team", keywords: ["equipo", "departamentos", "organigrama", "invitar"] },
+  { href: "staff", group: "Personas", label: "Empleados", icon: "staff", permission: "workspace.access", keywords: ["perfil", "ficha", "dni", "sueldo", "contrato", "rrhh"] },
+  { href: "employees", group: "Personas", label: "Personas", icon: "team", permission: "employees.manage", keywords: ["equipo", "departamentos", "organigrama", "invitar"] },
   { href: "reports", group: "Gestión", label: "Informes", icon: "reports", permission: "time.view_team", keywords: ["excel", "csv", "exportar", "facturación", "horas", "ausencias"] },
   { href: "automations", group: "Gestión", label: "Automatizaciones", icon: "automations", permission: "automations.manage", keywords: ["reglas", "workflows", "flujos", "recordatorios", "automático"] },
   { href: "settings", group: "Gestión", label: "Ajustes", icon: "settings", permission: "employees.manage", keywords: ["configuración", "empresa", "zona horaria", "roles", "permisos"] },
-  { href: "audit", group: "Gestión", label: "Auditoría", icon: "audit", permission: "employees.manage", keywords: ["log", "historial"] },
+  { href: "audit", group: "Gestión", label: "Auditoría", icon: "audit", permission: "audit.view", keywords: ["log", "historial"] },
+  { href: "errors", group: "Plataforma", label: "Errores", icon: "errors", permission: "platform.manage", keywords: ["fallos", "bugs", "logs", "excepciones"] },
+  { href: "structure", group: "Plataforma", label: "Estructura", icon: "structure", permission: "platform.manage", keywords: ["ramas", "departamentos", "permisos", "roles"] },
 ];
 
 export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
@@ -71,4 +77,12 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   settings: Settings,
   reports: BarChart3,
   forum: MessagesSquare,
+  contact: Mail,
+  errors: Bug,
+  structure: Network,
 };
+
+/** Qué secciones ve alguien según sus permisos efectivos (Errores y Estructura: solo el superadmin). */
+export function visibleNav(permissions: readonly Permission[]): NavItem[] {
+  return NAV.filter((n) => !n.permission || permissions.includes(n.permission));
+}

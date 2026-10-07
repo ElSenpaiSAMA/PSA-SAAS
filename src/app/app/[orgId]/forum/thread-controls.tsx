@@ -41,21 +41,26 @@ export function ThreadControls({
   if (!can.canEdit && !can.canDelete && !can.canModerate && !can.canResolve) return null;
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap gap-2" aria-busy={pending}>
+    <div className="grid gap-3">
+      <div className="flex flex-wrap gap-1" aria-busy={pending}>
         {can.canResolve ? (
-          <Button size="sm" variant={thread.resolved ? "secondary" : "accent"} disabled={pending} onClick={() => flag({ resolved: !thread.resolved })}>
+          <Button
+            size="sm"
+            variant={thread.resolved ? "ghost" : "accent"}
+            disabled={pending}
+            onClick={() => flag({ resolved: !thread.resolved })}
+          >
             {thread.resolved ? <RotateCcw className="size-3.5" /> : <CheckCircle2 className="size-3.5" />}
             {thread.resolved ? "Marcar sin resolver" : "Marcar como resuelto"}
           </Button>
         ) : null}
         {can.canModerate ? (
           <>
-            <Button size="sm" variant="secondary" disabled={pending} onClick={() => flag({ pinned: !thread.pinned })}>
+            <Button size="sm" variant="ghost" disabled={pending} onClick={() => flag({ pinned: !thread.pinned })}>
               {thread.pinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
               {thread.pinned ? "Desfijar" : "Fijar arriba"}
             </Button>
-            <Button size="sm" variant="secondary" disabled={pending} onClick={() => flag({ locked: !thread.locked })}>
+            <Button size="sm" variant="ghost" disabled={pending} onClick={() => flag({ locked: !thread.locked })}>
               {thread.locked ? <LockOpen className="size-3.5" /> : <Lock className="size-3.5" />}
               {thread.locked ? "Reabrir" : "Cerrar hilo"}
             </Button>
@@ -68,7 +73,13 @@ export function ThreadControls({
           </Button>
         ) : null}
         {can.canDelete ? (
-          <Button size="sm" variant="danger" disabled={pending} onClick={remove}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-danger hover:bg-danger/10 hover:text-danger"
+            disabled={pending}
+            onClick={remove}
+          >
             <Trash2 className="size-3.5" />
             Borrar hilo
           </Button>
@@ -76,7 +87,7 @@ export function ThreadControls({
       </div>
 
       {editing ? (
-        <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="mb-2 rounded-xl border border-border bg-background p-4">
           <ThreadForm
             action={editThread.bind(null, orgId, thread.id)}
             initial={{ category: thread.category, title: thread.title, body: thread.body }}
