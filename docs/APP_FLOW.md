@@ -53,6 +53,8 @@ src/
 
 ## Visibilidad por rol
 
+> Desde `0022_org_structure.sql` hay más niveles (CEO, dirección de rama, responsable, coordinador, empleado, aprendiz, externo y superadmin), ramas y un rol por proyecto: ver la sección siguiente. Esta tabla resume los casos más comunes.
+
 "Responsable" es quien encabeza un departamento (sube automáticamente a rol manager).
 
 | Función | Empleado | Responsable de depto. | Admin | Owner |
@@ -72,3 +74,14 @@ src/
 | Leer el foro, abrir hilos y responder | ✓ | ✓ | ✓ | ✓ |
 | Fijar, cerrar y borrar hilos ajenos en el foro | | | ✓ | ✓ |
 | Ver auditoría de la organización | | | ✓ | ✓ |
+
+### Qué ve cada nivel en el menú
+
+| Sección | Empleado / Aprendiz | Externo | Coordinador | Responsable | Dirección de rama | CEO |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|
+| Inicio, Bandeja, Fichaje, Vacaciones, Proyectos, OT | ✓ (lo suyo) | ✓ (lo suyo) | ✓ | ✓ | ✓ | ✓ |
+| Calendario | lo suyo + su departamento | | su grupo | su departamento | su rama | todo |
+| Foro | ✓ | | ✓ | ✓ | ✓ | ✓ |
+| Empleados | directorio básico | | su grupo | su departamento | su rama | todo |
+| Planificación, Informes | | | su grupo | su departamento | su rama | todo |
+| Personas, Ajustes, Auditoría, Automatizaciones, Mensajes web | | | | según la función de su departamento | según la función de su rama | ✓ |
