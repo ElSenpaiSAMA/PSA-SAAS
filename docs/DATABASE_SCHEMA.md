@@ -348,6 +348,10 @@ Cubierto por `supabase/tests/single_company.test.sql` (8 tests).
 
 Cubierto por `supabase/tests/forum_mentions.test.sql` (10 tests).
 
+## Respuestas anidadas del foro (`0019_forum_nested_replies.sql`)
+
+`forum_posts.parent_id` apunta a la respuesta que se contesta (`null` = directa al hilo). Un trigger valida que la madre sea del mismo hilo y no deja cambiarla después. Si se borra la madre, las respuestas que la contestaban quedan como directas (`on delete set null`): no se pierde la conversación. Cubierto por `supabase/tests/forum_nested.test.sql` (5 tests).
+
 ## Desarrollo local
 
 ```bash

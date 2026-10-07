@@ -52,3 +52,10 @@ Esto es un SaaS de gestión (RRHH/proyectos), así que el reto es lograr ese niv
 - **Fondos:** foto con velo azul (hero, empresa, contacto), carta náutica (`ChartBackground`) y duotono azul (llamada final). Las transiciones entre foto y fondo claro se hacen con una ola SVG del mismo color que el fondo siguiente.
 - **3D:** el yate de `boat-model.tsx` es la única pieza 3D. Se gira con el mouse y nunca intercepta el scroll ni la rueda.
 
+## Intranet: estructura
+
+- **Barra lateral** azul marino con el logo, los menús agrupados por sección (Mi día, Trabajo, Personas, Gestión) y, al pie, la empresa y el rol. **Barra superior** con la ruta ("Trabajo / Proyectos"), buscador ⌘K, avisos, tema y menú de usuario.
+- **Cada página va dentro de un contenedor** gris suave con borde, y las tarjetas blancas van adentro: nada queda suelto en el espacio.
+- **Indicadores en una sola banda** (`StatCard` dentro de un `grid gap-px bg-border`): las líneas divisorias son el fondo que asoma entre celdas.
+- **Listas de trabajo como tablas** (proyectos, órdenes, registro horario), con encabezados en mayúsculas pequeñas, barras de avance y estados de salud (en plazo / en riesgo / excedido), como en Productive o Kantata.
+
