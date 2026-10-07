@@ -345,7 +345,7 @@ export function AppShell(props: ShellProps) {
           >
             {/* Al cambiar de página el contenedor se vuelve a montar: el scroll arranca arriba */}
             <div className="p-4 sm:p-7 lg:h-full lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
-              <div className="mx-auto max-w-[1400px]">{props.children}</div>
+              <div className="mx-auto max-w-[1400px] lg:h-full">{props.children}</div>
             </div>
           </motion.div>
         </main>
