@@ -185,3 +185,16 @@ export async function deleteTask(orgId: string, taskId: string): Promise<ActionS
   refresh(orgId);
   return ok("Tarea borrada");
 }
+
+/** "Renovar la OT cada mes": el día 1 se crea sola la OT del mes nuevo (en borrador). */
+export async function setProjectRecurring(orgId: string, projectId: string, enabled: boolean): Promise<ActionState> {
+  await getOrgContext(orgId);
+  const id = z.guid().parse(projectId);
+  if (!(await canManageProject(id))) return fail("No tenés permisos para gestionar este proyecto.");
+  const supabase = await createClient();
+  const { error } = await supabase.from("projects").update({ recurring_work_orders: enabled }).eq("id", id).eq("org_id", orgId);
+  if (error) return fail(await reportDbError(error));
+  refresh(orgId);
+  return ok(enabled ? "Listo: su OT se renueva sola cada mes" : "La OT ya no se renueva sola");
+}
+

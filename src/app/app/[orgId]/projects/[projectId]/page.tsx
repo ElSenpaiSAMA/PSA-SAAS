@@ -19,6 +19,7 @@ import { NewWorkOrder } from "../../work-orders/new-work-order";
 import { toWorkOrderRow, WorkOrderList } from "../../work-orders/work-order-row";
 import { ArchiveButton } from "./archive-button";
 import { MembersPanel } from "./members-panel";
+import { RecurringToggle } from "./recurring-toggle";
 
 export const metadata: Metadata = { title: "Proyecto" };
 
@@ -111,6 +112,8 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
               />
             ) : null}
           </div>
+
+          <RecurringToggle orgId={orgId} projectId={project.id} enabled={project.recurring_work_orders} canManage={manage} />
 
           {rows.length === 0 ? (
             <EmptyState
