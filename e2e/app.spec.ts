@@ -133,8 +133,8 @@ const projectNames = (page: Page) => page.locator("table a[href*='/projects/']")
 test("una empleada solo ve los proyectos donde es miembro", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/projects`);
-  await expect(page.getByText("Rediseño portal clientes")).toBeVisible();
-  expect(await projectNames(page)).toEqual(["Rediseño portal clientes"]);
+  await expect(page.getByText("Climatización Princess V58")).toBeVisible();
+  expect(await projectNames(page)).toEqual(["Climatización Princess V58"]);
   // Un proyecto ajeno no es accesible ni por URL
   await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
@@ -143,8 +143,8 @@ test("una empleada solo ve los proyectos donde es miembro", async ({ page }) => 
 test("el responsable ve los proyectos de su departamento y suma miembros", async ({ page }) => {
   await login(page, "carlos@demo.com");
   await page.goto(`/app/${NEBULA}/projects`);
-  await expect(page.getByText("API de pagos v2")).toBeVisible();
-  expect((await projectNames(page)).sort()).toEqual(["API de pagos v2", "Rediseño portal clientes"]);
+  await expect(page.getByText("Refit eléctrico Lagoon 46")).toBeVisible();
+  expect((await projectNames(page)).sort()).toEqual(["Climatización Princess V58", "Refit eléctrico Lagoon 46"]);
 
   await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
   await page.getByLabel("Persona a sumar").selectOption({ label: "Ana Torres" });
@@ -155,7 +155,7 @@ test("el responsable ve los proyectos de su departamento y suma miembros", async
 test("la empleada pasa a ver el proyecto al que la sumaron", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/projects`);
-  await expect(page.getByText("API de pagos v2")).toBeVisible();
+  await expect(page.getByText("Refit eléctrico Lagoon 46")).toBeVisible();
 });
 
 test("una admin crea un departamento con responsable", async ({ page }) => {
@@ -181,7 +181,7 @@ test("una OT facturada enlaza su continuación en lugar de ofrecer copiarla", as
   await login(page, "carlos@demo.com");
   await page.goto(`/app/${NEBULA}/work-orders?month=${monthParam(-1)}`);
   await expect(page.getByRole("link", { name: /^Sigue en / })).toBeVisible();
-  await page.getByRole("link", { name: /^Portal clientes · / }).click();
+  await page.getByRole("link", { name: /^Princess V58 · / }).click();
   await expect(page.getByText("Ciclo completo")).toBeVisible();
   await page.getByRole("button", { name: "Repetir esta OT en otro período" }).click();
   await page.getByRole("link", { name: /^Ver la OT de / }).click();
@@ -198,7 +198,7 @@ test("el responsable repite el mes: copia en bloque las OT sin continuación", a
   await expect(page.getByText(/no tienen? continuación en/)).toHaveCount(0);
   // Las copias nacen en borrador
   await page.getByRole("link", { name: /^Borrador/ }).click();
-  await expect(page.getByRole("link", { name: /^Portal clientes · / })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Princess V58 · / })).toBeVisible();
 });
 
 test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo", async ({ page }) => {
@@ -207,10 +207,10 @@ test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo",
   // El formulario aparece con el registro semanal, que espera a hidratar (zona horaria del navegador)
   await expect(page.getByLabel("Tarea")).toBeVisible();
   const options = await page.getByLabel("Tarea").locator("option").allTextContents();
-  expect(options).toContain("Dashboard de cliente");
+  expect(options).toContain("Instalación de unidades de 16.000 BTU");
   // OT facturada (mes anterior) y copias en borrador (test anterior) no admiten horas
-  expect(options).not.toContain("Mantenimiento evolutivo");
-  expect(options.filter((o) => o === "Dashboard de cliente")).toHaveLength(1);
+  expect(options).not.toContain("Revisión del aire acondicionado");
+  expect(options.filter((o) => o === "Instalación de unidades de 16.000 BTU")).toHaveLength(1);
 
   await page.goto(`/app/${NEBULA}/planning`);
   await expect(page.getByRole("heading", { name: "Planificación" })).toBeVisible();
@@ -482,7 +482,7 @@ test("la owner ve los tres informes y exporta la facturación a CSV", async ({ p
   await page.goto(`/app/${NEBULA}/reports`);
   const tabs = page.getByRole("navigation", { name: "Informes" });
   await expect(tabs.getByRole("link")).toHaveText(["Facturación", "Horas por persona", "Ausencias"]);
-  await expect(page.getByRole("cell", { name: /Acme Corp/ }).first()).toBeVisible();
+  await expect(page.getByRole("cell", { name: /Náutica Costa Brava/ }).first()).toBeVisible();
 
   const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Exportar a Excel/ }).click()]);
   expect(download.suggestedFilename()).toMatch(/^facturacion-\d{4}-\d{2}-diplonautic\.csv$/);

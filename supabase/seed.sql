@@ -42,28 +42,29 @@ insert into public.organizations (id, name) values
 
 -- Diplonautic: Laura (owner) → Carlos (manager) → Ana, Diego ; Sofía (admin)
 insert into public.memberships (id, org_id, user_id, role_id, manager_id, position, weekly_hours) values
-  ('bbbbbbbb-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'owner',    null,                                   'CEO',                40),
-  ('bbbbbbbb-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', '55555555-5555-5555-5555-555555555555', 'admin',    'bbbbbbbb-0000-0000-0000-000000000001', 'People Ops',         40),
-  ('bbbbbbbb-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'manager',  'bbbbbbbb-0000-0000-0000-000000000001', 'Engineering Lead',   40),
-  ('bbbbbbbb-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Frontend Engineer',  40),
-  ('bbbbbbbb-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444444', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Backend Engineer',   32);
+  ('bbbbbbbb-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'owner',    null,                                   'Gerente',                  40),
+  ('bbbbbbbb-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', '55555555-5555-5555-5555-555555555555', 'admin',    'bbbbbbbb-0000-0000-0000-000000000001', 'Administración y RRHH',    40),
+  ('bbbbbbbb-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'manager',  'bbbbbbbb-0000-0000-0000-000000000001', 'Jefe de taller',           40),
+  ('bbbbbbbb-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Técnica de climatización', 40),
+  ('bbbbbbbb-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444444', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Técnico electricista',     32);
 
 
 -- Departamentos de Diplonautic: el responsable pasa a ser el manager de sus miembros
 insert into public.departments (id, org_id, name, head_id) values
   ('eeeeeeee-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Dirección',  'bbbbbbbb-0000-0000-0000-000000000001'),
-  ('eeeeeeee-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Ingeniería', 'bbbbbbbb-0000-0000-0000-000000000002'),
-  ('eeeeeeee-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'People',     'bbbbbbbb-0000-0000-0000-000000000005');
+  ('eeeeeeee-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Taller',     'bbbbbbbb-0000-0000-0000-000000000002'),
+  ('eeeeeeee-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Administración', 'bbbbbbbb-0000-0000-0000-000000000005');
 
 update public.memberships set department_id = 'eeeeeeee-0000-0000-0000-000000000002'
 where id in ('bbbbbbbb-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000004');
 
--- Ana ve solo "Portal clientes", Diego solo "API de pagos" (según sus tareas),
--- Carlos ambos por ser responsable de Ingeniería, Sofía y Laura todo por ser admin/owner.
+-- Proyectos = trabajos en barcos de clientes. Ana ve solo el Princess (climatización),
+-- Diego solo el Lagoon (eléctrico), Carlos ambos por ser responsable del Taller,
+-- Sofía y Laura todo por ser admin/owner.
 insert into public.projects (id, org_id, name, client_name, budgeted_hours, hourly_rate, department_id) values
-  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Rediseño portal clientes', 'Acme Corp', 320, 85,   'eeeeeeee-0000-0000-0000-000000000002'),
-  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'API de pagos v2',           'Fintrack',  200, 95,   'eeeeeeee-0000-0000-0000-000000000002'),
-  ('cccccccc-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Onboarding interno',        null,        60,  null, 'eeeeeeee-0000-0000-0000-000000000003');
+  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Climatización Princess V58', 'Náutica Costa Brava',  320, 65,   'eeeeeeee-0000-0000-0000-000000000002'),
+  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Refit eléctrico Lagoon 46',  'Charter Mediterráneo', 200, 70,   'eeeeeeee-0000-0000-0000-000000000002'),
+  ('cccccccc-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Formación interna',          null,                   60,  null, 'eeeeeeee-0000-0000-0000-000000000003');
 
 -- Órdenes de trabajo: el mes anterior cerrado y facturado, el actual en curso
 create or replace function pg_temp.m0() returns date language sql as $$ select date_trunc('month', current_date)::date $$;
@@ -75,25 +76,25 @@ create or replace function pg_temp.month_name(p date) returns text language sql 
 $$;
 
 insert into public.work_orders (id, project_id, title, period_start, period_end, budgeted_hours, status, billing_status, invoiced_at) values
-  ('ffffffff-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'Portal clientes · ' || pg_temp.month_name(pg_temp.prev0()), pg_temp.prev0(), pg_temp.m0() - 1, 60, 'closed', 'invoiced', now() - interval '3 days'),
-  ('ffffffff-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'Portal clientes · ' || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 90, 'in_progress', 'unbilled', null),
-  ('ffffffff-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000002', 'API de pagos · '    || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 70, 'in_progress', 'unbilled', null),
-  ('ffffffff-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000003', 'Onboarding · '      || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 20, 'approved',    'unbilled', null);
+  ('ffffffff-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'Princess V58 · ' || pg_temp.month_name(pg_temp.prev0()), pg_temp.prev0(), pg_temp.m0() - 1, 60, 'closed', 'invoiced', now() - interval '3 days'),
+  ('ffffffff-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'Princess V58 · ' || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 90, 'in_progress', 'unbilled', null),
+  ('ffffffff-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000002', 'Lagoon 46 · '    || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 70, 'in_progress', 'unbilled', null),
+  ('ffffffff-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000003', 'Formación · '    || pg_temp.month_name(pg_temp.m0()),    pg_temp.m0(), pg_temp.m_end(), 20, 'approved',    'unbilled', null);
 
 -- Cada asignado queda como miembro del proyecto (trigger tasks_sync_org)
 insert into public.tasks (id, project_id, work_order_id, title, assigned_to, estimated_hours, status, start_date, due_date) values
   -- Mes anterior (cerrado y facturado): base para "copiar al mes siguiente"
-  ('dddddddd-0000-0000-0000-000000000008', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Mantenimiento evolutivo',    'bbbbbbbb-0000-0000-0000-000000000003', 30, 'done',        pg_temp.prev0() + 1,  pg_temp.prev0() + 20),
-  ('dddddddd-0000-0000-0000-000000000009', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Soporte a usuarios',         'bbbbbbbb-0000-0000-0000-000000000003', 20, 'done',        pg_temp.prev0(),      pg_temp.m0() - 1),
-  ('dddddddd-0000-0000-0000-000000000010', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Informe mensual',            'bbbbbbbb-0000-0000-0000-000000000002', 4,  'done',        pg_temp.m0() - 3,     pg_temp.m0() - 1),
+  ('dddddddd-0000-0000-0000-000000000008', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Revisión del aire acondicionado', 'bbbbbbbb-0000-0000-0000-000000000003', 30, 'done',        pg_temp.prev0() + 1,  pg_temp.prev0() + 20),
+  ('dddddddd-0000-0000-0000-000000000009', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Asistencia en el amarre',         'bbbbbbbb-0000-0000-0000-000000000003', 20, 'done',        pg_temp.prev0(),      pg_temp.m0() - 1),
+  ('dddddddd-0000-0000-0000-000000000010', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000001', 'Informe técnico mensual',         'bbbbbbbb-0000-0000-0000-000000000002', 4,  'done',        pg_temp.m0() - 3,     pg_temp.m0() - 1),
   -- Mes actual
-  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Sistema de diseño y tokens', 'bbbbbbbb-0000-0000-0000-000000000003', 24, 'done',        pg_temp.m0(),         pg_temp.m0() + 6),
-  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Dashboard de cliente',       'bbbbbbbb-0000-0000-0000-000000000003', 40, 'in_progress', pg_temp.m0() + 5,     pg_temp.m0() + 19),
-  ('dddddddd-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Accesibilidad AA',           'bbbbbbbb-0000-0000-0000-000000000003', 16, 'todo',        pg_temp.m0() + 18,    pg_temp.m0() + 25),
-  ('dddddddd-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Webhooks idempotentes',      'bbbbbbbb-0000-0000-0000-000000000004', 30, 'in_progress', pg_temp.m0(),         pg_temp.m0() + 13),
-  ('dddddddd-0000-0000-0000-000000000005', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Conciliación nocturna',      'bbbbbbbb-0000-0000-0000-000000000004', 20, 'todo',        pg_temp.m0() + 12,    pg_temp.m0() + 24),
-  ('dddddddd-0000-0000-0000-000000000006', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Revisión de arquitectura',   'bbbbbbbb-0000-0000-0000-000000000002', 8,  'done',        pg_temp.m0(),         pg_temp.m0() + 3),
-  ('dddddddd-0000-0000-0000-000000000007', 'cccccccc-0000-0000-0000-000000000003', 'ffffffff-0000-0000-0000-000000000004', 'Guía de bienvenida',         'bbbbbbbb-0000-0000-0000-000000000005', 10, 'in_progress', pg_temp.m0() + 2,     pg_temp.m0() + 16);
+  ('dddddddd-0000-0000-0000-000000000001', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Desmontaje de unidades viejas',   'bbbbbbbb-0000-0000-0000-000000000003', 24, 'done',        pg_temp.m0(),         pg_temp.m0() + 6),
+  ('dddddddd-0000-0000-0000-000000000002', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Instalación de unidades de 16.000 BTU', 'bbbbbbbb-0000-0000-0000-000000000003', 40, 'in_progress', pg_temp.m0() + 5,     pg_temp.m0() + 19),
+  ('dddddddd-0000-0000-0000-000000000003', 'cccccccc-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000002', 'Prueba de estanqueidad y carga de gas', 'bbbbbbbb-0000-0000-0000-000000000003', 16, 'todo',        pg_temp.m0() + 18,    pg_temp.m0() + 25),
+  ('dddddddd-0000-0000-0000-000000000004', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Instalación de baterías de litio', 'bbbbbbbb-0000-0000-0000-000000000004', 30, 'in_progress', pg_temp.m0(),         pg_temp.m0() + 13),
+  ('dddddddd-0000-0000-0000-000000000005', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Cableado del cuadro eléctrico',   'bbbbbbbb-0000-0000-0000-000000000004', 20, 'todo',        pg_temp.m0() + 12,    pg_temp.m0() + 24),
+  ('dddddddd-0000-0000-0000-000000000006', 'cccccccc-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000003', 'Diagnóstico del sistema eléctrico', 'bbbbbbbb-0000-0000-0000-000000000002', 8,  'done',        pg_temp.m0(),         pg_temp.m0() + 3),
+  ('dddddddd-0000-0000-0000-000000000007', 'cccccccc-0000-0000-0000-000000000003', 'ffffffff-0000-0000-0000-000000000004', 'Curso de prevención de riesgos',  'bbbbbbbb-0000-0000-0000-000000000005', 10, 'in_progress', pg_temp.m0() + 2,     pg_temp.m0() + 16);
 
 -- Horas del mes anterior (ya facturadas)
 insert into public.time_entries (membership_id, entry_type, task_id, started_at, ended_at)
@@ -170,9 +171,9 @@ values
    '2021-01-11', 'indefinido', 85000, 'ES91 2100 0418 4502 0005 1332', null),
   -- Carlos: alta y ascenso a lead con subida
   ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002', '2022-03-01', '23456789D', '1988-09-14', '+34 600 222 333', 'carlos.ruiz@correo.test', 'Av. Diagonal 200, Barcelona', 'Marta Ruiz · +34 600 888 111',
-   '2022-03-01', 'indefinido', 52000, 'ES79 2100 0813 6101 2345 6789', 'Alta como Senior Engineer'),
+   '2022-03-01', 'indefinido', 52000, 'ES79 2100 0813 6101 2345 6789', 'Alta como técnico electricista'),
   ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002', (date_trunc('year', current_date) + interval '2 months')::date, '23456789D', '1988-09-14', '+34 600 222 333', 'carlos.ruiz@correo.test', 'Av. Diagonal 200, Barcelona', 'Marta Ruiz · +34 600 888 111',
-   '2022-03-01', 'indefinido', 61000, 'ES79 2100 0813 6101 2345 6789', 'Ascenso a Engineering Lead'),
+   '2022-03-01', 'indefinido', 61000, 'ES79 2100 0813 6101 2345 6789', 'Ascenso a jefe de taller'),
   -- Ana: entra en prácticas, pasa a indefinida y se muda el mes pasado
   ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000003', '2024-02-05', '34567890V', '1999-01-20', '+34 600 333 444', 'ana.torres@correo.test', 'Calle Sol 5, Valencia', 'Lucía Torres · +34 600 777 222',
    '2024-02-05', 'practicas', 18000, 'ES12 0049 1500 0512 3456 7892', 'Prácticas 6 meses'),
@@ -183,7 +184,7 @@ values
   -- Diego: temporal, 32 h
   ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000004', '2025-06-02', '45678901G', '1995-06-30', '+34 600 444 555', 'diego.fernandez@correo.test', 'Calle Río 8, Sevilla', 'Elena Fernández · +34 600 666 333',
    '2025-06-02', 'temporal', 36000, 'ES66 0182 0400 1234 5678 9012', 'Jornada de 32 h'),
-  -- Sofía (People Ops)
+  -- Sofía (Administración y RRHH)
   ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000005', '2021-09-13', '56789012B', '1990-11-08', '+34 600 555 666', 'sofia.lopez@correo.test', 'Calle Prado 3, Madrid', 'Andrés López · +34 600 555 777',
    '2021-09-13', 'indefinido', 48000, 'ES38 0081 0200 0100 0123 4567', null);
 
@@ -195,7 +196,7 @@ insert into public.forum_threads (id, author_id, category, title, body, pinned, 
    true, false, false, now() - interval '9 days'),
   ('99999999-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000004', 'incident',
    'Plotter Garmin GPSMAP 8612 del Lagoon 42 se reinicia solo',
-   E'El plotter del Lagoon 42 (cliente Acme) se reinicia cada 10-15 minutos con los motores en marcha. Con motores parados aguanta bien.\n\nYa revisé la tensión en bornes: 12,8 V parado y 14,1 V con el alternador cargando. ¿A alguien le pasó algo parecido?',
+   E'El plotter del Lagoon 42 (cliente Charter Mediterráneo) se reinicia cada 10-15 minutos con los motores en marcha. Con motores parados aguanta bien.\n\nYa revisé la tensión en bornes: 12,8 V parado y 14,1 V con el alternador cargando. ¿A alguien le pasó algo parecido?',
    false, false, true, now() - interval '6 days'),
   ('99999999-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000003', 'question',
    '¿Qué sellador usamos para pasacascos bajo la línea de flotación?',

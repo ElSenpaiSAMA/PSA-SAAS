@@ -16,9 +16,9 @@ end;
 $$;
 
 -- IDs del seed
--- orgs: Nébula ...01 · departamentos: Dirección e..01, Ingeniería e..02, People e..03
--- proyectos: Portal c..01 (Ingeniería), API c..02 (Ingeniería), Onboarding c..03 (People)
--- memberships: Laura b..01, Carlos b..02 (resp. Ingeniería), Ana b..03, Diego b..04, Sofía b..05 (admin)
+-- org: Diplonautic ...01 · departamentos: Dirección e..01, Taller e..02, Administración e..03
+-- proyectos: Princess c..01 (Taller), Lagoon c..02 (Taller), Formación c..03 (Administración)
+-- memberships: Laura b..01, Carlos b..02 (resp. Taller), Ana b..03, Diego b..04, Sofía b..05 (admin)
 
 -- ── Estado inicial derivado de los departamentos ─────────────
 select is(
@@ -38,7 +38,7 @@ select pg_temp.login_as('33333333-3333-3333-3333-333333333333', 'ana@demo.com');
 
 select results_eq(
   $$ select name from public.projects order by name $$,
-  $$ values ('Rediseño portal clientes'::text) $$,
+  $$ values ('Climatización Princess V58'::text) $$,
   'una empleada solo ve los proyectos donde es miembro'
 );
 
@@ -85,7 +85,7 @@ select pg_temp.login_as('22222222-2222-2222-2222-222222222222', 'carlos@demo.com
 
 select results_eq(
   $$ select name from public.projects where org_id = 'aaaaaaaa-0000-0000-0000-000000000001' order by name $$,
-  $$ values ('API de pagos v2'::text), ('Rediseño portal clientes'::text) $$,
+  $$ values ('Climatización Princess V58'::text), ('Refit eléctrico Lagoon 46'::text) $$,
   'el responsable ve todos los proyectos de su departamento, y solo esos'
 );
 
@@ -109,7 +109,7 @@ select throws_ok(
   'el responsable no puede crear proyectos en otro departamento'
 );
 
--- Ana ahora es miembro de "API de pagos v2"
+-- Ana ahora es miembro de "Refit eléctrico Lagoon 46"
 select pg_temp.login_as('33333333-3333-3333-3333-333333333333', 'ana@demo.com');
 
 select is(

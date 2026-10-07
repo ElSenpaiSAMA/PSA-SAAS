@@ -43,7 +43,7 @@ export function NewTaskForm({
       <input type="hidden" name="projectId" value={projectId} />
       <input type="hidden" name="workOrderId" value={workOrderId} />
       <Field label="Nueva tarea" error={state.fieldErrors?.title}>
-        <Input name="title" placeholder="Ej: Informe mensual" />
+        <Input name="title" placeholder="Ej: Revisión del generador" />
       </Field>
       <Field label="Asignar a" error={state.fieldErrors?.assignedTo}>
         <Select name="assignedTo" defaultValue="">
