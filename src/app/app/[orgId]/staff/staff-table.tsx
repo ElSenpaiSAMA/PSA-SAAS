@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 export interface StaffRow {
   id: string;
   name: string;
+  avatar: string | null;
   email: string | null;
   position: string | null;
   roleLabel: string;
@@ -129,7 +130,7 @@ export function StaffTable({
                       className="flex items-center gap-3 after:absolute after:inset-0 after:content-['']"
                       aria-label={`Ver perfil de ${r.name}`}
                     >
-                      <Avatar name={r.name} size={34} />
+                      <Avatar name={r.name} src={r.avatar} size={34} />
                       <span className="min-w-0">
                         <span className="flex items-center gap-2 font-medium group-hover:text-accent">
                           {r.name}

@@ -22,6 +22,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export interface Person {
   id: string;
   name: string;
+  avatar: string | null;
   email: string | null;
   role: Role;
   position: string | null;
@@ -182,7 +183,7 @@ function Directory({
             className={cn("rounded-2xl border bg-card p-4 transition-colors", open ? "border-accent/40 md:col-span-2" : "border-border")}
           >
             <div className="flex items-center gap-3.5">
-              <Avatar name={p.name} size={44} />
+              <Avatar name={p.name} src={p.avatar} size={44} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
                   <Link href={`/app/${orgId}/staff/${p.id}`} className="transition-colors hover:text-accent hover:underline">
@@ -256,7 +257,7 @@ function OrgNode({
           person.isMe ? "border-accent/40 ring-4 ring-accent-soft" : "border-border",
         )}
       >
-        <Avatar name={person.name} size={32} />
+        <Avatar name={person.name} src={person.avatar} size={32} />
         <div>
           <p className="text-[13.5px] leading-tight font-medium">{person.name}</p>
           <p className="text-[12px] text-muted-foreground">{person.position ?? ROLE_LABEL[person.role]}</p>

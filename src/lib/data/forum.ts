@@ -8,6 +8,7 @@ import type { ForumPost, ForumThread } from "@/lib/supabase/database.types";
 export interface Author {
   id: string | null;
   name: string;
+  avatar: string | null;
 }
 
 export type ThreadWithAuthor = ForumThread & { author: Author };
@@ -15,13 +16,14 @@ export type PostWithAuthor = ForumPost & { author: Author };
 
 const authorNames = cache(async (orgId: string) => {
   const employees = await getEmployees(orgId);
-  return new Map(employees.map((e) => [e.id, displayName(e.profile)]));
+  return new Map(employees.map((e) => [e.id, { name: displayName(e.profile), avatar: e.profile?.avatar_url ?? null }]));
 });
 
-const withAuthor = (names: Map<string, string>, id: string | null): Author => ({
+const withAuthor = (names: Map<string, { name: string; avatar: string | null }>, id: string | null): Author => ({
   id,
+  avatar: (id && names.get(id)?.avatar) || null,
   // Si la persona ya no está en la empresa, el mensaje se conserva sin autor
-  name: (id && names.get(id)) || "Ex miembro",
+  name: (id && names.get(id)?.name) || "Ex miembro",
 });
 
 /** Hilos con actividad de otras personas desde mi última visita al foro (para el aviso del menú). */

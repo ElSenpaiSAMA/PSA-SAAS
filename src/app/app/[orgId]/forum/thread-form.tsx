@@ -68,9 +68,18 @@ export function ThreadForm({
       </fieldset>
 
       <Field label="Título" error={state.fieldErrors?.title}>
-        <Input name="title" defaultValue={initial?.title} placeholder="Ej.: Fallo intermitente en el plotter del Lagoon 42" maxLength={140} />
+        <Input
+          name="title"
+          defaultValue={initial?.title}
+          placeholder="Ej.: Fallo intermitente en el plotter del Lagoon 42"
+          maxLength={140}
+        />
       </Field>
-      <Field label="Mensaje" error={state.fieldErrors?.body} hint="Contá el contexto: barco, equipo, qué probaste. Con @ mencionás a un compañero.">
+      <Field
+        label="Mensaje"
+        error={state.fieldErrors?.body}
+        hint="Contá el contexto: barco, equipo, qué probaste. Con @ mencionás a un compañero."
+      >
         {people ? (
           <MentionTextarea name="body" people={people} defaultValue={initial?.body} rows={8} maxLength={5000} />
         ) : (
