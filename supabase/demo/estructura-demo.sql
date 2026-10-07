@@ -135,3 +135,6 @@ left join public.branches b on b.id = m.directs_branch_id
 left join public.departments d on d.id = m.department_id
 where m.org_id = 'aaaaaaaa-0000-0000-0000-000000000001'
 order by r.level desc, p.email;
+
+-- El mantenimiento del Princess es mensual: su OT se renueva sola cada mes (0026)
+update public.projects set recurring_work_orders = true where id = 'cccccccc-0000-0000-0000-000000000001';

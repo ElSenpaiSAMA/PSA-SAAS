@@ -404,6 +404,12 @@ Corrige el alcance de `0023`: el superadmin ve y gestiona toda la empresa, adem�
 
 Cubierto por `supabase/tests/delete_member.test.sql` (10 tests).
 
+## OT recurrentes por proyecto (`0026_recurring_work_orders.sql`)
+
+`projects.recurring_work_orders` marca un proyecto como mensual (por ejemplo, un mantenimiento). El día 1, la automatización "OT del mes" copia la OT del mes anterior de **esos** proyectos (con sus tareas y su presupuesto), en borrador, y avisa a quien gestiona el proyecto. Antes copiaba todos los proyectos o ninguno y venía apagada; ahora la decide cada proyecto, así que viene encendida. Lo cambia quien gestiona el proyecto.
+
+Cubierto por `supabase/tests/recurring_work_orders.test.sql` (6 tests).
+
 ## Desarrollo local
 
 ```bash

@@ -76,16 +76,21 @@ export function overlaps(aStart: ISODate, aEnd: ISODate, bStart: ISODate, bEnd: 
   return aStart <= bEnd && bStart <= aEnd;
 }
 
-/** El mismo período corrido un mes (para "copiar al mes siguiente"); un mes completo sigue siendo un mes completo. */
-export function nextPeriod(start: ISODate, end: ISODate): { start: ISODate; end: ISODate } {
+/** El mismo período corrido N meses (para "copiar a otro mes"); un mes completo sigue siendo un mes completo. */
+export function shiftPeriod(start: ISODate, end: ISODate, months: number): { start: ISODate; end: ISODate } {
   const isFullMonth = start === monthStart(start) && end === monthEnd(start);
   if (isFullMonth) {
-    const next = addMonths(start, 1);
-    return { start: next, end: monthEnd(next) };
+    const target = addMonths(start, months);
+    return { start: target, end: monthEnd(target) };
   }
   const length = daysBetween(start, end);
-  const nextStart = addMonths(start, 1);
-  return { start: nextStart, end: addDays(nextStart, length) };
+  const targetStart = addMonths(start, months);
+  return { start: targetStart, end: addDays(targetStart, length) };
+}
+
+/** El mismo período corrido un mes (para "copiar al mes siguiente"). */
+export function nextPeriod(start: ISODate, end: ISODate): { start: ISODate; end: ISODate } {
+  return shiftPeriod(start, end, 1);
 }
 
 export interface Week {

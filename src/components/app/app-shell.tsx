@@ -128,10 +128,9 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
           ) : (
             <span className="text-[15px] font-semibold text-white">{props.orgName}</span>
           )}
-          {/* El sistema interno de la empresa: "Diplonautic OS" */}
-          <span className="rounded-md border border-sky-300/30 bg-sky-300/10 px-1.5 py-0.5 font-mono text-[10.5px] leading-none font-semibold tracking-[0.18em] text-sky-200">
-            OS
-          </span>
+          {/* El sistema interno de la empresa: "Diplonautic OS", como parte de la marca */}
+          <span aria-hidden className="h-4 w-px bg-white/25" />
+          <span className="text-[14px] leading-none font-medium tracking-[0.14em] text-sky-300">OS</span>
         </Link>
       </div>
 
