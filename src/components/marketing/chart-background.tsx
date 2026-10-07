@@ -59,14 +59,19 @@ function Compass() {
   );
 }
 
-/** Cuánto sigue la carta por debajo de la sección cuando se funde con la siguiente. */
-const FLOW = "28rem";
+/** Cuánto siguen las curvas por debajo de la sección cuando se funde con la siguiente. */
+const FLOW = "20rem";
+
+const SVG_PROPS = { viewBox: "0 0 1440 900", preserveAspectRatio: "xMidYMid slice" } as const;
 
 /**
- * @param flowInto Las curvas no terminan en el borde de la sección: siguen por debajo,
- * dentro de la sección siguiente, y se desvanecen de a poco (sin corte ni regla al pie).
+ * @param flowInto Las curvas de nivel no terminan en el borde de la sección: siguen
+ * por debajo, dentro de la sección siguiente, y se desvanecen de a poco. La derrota, las
+ * sondas y la rosa quedan dentro de la sección, para no invadir el contenido de abajo.
  */
 export function ChartBackground({ flowInto = false }: { flowInto?: boolean }) {
+  // Las dos capas miden lo mismo que la sección; la extensión solo la ocupan las curvas
+  const layer = { height: flowInto ? `calc(100% - ${FLOW})` : "100%" };
   return (
     <div
       aria-hidden
@@ -76,25 +81,21 @@ export function ChartBackground({ flowInto = false }: { flowInto?: boolean }) {
           ? "bg-[linear-gradient(180deg,#e6f0fc_0%,#f4f8fe_40%,#ffffff_70%)]"
           : "bottom-0 bg-[linear-gradient(180deg,#e6f0fc_0%,#f4f8fe_45%,#ffffff_100%)]",
       )}
-      // La carta se ve entera hasta el borde de la sección y se desvanece en la extensión
       style={
-        flowInto ? { bottom: `-${FLOW}`, maskImage: `linear-gradient(180deg, #000 calc(100% - ${FLOW}), transparent 100%)` } : undefined
+        flowInto
+          ? { bottom: `-${FLOW}`, maskImage: `linear-gradient(180deg, #000 calc(100% - ${FLOW} - 4rem), transparent 100%)` }
+          : undefined
       }
     >
-      <svg
-        className="absolute inset-x-0 top-0 w-full overflow-visible"
-        style={{ height: flowInto ? `calc(100% - ${FLOW})` : "100%" }}
-        viewBox="0 0 1440 900"
-        preserveAspectRatio="xMidYMid slice"
-      >
+      {/* Curvas de nivel: pueden salirse por debajo (overflow visible) */}
+      <svg className="absolute inset-x-0 top-0 w-full overflow-visible" style={layer} {...SVG_PROPS}>
         {flowInto
-          ? // Más curvas hacia abajo, para que la carta siga dentro de la sección siguiente
-            Array.from({ length: 7 }, (_, i) => (
+          ? Array.from({ length: 5 }, (_, i) => (
               <path
                 key={`c${i}`}
-                d={contour(260, 1320, 120 + i * 60, i + 5)}
+                d={contour(260, 1320, 140 + i * 70, i + 5)}
                 className="fill-none stroke-blue-500"
-                strokeOpacity={i % 3 === 0 ? 0.26 : 0.14}
+                strokeOpacity={i % 3 === 0 ? 0.16 : 0.09}
               />
             ))
           : null}
@@ -109,6 +110,14 @@ export function ChartBackground({ flowInto = false }: { flowInto?: boolean }) {
         {Array.from({ length: 6 }, (_, i) => (
           <path key={`b${i}`} d={contour(120, -40, 50 + i * 50, i + 3)} className="fill-none stroke-blue-500" strokeOpacity="0.2" />
         ))}
+      </svg>
+      {/* Marcas de la carta: siempre dentro de la sección */}
+      <svg
+        className="absolute inset-x-0 top-0 w-full"
+        // Se apagan antes del borde: ninguna marca queda cortada en seco
+        style={flowInto ? { ...layer, maskImage: "linear-gradient(180deg, #000 72%, transparent 96%)" } : layer}
+        {...SVG_PROPS}
+      >
         {DEPTHS.map(([x, y, d]) => (
           <text key={`${x}-${y}`} x={x} y={y} className="fill-blue-600/55 font-serif" fontSize="15" fontStyle="italic">
             {d}
