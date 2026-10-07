@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(12);
+select plan(18);
 
 create or replace function pg_temp.login_as(p_user uuid, p_email text)
 returns void
@@ -27,13 +27,14 @@ $$;
 
 -- ── Qué se puede cambiar del propio perfil ────────────────────
 select pg_temp.login_as('33333333-3333-3333-3333-333333333333', 'ana@demo.com');
-select lives_ok(
-  $$ update public.profiles set full_name = 'Ana Torres Vidal' where id = '33333333-3333-3333-3333-333333333333' $$,
-  'cada persona cambia su nombre'
+select throws_ok(
+  $ update public.profiles set full_name = 'Ana Torres Vidal' where id = '33333333-3333-3333-3333-333333333333' $,
+  'name is managed by administration',
+  'una vez elegido, el nombre no lo cambia la propia persona'
 );
 select throws_ok(
-  $$ update public.profiles set email = 'otra@demo.com' where id = '33333333-3333-3333-3333-333333333333' $$,
-  'only name, photo and preferences can be changed',
+  $ update public.profiles set email = 'otra@demo.com' where id = '33333333-3333-3333-3333-333333333333' $,
+  'only the photo can be changed',
   'el email no se cambia desde la app'
 );
 select throws_ok(
@@ -72,13 +73,51 @@ select throws_ok(
   'no puede subir a la carpeta de otra persona'
 );
 
--- ── Avisos silenciados ────────────────────────────────────────
+-- ── El nombre: se elige al activar y después lo cambia administración ──
+select pg_temp.as_system();
+update public.profiles set full_name = null where id = '44444444-4444-4444-4444-444444444444';
+select pg_temp.login_as('44444444-4444-4444-4444-444444444444', 'diego@demo.com');
+select lives_ok(
+  $ update public.profiles set full_name = 'Diego Fernández' where id = '44444444-4444-4444-4444-444444444444' $,
+  'al activar la cuenta, la persona elige su nombre'
+);
+select throws_ok(
+  $ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000003', 'Ana Cambiada') $,
+  'not allowed to rename this member',
+  'un empleado no cambia el nombre de otra persona'
+);
+select pg_temp.login_as('55555555-5555-5555-5555-555555555555', 'sofia@demo.com');
+select lives_ok(
+  $ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000003', 'Ana Torres Vidal') $,
+  'administración corrige el nombre de una empleada'
+);
+select throws_ok(
+  $ select public.set_member_name('bbbbbbbb-0000-0000-0000-000000000001', 'Laura Cambiada') $,
+  'not allowed to rename this member',
+  'una admin no cambia el nombre de alguien de mayor rango (la owner)'
+);
+select pg_temp.as_system();
+select is(
+  (select full_name from public.profiles where id = '33333333-3333-3333-3333-333333333333'),
+  'Ana Torres Vidal',
+  'el nombre corregido por administración queda guardado'
+);
+
+-- ── Avisos: los configura administración, no la persona ───────
+select pg_temp.login_as('33333333-3333-3333-3333-333333333333', 'ana@demo.com');
+select throws_ok(
+  $$ update public.profiles set muted_notifications = array['forum.reply'] where id = '33333333-3333-3333-3333-333333333333' $$,
+  'notification settings are managed by administration',
+  'una persona no cambia sus propios avisos'
+);
+select pg_temp.as_system();
 select throws_ok(
   $$ update public.profiles set muted_notifications = array['vacation.requested'] where id = '33333333-3333-3333-3333-333333333333' $$,
   '23514', null,
   'lo que pide una acción (aprobar vacaciones) no se puede silenciar'
 );
 update public.profiles set muted_notifications = array['forum.reply'] where id = '33333333-3333-3333-3333-333333333333';
+select pg_temp.login_as('33333333-3333-3333-3333-333333333333', 'ana@demo.com');
 insert into public.forum_threads (id, author_id, category, title, body)
 values ('66666666-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000003', 'question', 'Hilo para probar avisos silenciados', 'Pregunta');
 
