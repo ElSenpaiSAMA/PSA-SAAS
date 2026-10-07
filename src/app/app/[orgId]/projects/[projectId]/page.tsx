@@ -8,12 +8,12 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getDepartments, getHeadedDepartmentId } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
-import { getProject, getProjectMembers, getTaskMinutes, getTasks } from "@/lib/data/projects";
+import { canManageProjectDb, getProject, getProjectMembers, getTaskMinutes, getTasks } from "@/lib/data/projects";
 import { getOrgContext } from "@/lib/data/session";
 import { getProjectWorkOrders } from "@/lib/data/work-orders";
 import { displayName } from "@/lib/domain/hierarchy";
+import { projectTeam } from "@/lib/domain/projects";
 import { monthEnd, monthStart, todayISO } from "@/lib/domain/periods";
-import { canManageProject } from "@/lib/domain/projects";
 import { findContinuation, workOrderAmounts } from "@/lib/domain/work-orders";
 import { NewWorkOrder } from "../../work-orders/new-work-order";
 import { toWorkOrderRow, WorkOrderList } from "../../work-orders/work-order-row";
@@ -38,23 +38,23 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
     getDepartments(orgId),
     getHeadedDepartmentId(orgId, ctx.membership.id),
   ]);
-  const manage = canManageProject(
-    { managesAllProjects: ctx.can("projects.manage"), headOfDepartmentId: headed, memberOf: new Set() },
-    project,
-  );
+  const manage = await canManageProjectDb(project.id);
+  const projectMembers = allMembers.filter((m) => m.project_id === project.id);
+  const myProjectRole = projectMembers.find((m) => m.membership_id === ctx.membership.id)?.role;
+  // Quien solo es responsable del proyecto invita, pero no nombra otros responsables
+  const canAppointLead =
+    ctx.can("projects.manage") || headed === project.department_id || (manage && myProjectRole !== "lead");
   const department = departments.find((d) => d.id === project.department_id);
   const rate = project.hourly_rate === null ? null : Number(project.hourly_rate);
 
-  const memberIds = new Set(allMembers.filter((m) => m.project_id === project.id).map((m) => m.membership_id));
-  const active = employees.filter((e) => e.status === "active");
-  const members = active
-    .filter((e) => memberIds.has(e.id))
-    .map((e) => ({ id: e.id, name: displayName(e.profile), position: e.position, isMe: e.id === ctx.membership.id }));
-  // Candidatos: primero las personas del departamento del proyecto
-  const candidates = active
-    .filter((e) => !memberIds.has(e.id))
-    .map((e) => ({ id: e.id, name: displayName(e.profile), sameDepartment: !!project.department_id && e.department_id === project.department_id }))
-    .sort((a, b) => Number(b.sameDepartment) - Number(a.sameDepartment) || a.name.localeCompare(b.name, "es"));
+  const { members, candidates } = projectTeam(
+    employees
+      .filter((e) => e.status === "active")
+      .map((e) => ({ id: e.id, name: displayName(e.profile), avatar: e.profile?.avatar_url ?? null, position: e.position, departmentId: e.department_id })),
+    projectMembers,
+    project,
+    ctx.membership.id,
+  );
 
   const rows = workOrders.map((wo) =>
     toWorkOrderRow(wo, allTasks, minutes, {
@@ -125,11 +125,18 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
 
         <Card className="h-fit lg:sticky lg:top-6">
           <CardHeader
-            title={`Miembros · ${members.length}`}
-            description={manage ? "Solo los miembros ven el proyecto y reciben tareas" : "Personas que participan del proyecto"}
+            title={`Equipo · ${members.length}`}
+            description={manage ? "Invitá a quien necesites: entra al instante y lo ve todo el equipo" : "Quiénes participan del proyecto y con qué rol"}
           />
           <CardBody>
-            <MembersPanel orgId={orgId} projectId={project.id} members={members} candidates={candidates} canManage={manage} />
+            <MembersPanel
+              orgId={orgId}
+              projectId={project.id}
+              members={members}
+              candidates={candidates}
+              canManage={manage}
+              canAppointLead={canAppointLead}
+            />
           </CardBody>
         </Card>
       </div>

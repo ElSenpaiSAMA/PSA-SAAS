@@ -557,3 +557,21 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Arreglo de seguridad de paso:** la política "update own" de `profiles` permitía cambiar el propio email, que se muestra a los compañeros. Ahora un guard lo impide.
 
 **Pruebas:** 18 pgTAP (solo la foto es editable, nombre solo al activar o por administración con rango, fotos solo en la carpeta propia, avisos silenciados y menciones que siguen llegando), unitarios de avisos (incluido que la lista coincida con la de la base) y del formulario de administración, y E2E: entrar desde el avatar, subir una foto y ver nombre y avisos bloqueados.
+
+---
+
+## 2026-10-07 Roles y jerarquía: organización matricial
+
+**Prompt (resumen):** no todos los empleados pueden ver lo mismo. Un técnico ve su inicio, su bandeja, sus fichajes y sus horas, el calendario con lo suyo y su departamento, el foro y solo los proyectos u OT donde está. No ve Planificación, Personas, Empleados, Informes, Automatizaciones, Ajustes ni Auditoría. Se pidieron más roles, tomando como ejemplo dos organigramas: uno por áreas y departamentos y otro por niveles (C-level, VP, team lead, equipo). También un superadmin para el desarrollador, un CEO, poder elegir exactamente qué rama dirige cada director, y que dentro de un proyecto u OT el responsable pueda invitar a quien necesite.
+
+**Decisiones:**
+- **Dos estructuras en lugar de una escalera:** la *organización* (nivel + rama/departamento) gestiona personas y el *trabajo* (rol en cada proyecto) gestiona proyectos y OT. Así "jefe de proyecto" no es un nivel: cualquiera puede ser responsable de un proyecto concreto.
+- **Ocho niveles:** superadmin, CEO, dirección de rama, responsable de departamento, coordinador, empleado, aprendiz y externo. **Ramas** que dicen qué gestiona cada dirección para toda la empresa: RRHH gestiona personas, Comercial proyectos y mensajes web, Técnica las tareas del taller.
+- **La base calcula los permisos** (`has_permission`): nivel + rama que dirige + departamento que encabeza. Las políticas RLS existentes no cambiaron, porque preguntan por permisos y ahora la respuesta es más fina. La app arma el menú con `my_permissions()`.
+- **Invitar en vez de "apoyo puntual":** el responsable de un proyecto invita a cualquier persona desde el proyecto o desde la OT, que entra al instante; todo el equipo lo ve con su rol. Nombrar responsables queda para quien gestiona por encima.
+- **Directorio básico:** un empleado ve nombre, foto, puesto y departamento de todos, pero no abre perfiles ajenos.
+- **Migración sin pérdidas:** el viejo rol *admin* pasa a dirigir la rama "Administración y RRHH", que conserva todos sus permisos.
+- **Un usuario de demo por puesto** para probar cada caso.
+
+**Pruebas:** 27 pgTAP (qué da cada nivel y rama, alcance de supervisión, externos, invitar sin nombrar responsables, observadores y aprendices que no imputan, calendario por departamento, rangos y superadmin), unitarios de niveles y del equipo de un proyecto, y E2E: menú de un técnico, externo sin foro, director técnico, CEO que asigna una rama y responsable de proyecto que invita desde la OT.
+

@@ -78,10 +78,14 @@ export async function addProjectMember(orgId: string, _prev: ActionState, formDa
   const supabase = await createClient();
   const { error } = await supabase
     .from("project_members")
-    .insert({ project_id: parsed.data.projectId, membership_id: parsed.data.membershipId });
-  if (error) return fail(error.code === "23505" ? "Ya es miembro del proyecto." : dbErrorMessage(error));
+    .insert({ project_id: parsed.data.projectId, membership_id: parsed.data.membershipId, role: parsed.data.role });
+  if (error) {
+    if (error.code === "23505") return fail("Ya está en el proyecto.");
+    if (error.message.includes("appoint a lead")) return fail("Solo quien gestiona por encima del proyecto nombra responsables.");
+    return fail(dbErrorMessage(error));
+  }
   refresh(orgId);
-  return ok("Miembro agregado");
+  return ok("Invitación hecha: ya está en el proyecto");
 }
 
 export async function removeProjectMember(orgId: string, projectId: string, membershipId: string): Promise<ActionState> {

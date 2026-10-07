@@ -12,10 +12,10 @@ import { Input, Select } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { idle } from "@/lib/actions";
 import { reportsOf } from "@/lib/domain/hierarchy";
-import { outranks, ROLE_LABEL, ROLES, type Role } from "@/lib/domain/permissions";
+import { assignableRoles, outranks, ROLE_LABEL, ROLE_SCOPE, type Role } from "@/lib/domain/permissions";
 import { cn } from "@/lib/utils";
 import { updateMember } from "./actions";
-import { DepartmentsView, type DepartmentInfo } from "./departments-view";
+import { DepartmentsView, type BranchOption, type DepartmentInfo } from "./departments-view";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -30,13 +30,20 @@ export interface Person {
   position: string | null;
   managerId: string | null;
   departmentId: string | null;
+  /** Solo para "Dirección de rama" */
+  directsBranchId: string | null;
   weeklyHours: number;
   isMe: boolean;
 }
 
 function roleTone(role: Role) {
-  return role === "owner" || role === "admin" ? "accent" : role === "manager" ? "success" : "neutral";
+  if (role === "owner" || role === "director") return "accent";
+  if (role === "manager" || role === "coordinator") return "success";
+  if (role === "external" || role === "intern") return "warning";
+  return "neutral";
 }
+
+const canEdit = (myRole: Role, theirs: Role) => myRole === "owner" || myRole === "superadmin" || outranks(myRole, theirs);
 
 function EditMember({
   orgId,
@@ -44,6 +51,7 @@ function EditMember({
   people,
   myRole,
   departments,
+  branches,
   onDone,
 }: {
   orgId: string;
@@ -51,9 +59,12 @@ function EditMember({
   people: Person[];
   myRole: Role;
   departments: DepartmentInfo[];
+  branches: BranchOption[];
   onDone: () => void;
 }) {
   const [state, action] = useActionState(updateMember.bind(null, orgId), idle);
+  const [role, setRole] = useState<Role>(person.role);
+  const heads = departments.find((d) => d.headId === person.id)?.id ?? "";
   const handled = useRef<number | undefined>(undefined);
   const [departmentId, setDepartmentId] = useState(person.departmentId ?? "");
   const department = departments.find((d) => d.id === departmentId);
@@ -74,7 +85,7 @@ function EditMember({
   // Ni uno mismo ni nadie de su propia línea de reporte puede ser su manager (evita ciclos)
   const blocked = reportsOf(people.map((p) => ({ id: p.id, manager_id: p.managerId })), person.id);
   const managers = people.filter((p) => p.id !== person.id && !blocked.has(p.id));
-  const roles = ROLES.filter((r) => r !== "owner" && (myRole === "owner" || outranks(myRole, r)));
+  const roles = assignableRoles(myRole);
 
   return (
     <motion.form
@@ -91,8 +102,8 @@ function EditMember({
         <Field label="Nombre y apellido" error={state.fieldErrors?.fullName} className="sm:col-span-2">
           <Input name="fullName" defaultValue={person.fullName ?? ""} placeholder="Como figura en la ficha" maxLength={80} />
         </Field>
-        <Field label="Rol" error={state.fieldErrors?.role}>
-          <Select name="role" defaultValue={person.role}>
+        <Field label="Nivel" error={state.fieldErrors?.role} hint={ROLE_SCOPE[role]}>
+          <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
             {roles.map((r) => (
               <option key={r} value={r}>
                 {ROLE_LABEL[r]}
@@ -100,6 +111,30 @@ function EditMember({
             ))}
           </Select>
         </Field>
+        {role === "director" ? (
+          <Field label="Rama que dirige" error={state.fieldErrors?.branchId}>
+            <Select name="branchId" defaultValue={person.directsBranchId ?? ""}>
+              <option value="">Elegí una rama</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        ) : null}
+        {role === "manager" ? (
+          <Field label="Responsable de" error={state.fieldErrors?.headOf} hint="Queda como responsable de ese departamento">
+            <Select name="headOf" defaultValue={heads}>
+              <option value="">Sin cambios</option>
+              {departments.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+        ) : null}
         <Field label="Departamento" error={state.fieldErrors?.departmentId}>
           <Select name="departmentId" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
             <option value="">Sin departamento</option>
@@ -156,6 +191,7 @@ function Directory({
   myRole,
   canManage,
   departments,
+  branches,
 }: {
   orgId: string;
   people: Person[];
@@ -163,8 +199,10 @@ function Directory({
   myRole: Role;
   canManage: boolean;
   departments: DepartmentInfo[];
+  branches: BranchOption[];
 }) {
   const [editing, setEditing] = useState<string | null>(null);
+  const branchName = new Map(branches.map((b) => [b.id, b.name]));
   const names = new Map(allPeople.map((p) => [p.id, p.name]));
   const departmentName = new Map(departments.map((d) => [d.id, d.name]));
   const heads = new Set(departments.map((d) => d.headId).filter(Boolean));
@@ -176,7 +214,7 @@ function Directory({
   return (
     <div className="grid gap-3 md:grid-cols-2">
       {people.map((p, i) => {
-        const editable = canManage && !p.isMe && (myRole === "owner" || outranks(myRole, p.role));
+        const editable = canManage && !p.isMe && canEdit(myRole, p.role);
         const open = editing === p.id;
         return (
           <motion.div
@@ -208,7 +246,9 @@ function Directory({
                   </p>
                 ) : null}
               </div>
-              <Badge tone={roleTone(p.role)}>{ROLE_LABEL[p.role]}</Badge>
+              <Badge tone={roleTone(p.role)}>
+                {p.role === "director" && p.directsBranchId ? `Dirección · ${branchName.get(p.directsBranchId) ?? "rama"}` : ROLE_LABEL[p.role]}
+              </Badge>
               {editable ? (
                 <button
                   type="button"
@@ -228,6 +268,7 @@ function Directory({
                   people={allPeople}
                   myRole={myRole}
                   departments={departments}
+                  branches={branches}
                   onDone={() => setEditing(null)}
                 />
               ) : null}
@@ -320,6 +361,7 @@ export function TeamView({
   canManage,
   canManageDepartments,
   departments,
+  branches,
 }: {
   orgId: string;
   people: Person[];
@@ -327,6 +369,7 @@ export function TeamView({
   canManage: boolean;
   canManageDepartments: boolean;
   departments: DepartmentInfo[];
+  branches: BranchOption[];
 }) {
   const [view, setView] = useState<View>("directory");
   const [query, setQuery] = useState("");
@@ -411,9 +454,10 @@ export function TeamView({
               myRole={myRole}
               canManage={canManage}
               departments={departments}
+              branches={branches}
             />
           ) : view === "departments" ? (
-            <DepartmentsView orgId={orgId} departments={departments} people={people} canManage={canManageDepartments} />
+            <DepartmentsView orgId={orgId} departments={departments} people={people} branches={branches} canManage={canManageDepartments} />
           ) : (
             <OrgChart people={people} />
           )}

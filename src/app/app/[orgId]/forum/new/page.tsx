@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { getMentionables } from "@/lib/data/forum";
-import { getOrgContext } from "@/lib/data/session";
+import { requirePermission } from "@/lib/data/session";
 import { createThread } from "../actions";
 import { ThreadForm } from "../thread-form";
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Nuevo hilo · Foro" };
 
 export default async function NewThreadPage({ params }: PageProps<"/app/[orgId]/forum/new">) {
   const { orgId } = await params;
-  const ctx = await getOrgContext(orgId);
+  const ctx = await requirePermission(orgId, "workspace.access");
   const people = (await getMentionables(orgId)).filter((p) => p.id !== ctx.membership.id);
 
   return (

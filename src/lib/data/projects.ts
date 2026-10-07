@@ -30,6 +30,16 @@ export const getProject = cache(async (projectId: string): Promise<Project | nul
 });
 
 /** Membresías de proyectos visibles para el usuario (RLS filtra el resto). */
+/**
+ * ¿Quien consulta gestiona este proyecto? Lo decide la base (can_manage_project): permiso de
+ * empresa, responsable del departamento, director de su rama o responsable del propio proyecto.
+ */
+export const canManageProjectDb = cache(async (projectId: string): Promise<boolean> => {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("can_manage_project", { p_project_id: projectId });
+  return data === true;
+});
+
 export const getProjectMembers = cache(async (orgId: string): Promise<ProjectMember[]> => {
   const supabase = await createClient();
   const projects = await getProjects(orgId);

@@ -11,6 +11,8 @@ export const getEmployees = cache(async (orgId: string): Promise<Employee[]> => 
     .from("memberships")
     .select("*")
     .eq("org_id", orgId)
+    // El superadmin es la plataforma, no una persona de la empresa: no aparece en listados
+    .neq("role_id", "superadmin")
     .order("created_at");
   if (error) throw error;
 

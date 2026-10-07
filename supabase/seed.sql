@@ -32,6 +32,17 @@ select pg_temp.demo_user('22222222-2222-2222-2222-222222222222', 'carlos@demo.co
 select pg_temp.demo_user('33333333-3333-3333-3333-333333333333', 'ana@demo.com', 'Ana Torres');
 select pg_temp.demo_user('44444444-4444-4444-4444-444444444444', 'diego@demo.com', 'Diego Fernández');
 select pg_temp.demo_user('55555555-5555-5555-5555-555555555555', 'sofia@demo.com', 'Sofía Navarro');
+-- Un usuario por cada puesto de la estructura (ver 0022_org_structure.sql)
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000001', 'dev@demo.com', 'Equipo de desarrollo');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000002', 'jorge@demo.com', 'Jorge Martín');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000003', 'raul@demo.com', 'Raúl Ortega');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000004', 'nuria@demo.com', 'Nuria Vidal');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000005', 'irene@demo.com', 'Irene Pastor');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000006', 'toni@demo.com', 'Toni Ferrer');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000007', 'pol@demo.com', 'Pol Serra');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000008', 'lucia@demo.com', 'Lucía Gómez');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000009', 'ivan@demo.com', 'Iván Soler');
+select pg_temp.demo_user('10000000-0000-0000-0000-000000000010', 'gestoria@demo.com', 'Gestoría Rius');
 
 -- La empresa: Diplonautic. La plataforma es multi-tenant por dentro (RLS por
 -- organización): la segunda organización no tiene miembros de demo y solo existe
@@ -40,27 +51,77 @@ insert into public.organizations (id, name) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'Diplonautic'),
   ('aaaaaaaa-0000-0000-0000-000000000002', 'Otra empresa (pruebas de aislamiento)');
 
--- Diplonautic: Laura (owner) → Carlos (manager) → Ana, Diego ; Sofía (admin)
-insert into public.memberships (id, org_id, user_id, role_id, manager_id, position, weekly_hours) values
-  ('bbbbbbbb-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'owner',    null,                                   'Gerente',                  40),
-  ('bbbbbbbb-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', '55555555-5555-5555-5555-555555555555', 'admin',    'bbbbbbbb-0000-0000-0000-000000000001', 'Administración y RRHH',    40),
-  ('bbbbbbbb-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'manager',  'bbbbbbbb-0000-0000-0000-000000000001', 'Jefe de taller',           40),
-  ('bbbbbbbb-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Técnica de climatización', 40),
-  ('bbbbbbbb-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444444', 'employee', 'bbbbbbbb-0000-0000-0000-000000000002', 'Técnico electricista',     32);
+-- Ramas de Diplonautic. Cada una gestiona a nivel empresa lo de su función
+-- (branch_permissions): lo recibe quien la dirige.
+insert into public.branches (id, org_id, name, color) values
+  ('dddddddd-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Técnica', 'blue'),
+  ('dddddddd-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Comercial', 'green'),
+  ('dddddddd-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Administración y RRHH', 'violet');
+
+insert into public.branch_permissions (branch_id, permission_key)
+select 'dddddddd-0000-0000-0000-000000000001'::uuid, k from unnest(array['tasks.manage_all']) k
+union all
+select 'dddddddd-0000-0000-0000-000000000002'::uuid, k from unnest(array['projects.manage', 'tasks.manage_all', 'billing.manage', 'contact.manage']) k
+union all
+select 'dddddddd-0000-0000-0000-000000000003'::uuid, k from unnest(array[
+  'employees.manage', 'people.sensitive', 'departments.manage', 'holidays.manage', 'automations.manage',
+  'billing.manage', 'projects.manage', 'tasks.manage_all', 'contact.manage', 'forum.moderate'
+]) k;
+
+-- Diplonautic:
+--   Laura (CEO) → Jorge (dir. técnico) → Carlos (resp. Taller) → Ana, Diego, Toni (encargado) → Lucía (aprendiz)
+--              → Raúl (dir. comercial) → Nuria (resp. Oficina técnica) → Pol
+--              → Sofía (dir. Administración y RRHH, resp. Administración) → Irene (resp. RRHH), Iván, Gestoría (externa)
+--   Superadmin (dev@demo.com): la plataforma, oculto en la empresa
+insert into public.memberships (id, org_id, user_id, role_id, manager_id, position, weekly_hours, directs_branch_id) values
+  ('bbbbbbbb-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111', 'owner',      null,                                   'CEO',                      40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000101', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'superadmin', null,                                   'Desarrollo (plataforma)',  40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000102', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002', 'director',   'bbbbbbbb-0000-0000-0000-000000000001', 'Director técnico',         40, 'dddddddd-0000-0000-0000-000000000001'),
+  ('bbbbbbbb-0000-0000-0000-000000000103', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000003', 'director',   'bbbbbbbb-0000-0000-0000-000000000001', 'Director comercial',       40, 'dddddddd-0000-0000-0000-000000000002'),
+  ('bbbbbbbb-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', '55555555-5555-5555-5555-555555555555', 'director',   'bbbbbbbb-0000-0000-0000-000000000001', 'Directora de administración y RRHH', 40, 'dddddddd-0000-0000-0000-000000000003'),
+  ('bbbbbbbb-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'manager',     'bbbbbbbb-0000-0000-0000-000000000102', 'Jefe de taller',           40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '33333333-3333-3333-3333-333333333333', 'employee',    'bbbbbbbb-0000-0000-0000-000000000002', 'Técnica de climatización', 40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', '44444444-4444-4444-4444-444444444444', 'employee',    'bbbbbbbb-0000-0000-0000-000000000002', 'Técnico electricista',     32, null),
+  ('bbbbbbbb-0000-0000-0000-000000000104', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000004', 'manager',     'bbbbbbbb-0000-0000-0000-000000000103', 'Responsable de oficina técnica', 40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000105', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000005', 'manager',     'bbbbbbbb-0000-0000-0000-000000000005', 'Responsable de RRHH',      40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000106', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000006', 'coordinator', 'bbbbbbbb-0000-0000-0000-000000000002', 'Encargado de varadero',    40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000107', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000007', 'employee',    'bbbbbbbb-0000-0000-0000-000000000104', 'Técnico comercial',        40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000108', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000008', 'intern',      'bbbbbbbb-0000-0000-0000-000000000106', 'Aprendiz de taller',       30, null),
+  ('bbbbbbbb-0000-0000-0000-000000000109', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000009', 'employee',    'bbbbbbbb-0000-0000-0000-000000000005', 'Administrativo',           40, null),
+  ('bbbbbbbb-0000-0000-0000-000000000110', 'aaaaaaaa-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000010', 'external',    'bbbbbbbb-0000-0000-0000-000000000005', 'Gestoría externa',         20, null);
 
 
 -- Departamentos de Diplonautic: el responsable pasa a ser el manager de sus miembros
-insert into public.departments (id, org_id, name, head_id) values
-  ('eeeeeeee-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Dirección',  'bbbbbbbb-0000-0000-0000-000000000001'),
-  ('eeeeeeee-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Taller',     'bbbbbbbb-0000-0000-0000-000000000002'),
-  ('eeeeeeee-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Administración', 'bbbbbbbb-0000-0000-0000-000000000005');
+insert into public.departments (id, org_id, name, head_id, branch_id) values
+  ('eeeeeeee-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Dirección',       'bbbbbbbb-0000-0000-0000-000000000001', null),
+  ('eeeeeeee-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Taller',          'bbbbbbbb-0000-0000-0000-000000000002', 'dddddddd-0000-0000-0000-000000000001'),
+  ('eeeeeeee-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Administración',  'bbbbbbbb-0000-0000-0000-000000000005', 'dddddddd-0000-0000-0000-000000000003'),
+  ('eeeeeeee-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', 'Oficina técnica', 'bbbbbbbb-0000-0000-0000-000000000104', 'dddddddd-0000-0000-0000-000000000002'),
+  ('eeeeeeee-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', 'RRHH',            'bbbbbbbb-0000-0000-0000-000000000105', 'dddddddd-0000-0000-0000-000000000003');
+
+-- Lo que gestiona cada responsable a nivel empresa, por la función de su departamento
+insert into public.department_permissions (department_id, permission_key)
+select 'eeeeeeee-0000-0000-0000-000000000004'::uuid, k from unnest(array['projects.manage', 'contact.manage']) k
+union all
+select 'eeeeeeee-0000-0000-0000-000000000005'::uuid, k from unnest(array['employees.manage', 'people.sensitive', 'holidays.manage']) k
+union all
+select 'eeeeeeee-0000-0000-0000-000000000003'::uuid, k from unnest(array['billing.manage']) k;
 
 update public.memberships set department_id = 'eeeeeeee-0000-0000-0000-000000000002'
-where id in ('bbbbbbbb-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000004');
+where id in ('bbbbbbbb-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000004',
+             'bbbbbbbb-0000-0000-0000-000000000106', 'bbbbbbbb-0000-0000-0000-000000000108');
+update public.memberships set department_id = 'eeeeeeee-0000-0000-0000-000000000004'
+where id = 'bbbbbbbb-0000-0000-0000-000000000107';
+update public.memberships set department_id = 'eeeeeeee-0000-0000-0000-000000000003'
+where id in ('bbbbbbbb-0000-0000-0000-000000000109', 'bbbbbbbb-0000-0000-0000-000000000110');
+-- Al entrar al departamento el manager pasa a ser el responsable: la aprendiz reporta
+-- al encargado, y la responsable de RRHH a la directora de la rama
+update public.memberships set manager_id = 'bbbbbbbb-0000-0000-0000-000000000106' where id = 'bbbbbbbb-0000-0000-0000-000000000108';
+update public.memberships set manager_id = 'bbbbbbbb-0000-0000-0000-000000000005' where id = 'bbbbbbbb-0000-0000-0000-000000000105';
 
 -- Proyectos = trabajos en barcos de clientes. Ana ve solo el Princess (climatización),
--- Diego solo el Lagoon (eléctrico), Carlos ambos por ser responsable del Taller,
--- Sofía y Laura todo por ser admin/owner.
+-- Diego solo el Lagoon (eléctrico, y es su responsable), Carlos ambos por ser responsable
+-- del Taller, Jorge por dirigir la rama Técnica, y Laura, Sofía, Raúl y Nuria todo por su función.
 insert into public.projects (id, org_id, name, client_name, budgeted_hours, hourly_rate, department_id) values
   ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'Climatización Princess V58', 'Náutica Costa Brava',  320, 65,   'eeeeeeee-0000-0000-0000-000000000002'),
   ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Refit eléctrico Lagoon 46',  'Charter Mediterráneo', 200, 70,   'eeeeeeee-0000-0000-0000-000000000002'),
@@ -247,3 +308,11 @@ insert into public.contact_messages (id, org_id, name, email, phone, boat_type, 
    'ElectroMotor: arranque, alternador o dinamo',
    E'El motor de arranque hace clic pero no gira. Ya cambié la batería. ¿Reparan motores de arranque fuera del barco si se los llevo al taller?',
    'closed', 'bbbbbbbb-0000-0000-0000-000000000001', now() - interval '6 days', now() - interval '9 days');
+
+-- Rol en cada proyecto (estructura del trabajo): Diego lleva el Lagoon; Pol sigue el
+-- Princess como observador para el cliente; Lucía (aprendiz) ayuda en el Princess
+insert into public.project_members (project_id, membership_id, role) values
+  ('cccccccc-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000004', 'lead'),
+  ('cccccccc-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000107', 'observer'),
+  ('cccccccc-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000108', 'member')
+on conflict (project_id, membership_id) do update set role = excluded.role;
