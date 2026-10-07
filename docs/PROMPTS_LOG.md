@@ -600,3 +600,29 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Es el único que elige sus propios avisos;** al resto se los configura administración.
 - **Se mantiene** que no aprueba vacaciones ni aparece en los listados de la empresa.
 
+---
+
+## 2026-10-07 Eliminar personas
+
+**Prompt (resumen):** faltaba poder eliminar personas desde Personas, borrándolas también de la base.
+
+**Decisiones:**
+- **Se borra la cuenta y todos sus datos** (fichajes, vacaciones, ficha, avisos), en una función de la base que valida permiso y nivel. Confirmación en dos pasos, porque no se puede deshacer.
+- **Queda constancia en la auditoría** de quién era y quién lo eliminó.
+- **Lo que decidió esa persona se conserva:** las vacaciones aprobadas quedan sin firmante en lugar de impedir el borrado.
+
+**Pruebas:** 10 pgTAP (quién puede, nivel, a sí mismo, borrado de cuenta y perfil, auditoría, persona con historia) y E2E de eliminar y de que ya no puede entrar.
+
+---
+
+## 2026-10-07 Confirmación por email del formulario de contacto
+
+**Prompt (resumen):** al enviar el formulario de contacto, a la persona tiene que llegarle un email de confirmación.
+
+**Decisiones:**
+- **SMTP genérico (`nodemailer`)** en lugar de atarse a un proveedor: funciona con Brevo (gratis, 300 por día y sin dominio propio), con Gmail o con el servidor de la empresa. Formspree se descartó porque la respuesta automática a quien escribe es de pago y reemplazaría la bandeja de Mensajes web que ya existe.
+- **El email resume la consulta** (servicio, barco, mensaje) y da el teléfono para urgencias. Lo que escribe la persona se escapa: nunca se inyecta HTML.
+- **Si el email falla, la consulta igual se guarda;** el fallo queda en el registro de errores. Sin SMTP configurado, el formulario funciona igual, sin email. La base ya limita a 3 envíos por email y hora, así que el formulario no sirve para mandarle emails en masa a alguien.
+
+**Pruebas:** unitarios de la plantilla (contenido y escape de HTML).
+

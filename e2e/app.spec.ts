@@ -774,3 +774,22 @@ test("el CEO no configura la plataforma", async ({ page }) => {
   await page.goto(`/app/${NEBULA}/structure`);
   await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
+
+test("RRHH elimina a una persona: confirma en dos pasos y desaparece de la empresa", async ({ page }) => {
+  await login(page, "sofia@demo.com");
+  await page.goto(`/app/${NEBULA}/employees`);
+  await page.getByRole("button", { name: "Editar a Pol Serra" }).click();
+  await page.getByRole("button", { name: "Eliminar persona" }).click();
+  await expect(page.getByText(/Se borra la cuenta de Pol Serra/)).toBeVisible();
+  await page.getByRole("button", { name: "Sí, eliminar" }).click();
+  await expect(page.getByText("Pol Serra fue eliminada.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Editar a Pol Serra" })).toHaveCount(0);
+});
+
+test("una persona eliminada ya no puede entrar", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill("pol@demo.com");
+  await page.getByLabel("Contraseña").fill("Demo1234!");
+  await page.getByRole("button", { name: /ingresar/i }).click();
+  await expect(page.getByText("Email o contraseña incorrectos.")).toBeVisible();
+});
