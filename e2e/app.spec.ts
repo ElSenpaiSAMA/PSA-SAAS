@@ -43,7 +43,7 @@ test("empleada ficha entrada, pausa para almorzar, reanuda y ficha salida", asyn
   await page.getByRole("button", { name: "Reanudar" }).click();
   await expect(page.getByText("Jornada reanudada")).toBeVisible();
   await expect(page.getByText(/Trabajando desde las/)).toBeVisible();
-  await expect(page.getByText(/^Pausa \d/)).toBeVisible();
+  await expect(page.getByText(/^Pausa \d/).first()).toBeVisible();
 
   await page.getByRole("button", { name: "Fichar salida" }).click();
   await expect(page.getByText("Salida registrada")).toBeVisible();
@@ -127,7 +127,8 @@ test("una admin ve la auditoría con la actividad reciente", async ({ page }) =>
   await expect(page.getByText("aprobó una solicitud de vacaciones").first()).toBeVisible();
 });
 
-const projectNames = (page: Page) => page.locator("a[href*='/projects/'] p.font-semibold").allTextContents();
+// Tabla de proyectos: el enlace de cada fila es el nombre del proyecto
+const projectNames = (page: Page) => page.locator("table a[href*='/projects/']").allTextContents();
 
 test("una empleada solo ve los proyectos donde es miembro", async ({ page }) => {
   await login(page, "ana@demo.com");
@@ -203,6 +204,8 @@ test("el responsable repite el mes: copia en bloque las OT sin continuación", a
 test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
+  // El formulario aparece con el registro semanal, que espera a hidratar (zona horaria del navegador)
+  await expect(page.getByLabel("Tarea")).toBeVisible();
   const options = await page.getByLabel("Tarea").locator("option").allTextContents();
   expect(options).toContain("Dashboard de cliente");
   // OT facturada (mes anterior) y copias en borrador (test anterior) no admiten horas
@@ -401,7 +404,11 @@ test("la persona ve el motivo del rechazo", async ({ page }) => {
 
 test("un empleado pide corregir un fichaje pasado", async ({ page }) => {
   await login(page, "diego@demo.com");
+  // Los fichajes de días anteriores están en el registro semanal: semana pasada, detalle del lunes
   await page.goto(`/app/${NEBULA}/time-tracking`);
+  await page.getByRole("link", { name: "Semana anterior" }).click();
+  await expect(page).toHaveURL(/semana=/);
+  await page.getByRole("button", { name: /Ver el detalle del lunes/ }).click();
   const row = page
     .getByRole("listitem")
     .filter({ hasText: /^Jornada/ })
@@ -420,8 +427,8 @@ test("su responsable aprueba la corrección y se aplica", async ({ page }) => {
   await login(page, "carlos@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
   const card = page.locator("#correcciones");
-  await expect(card.getByText("Entré a las 8 y fiché tarde")).toBeVisible();
-  await card.getByRole("button", { name: "Aprobar" }).click();
+  await expect(card.getByText("Entré a las 8 y fiché tarde").first()).toBeVisible();
+  await card.getByRole("button", { name: "Aprobar" }).first().click();
   await expect(page.getByText("Corrección aprobada y aplicada al fichaje")).toBeVisible();
 });
 
@@ -581,4 +588,20 @@ test("al mencionado le llega el aviso y ve la novedad en el foro", async ({ page
   await expect(item.getByText("Nuevo", { exact: true })).toBeVisible();
   // Al ver el foro, el aviso del menú vuelve a cero
   await expect(forumLink).toHaveText(/^Foro$/);
+});
+
+test("un técnico contesta una respuesta y la conversación se puede plegar", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  // Hilo del seed: Carlos respondió sugiriendo un filtro de ruido
+  await page.goto(`/app/${NEBULA}/forum/99999999-0000-0000-0000-000000000002`);
+  await page.getByRole("button", { name: "Responder a Carlos Ruiz" }).first().click();
+  await page.getByLabel("Respuesta a Carlos Ruiz").fill("E2E: a mí me pasó igual en un Lagoon 40, gracias.");
+  await page.getByRole("button", { name: "Responder", exact: true }).first().click();
+  await expect(page.getByText("Respuesta publicada")).toBeVisible();
+  await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
+
+  await page.getByRole("button", { name: "Ocultar respuestas" }).first().click();
+  await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toHaveCount(0);
+  await page.getByRole("button", { name: /Ver \d+ respuesta/ }).first().click();
+  await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
 });

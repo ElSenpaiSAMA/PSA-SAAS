@@ -511,3 +511,20 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** 10 pgTAP (filtrado de menciones, aviso al mencionado, sin duplicados, menciones inmutables, contador de novedades), unitarios del parser de menciones y del autocompletado, y E2E del recorrido: Ana menciona a Diego, a Diego le aparece el aviso en "Foro" y la mención en la Bandeja, y el contador vuelve a cero al ver el foro.
 
+---
+
+## 2026-10-07 Intranet profesional: estructura, fichaje, tablas y foro anidado
+
+**Prompt (resumen):** la sección de fichaje se veía rara, y en general la intranet tenía tarjetas sueltas y distanciadas. Se pidió tomar ideas de PSA profesionales (Factorial, Productive, Kantata, Certinia) y de la estructura de Mira (barra lateral por secciones, barra superior y contenido dentro de un contenedor). En el foro faltaba poder responder una respuesta y plegar las conversaciones. Además, se pasó al logo oficial de Diplonautic.
+
+**Decisiones:**
+- **Estructura (Mira):** barra lateral por secciones, barra superior con ruta, buscador, avisos y usuario, y cada página dentro de un contenedor. Se resolvió en el marco común (`AppShell`), así que aplica a todas las secciones a la vez.
+- **Fichaje (Factorial):** un registro semanal con una fila por día, con una barra visual de los tramos de trabajo y pausa, trabajado contra previsto, saldo con signo y estado (completa, incompleta, sin fichar, festivo, ausencia). Se navega por semanas (`?semana=`) y cada día despliega sus tramos para pedir una corrección. Los totales y la agrupación por día se calculan **en el navegador** (`src/lib/domain/timesheet.ts`, funciones puras con tests), porque el servidor corre en UTC.
+- **Horas por tarea (Productive):** hoja con filas por tarea y columnas por día, con totales, y el formulario para imputar al lado.
+- **Indicadores:** las tarjetas sueltas pasaron a una banda única dividida en celdas en las 11 secciones que las usaban.
+- **Proyectos y órdenes de trabajo como tablas:** buscador, filtro por estado, equipo, avance de horas y salud del proyecto. Las órdenes tienen encabezados de columna.
+- **Foro con respuestas anidadas:** `parent_id` validado por la base (misma conversación, no se puede mover) y, si se borra la madre, las hijas no se pierden. En la interfaz hay un "Responder" en cada respuesta, una línea guía y la opción de plegar y desplegar cada conversación.
+- **Logo oficial:** se generan versiones para fondo claro y oscuro y el favicon a partir del archivo de la empresa (`scripts/logo-variants.mjs`).
+
+**Pruebas:** 10 unitarios del registro semanal, 2 del árbol de respuestas, 5 pgTAP de respuestas anidadas, y E2E de fichaje (con detalle por día y navegación de semanas), corrección de fichajes, imputación y respuesta a una respuesta con plegado.
+

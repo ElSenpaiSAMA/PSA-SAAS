@@ -53,7 +53,7 @@ export default async function PeoplePage({ params }: PageProps<"/app/[orgId]/emp
     <>
       <PageHeader title="Personas" description={`Quiénes forman ${ctx.organization.name}, en qué departamento están y a quién reportan.`} />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         <StatCard index={0} label="Personas activas" value={people.length} icon={Users} />
         <StatCard index={1} label="Departamentos" value={departments.length} icon={Building2} />
         <StatCard

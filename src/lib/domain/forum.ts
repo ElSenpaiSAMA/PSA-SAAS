@@ -95,3 +95,28 @@ export function excerpt(body: string, max = 160): string {
   const flat = body.replace(/\s+/g, " ").trim();
   return flat.length > max ? `${flat.slice(0, max - 1).trimEnd()}…` : flat;
 }
+
+export interface PostNode<T> {
+  post: T;
+  children: PostNode<T>[];
+  /** Respuestas que cuelgan de esta, en total (hijas, nietas…) */
+  descendants: number;
+}
+
+/**
+ * Arma el árbol de respuestas de un hilo. Las respuestas sin madre (o cuya madre
+ * ya no está) van al primer nivel; dentro de cada nivel, en orden cronológico.
+ */
+export function buildPostTree<T extends { id: string; parent_id: string | null; created_at: string }>(posts: readonly T[]): PostNode<T>[] {
+  const nodes = new Map(posts.map((p) => [p.id, { post: p, children: [] as PostNode<T>[], descendants: 0 }]));
+  const roots: PostNode<T>[] = [];
+  const sorted = [...posts].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  for (const p of sorted) {
+    const node = nodes.get(p.id)!;
+    const parent = p.parent_id ? nodes.get(p.parent_id) : undefined;
+    (parent ? parent.children : roots).push(node);
+  }
+  const count = (n: PostNode<T>): number => (n.descendants = n.children.reduce((s, c) => s + 1 + count(c), 0));
+  roots.forEach(count);
+  return roots;
+}

@@ -83,7 +83,7 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
         actions={manage ? <ArchiveButton orgId={orgId} projectId={project.id} status={project.status} /> : null}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
         <StatCard index={0} label="Órdenes de trabajo" value={rows.length} icon={ClipboardList} />
         <StatCard
           index={1}

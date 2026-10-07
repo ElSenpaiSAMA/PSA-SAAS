@@ -67,7 +67,7 @@ export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staf
         title="Empleados"
         description="Todas las personas de la empresa. Abrí un perfil para ver su ficha, su trabajo, sus horas, vacaciones y actividad."
       />
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         <StatCard index={0} label="Empleados activos" value={active.length} icon={Users} />
         <StatCard index={1} label="Con personas a cargo" value={active.filter((r) => r.reports > 0).length} icon={UserCheck} />
         <StatCard index={2} label="Departamentos" value={departments.length} icon={Building2} />

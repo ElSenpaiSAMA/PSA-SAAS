@@ -58,7 +58,14 @@ export async function replyToThread(orgId: string, threadId: string, _prev: Acti
   const supabase = await createClient();
   const { error } = await supabase
     .from("forum_posts")
-    .insert({ thread_id: z.guid().parse(threadId), author_id: ctx.membership.id, body: parsed.data.body, mentions: parseMentions(formData) });
+    .insert({
+      thread_id: z.guid().parse(threadId),
+      // Respuesta a otra respuesta del hilo (la base valida que sea del mismo hilo)
+      parent_id: z.guid().safeParse(formData.get("parentId")).data ?? null,
+      author_id: ctx.membership.id,
+      body: parsed.data.body,
+      mentions: parseMentions(formData),
+    });
   if (error) return fail(dbErrorMessage(error));
   refresh(orgId);
   return ok("Respuesta publicada");

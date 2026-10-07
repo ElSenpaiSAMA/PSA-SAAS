@@ -44,7 +44,7 @@ export function WorkOrderRow({ orgId, row }: { orgId: string; row: WorkOrderRowD
   const consumption = amounts.consumption ?? 0;
 
   return (
-    <li className="group relative grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 gap-y-3 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 @3xl:grid-cols-[minmax(0,1.7fr)_7.5rem_minmax(0,1.1fr)_6.5rem_auto] @3xl:items-center">
+    <li className="group relative grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 gap-y-3 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 @3xl:grid-cols-[minmax(0,1.7fr)_7.5rem_minmax(0,1.1fr)_6.5rem_11.5rem] @3xl:items-center">
       <div className="order-1 col-span-2 min-w-0 @xl:col-span-1 @3xl:order-1">
         <Link
           href={`/app/${orgId}/work-orders/${row.id}`}
@@ -118,6 +118,17 @@ export function WorkOrderRow({ orgId, row }: { orgId: string; row: WorkOrderRowD
 export function WorkOrderList({ orgId, rows }: { orgId: string; rows: WorkOrderRowData[] }) {
   return (
     <ul className="@container overflow-hidden rounded-2xl border border-border bg-card">
+      {/* Encabezados de columna (en pantallas anchas la lista se lee como una tabla) */}
+      <li
+        aria-hidden
+        className="hidden border-b border-border bg-muted/40 px-5 py-2.5 text-[11px] font-medium tracking-wide text-muted-foreground uppercase @3xl:grid @3xl:grid-cols-[minmax(0,1.7fr)_7.5rem_minmax(0,1.1fr)_6.5rem_11.5rem] @3xl:gap-x-6"
+      >
+        <span>Orden de trabajo</span>
+        <span>Estado</span>
+        <span>Horas y tareas</span>
+        <span className="text-right">Importe</span>
+        <span className="w-8" />
+      </li>
       {rows.map((row) => (
         <WorkOrderRow key={row.id} orgId={orgId} row={row} />
       ))}

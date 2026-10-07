@@ -9,8 +9,8 @@ import { getMentionables, getThread } from "@/lib/data/forum";
 import { getOrgContext } from "@/lib/data/session";
 import { threadAbilities } from "@/lib/domain/forum";
 import { CategoryBadge } from "../category-badge";
-import { DeletePostButton } from "../delete-post-button";
 import { MentionText } from "../mention-text";
+import { PostTree } from "../post-tree";
 import { ReplyForm } from "../reply-form";
 import { ThreadControls } from "../thread-controls";
 
@@ -98,28 +98,24 @@ export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/for
           {posts.length === 0 ? "Sin respuestas todavía" : posts.length === 1 ? "1 respuesta" : `${posts.length} respuestas`}
         </h2>
         {posts.length > 0 ? (
-          <ol className="grid gap-3">
-            {posts.map((p) => {
-              const isOp = p.author_id !== null && p.author_id === thread.author_id;
-              return (
-                <li key={p.id} id={`post-${p.id}`} className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-                  <div className="flex items-center gap-2.5 text-[13px] text-muted-foreground">
-                    <Avatar name={p.author.name} size={26} />
-                    <span className="font-medium text-foreground/80">{p.author.name}</span>
-                    {isOp ? <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-medium">Autor</span> : null}
-                    <span aria-hidden>·</span>
-                    <TimeAgo iso={p.created_at} />
-                    <span className="ml-auto">
-                      {p.author_id === me || isModerator ? <DeletePostButton orgId={orgId} postId={p.id} /> : null}
-                    </span>
-                  </div>
-                  <p className="mt-2.5 text-[14.5px] leading-relaxed whitespace-pre-line">
-                    <MentionText body={p.body} people={mentioned(p.mentions)} />
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
+          <PostTree
+            orgId={orgId}
+            threadId={thread.id}
+            me={me}
+            isModerator={isModerator}
+            canReply={can.canReply}
+            threadAuthorId={thread.author_id}
+            people={mentionables.filter((p) => p.id !== me)}
+            posts={posts.map((p) => ({
+              id: p.id,
+              parent_id: p.parent_id,
+              author_id: p.author_id,
+              author: p.author.name,
+              body: p.body,
+              created_at: p.created_at,
+              mentioned: mentioned(p.mentions),
+            }))}
+          />
         ) : null}
       </section>
 

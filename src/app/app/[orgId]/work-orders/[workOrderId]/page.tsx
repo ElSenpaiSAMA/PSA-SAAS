@@ -97,7 +97,7 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
         canBill={ctx.can("billing.manage")}
       />
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      <div className="mt-4 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         <StatCard
           index={0}
           label="Horas imputadas"

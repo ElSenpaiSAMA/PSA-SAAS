@@ -81,3 +81,33 @@ export async function getTimeEntriesById(ids: string[]): Promise<Map<string, Tim
   if (error) throw error;
   return new Map((data ?? []).map((e) => [e.id, e]));
 }
+
+/** Mis registros entre dos instantes (para el registro semanal). */
+export const getMyEntriesBetween = cache(
+  async (membershipId: string, fromIso: string, toIso: string): Promise<TimeEntryWithTask[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("time_entries")
+      .select("*, task:tasks(id, title, project:projects(id, name))")
+      .eq("membership_id", membershipId)
+      .gte("started_at", fromIso)
+      .lt("started_at", toIso)
+      .order("started_at");
+    if (error) throw error;
+    return (data ?? []) as unknown as TimeEntryWithTask[];
+  },
+);
+
+/** Mis ausencias aprobadas que tocan el período (con su tipo, para el registro). */
+export const getMyApprovedAbsences = cache(async (membershipId: string, from: string, to: string) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("vacation_requests")
+    .select("start_date, end_date, kind")
+    .eq("membership_id", membershipId)
+    .eq("status", "approved")
+    .lte("start_date", to)
+    .gte("end_date", from);
+  if (error) throw error;
+  return data ?? [];
+});
