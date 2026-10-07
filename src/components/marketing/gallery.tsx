@@ -62,7 +62,7 @@ export function Gallery() {
       <div ref={viewport} className="overflow-hidden">
         <motion.div
           ref={track}
-          style={{ x, paddingInline: "max(24px, calc((100vw - 72rem) / 2 + 24px))" }}
+          style={{ x, paddingLeft: 24, paddingRight: "max(24px, calc((100vw - 72rem) / 2 + 24px))" }}
           drag={max > 0 ? "x" : false}
           dragConstraints={{ left: -max, right: 0 }}
           dragElastic={0.08}
