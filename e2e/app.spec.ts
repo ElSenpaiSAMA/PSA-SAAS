@@ -127,7 +127,8 @@ test("una admin ve la auditoría con la actividad reciente", async ({ page }) =>
   await expect(page.getByText("aprobó una solicitud de vacaciones").first()).toBeVisible();
 });
 
-const projectNames = (page: Page) => page.locator("a[href*='/projects/'] p.font-semibold").allTextContents();
+// Tabla de proyectos: el enlace de cada fila es el nombre del proyecto
+const projectNames = (page: Page) => page.locator("table a[href*='/projects/']").allTextContents();
 
 test("una empleada solo ve los proyectos donde es miembro", async ({ page }) => {
   await login(page, "ana@demo.com");
