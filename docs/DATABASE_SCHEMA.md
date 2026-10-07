@@ -398,6 +398,12 @@ Cubierto por `supabase/tests/platform_admin.test.sql` (15 tests).
 
 Corrige el alcance de `0023`: el superadmin ve y gestiona toda la empresa, además de la plataforma (`platform.manage`: errores y estructura de permisos, que sigue siendo solo suya). Vuelve a recibir avisos y es el único que elige los suyos (al resto se los configura administración). No cambia: no aprueba vacaciones, no aparece en listados y nadie de la empresa lo toca.
 
+## Eliminar a una persona (`0025_delete_member.sql`)
+
+`delete_member(membership)` borra la cuenta de la persona y, en cascada, su perfil, membresía, fichajes, vacaciones, ficha y avisos (si pertenece a otra organización, solo la membresía de esta). Lo hace quien gestiona personas sobre alguien de nivel menor; nadie se borra a sí mismo y al CEO solo lo borra el superadmin. Antes deja un evento `member.deleted` en la auditoría con quién era. El borrado corre como sistema: las reglas del día a día (horas de una OT facturada, vacaciones ya decididas) no lo frenan. Las vacaciones que la persona decidió se conservan sin firmante (`decided_by` pasa a `on delete set null`).
+
+Cubierto por `supabase/tests/delete_member.test.sql` (10 tests).
+
 ## Desarrollo local
 
 ```bash
