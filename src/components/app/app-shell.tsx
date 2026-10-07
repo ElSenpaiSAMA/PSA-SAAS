@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
@@ -53,10 +54,14 @@ function OrgSwitcher({ orgId, orgName, role, organizations }: Pick<ShellProps, "
   const multiple = organizations.length > 1;
   const brand = (
     <>
-      <LogoMark inverted className="size-9 shrink-0" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[14px] font-semibold tracking-tight text-white">{orgName}</p>
-        <p className="text-[11.5px] text-white/55">Intranet · {ROLE_LABEL[role]}</p>
+        {/* Instalación de Diplonautic: el logo oficial; con otra empresa, su nombre */}
+        {orgName === "Diplonautic" ? (
+          <Image src="/logo/diplonautic-claro.png" alt="Diplonautic" width={566} height={96} className="h-6 w-auto" />
+        ) : (
+          <p className="truncate text-[14px] font-semibold tracking-tight text-white">{orgName}</p>
+        )}
+        <p className="mt-1.5 text-[11.5px] text-white/55">Intranet · {ROLE_LABEL[role]}</p>
       </div>
     </>
   );
