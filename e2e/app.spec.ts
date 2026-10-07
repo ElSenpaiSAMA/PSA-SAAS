@@ -596,7 +596,11 @@ test("un técnico contesta una respuesta y la conversación se puede plegar", as
   await page.goto(`/app/${NEBULA}/forum/99999999-0000-0000-0000-000000000002`);
   await page.getByRole("button", { name: "Responder a Carlos Ruiz" }).first().click();
   await page.getByLabel("Respuesta a Carlos Ruiz").fill("E2E: a mí me pasó igual en un Lagoon 40, gracias.");
-  await page.getByRole("button", { name: "Responder", exact: true }).first().click();
+  // El botón del formulario anidado (la caja principal del hilo también dice "Responder")
+  await page
+    .locator("form", { has: page.getByLabel("Respuesta a Carlos Ruiz") })
+    .getByRole("button", { name: "Responder", exact: true })
+    .click();
   await expect(page.getByText("Respuesta publicada")).toBeVisible();
   await expect(page.getByText("E2E: a mí me pasó igual en un Lagoon 40, gracias.")).toBeVisible();
 
