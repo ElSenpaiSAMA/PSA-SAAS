@@ -24,6 +24,8 @@ export interface ThreadItem {
   created_at: string;
   last_activity_at: string;
   author: string;
+  /** Actividad de otra persona desde mi última visita */
+  unread: boolean;
 }
 
 const STATUS: { value: ThreadStatusFilter; label: string }[] = [
@@ -39,6 +41,9 @@ const chip = (active: boolean) =>
   );
 
 export function ThreadList({ orgId, threads }: { orgId: string; threads: ThreadItem[] }) {
+  // Las novedades se fijan al abrir la página: al marcar el foro como visto, la lista se
+  // vuelve a pedir, pero las marcas de "Nuevo" se mantienen mientras la persona está acá
+  const [unread] = useState(() => new Set(threads.filter((t) => t.unread).map((t) => t.id)));
   const [category, setCategory] = useState<ForumCategory | null>(null);
   const [status, setStatus] = useState<ThreadStatusFilter>("all");
   const [query, setQuery] = useState("");
@@ -93,6 +98,11 @@ export function ThreadList({ orgId, threads }: { orgId: string; threads: ThreadI
                 <Avatar name={t.author} size={36} className="mt-0.5 hidden sm:inline-flex" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
+                    {unread.has(t.id) ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
+                        Nuevo
+                      </span>
+                    ) : null}
                     {t.pinned ? <Pin className="size-3.5 text-accent" aria-label="Fijado" /> : null}
                     <CategoryBadge category={t.category} />
                     {t.resolved ? (

@@ -24,7 +24,7 @@ export interface ShellProps {
   user: { name: string; email: string; position: string | null };
   organizations: { id: string; name: string; role: string }[];
   /** Contadores de la navegación (pendientes + avisos sin leer) */
-  badges?: { inbox?: number };
+  badges?: { inbox?: number; forum?: number };
   /** La IA está configurada en el servidor (OPENROUTER_API_KEY) */
   aiEnabled?: boolean;
   children: ReactNode;

@@ -339,6 +339,15 @@ En el seed, la segunda organización no tiene miembros de demo: solo existe para
 
 Cubierto por `supabase/tests/single_company.test.sql` (8 tests).
 
+## Menciones y novedades del foro (`0018_forum_mentions.sql`)
+
+- `forum_threads.mentions` / `forum_posts.mentions` (`uuid[]`): personas mencionadas con @. Un trigger las filtra a personas activas de la misma empresa, sin el autor ni repetidos, y avisa a cada una (`forum.mention`). Al editar no cambian. Quien está mencionado no recibe además el aviso de respuesta ni el de aviso general.
+- `forum_threads.last_author_id`: quién movió el hilo por última vez (lo mantiene el contador de respuestas).
+- `forum_reads (membership_id, org_id, seen_at)`: última visita de cada persona al foro (RLS: cada uno ve y escribe solo la suya).
+- `forum_unread_count(org)`: hilos con actividad **de otra persona** desde la última visita (o desde que la persona entró a la empresa). Alimenta el aviso del menú.
+
+Cubierto por `supabase/tests/forum_mentions.test.sql` (10 tests).
+
 ## Desarrollo local
 
 ```bash

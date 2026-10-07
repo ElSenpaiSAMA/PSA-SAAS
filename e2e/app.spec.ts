@@ -549,3 +549,36 @@ test("la autora recibe el aviso de la respuesta y ya no puede responder", async 
   await expect(page.getByText("La administración cerró este hilo: ya no admite respuestas.")).toBeVisible();
   await expect(page.getByLabel("Tu respuesta")).toHaveCount(0);
 });
+
+// ── Menciones y novedades del foro ───────────────────────────
+const MENTION_TITLE = "E2E: revisión del generador con mención";
+
+test("una empleada abre un hilo mencionando a un compañero", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/forum/new`);
+  await page.getByLabel("Título").fill(MENTION_TITLE);
+  const body = page.getByLabel("Mensaje");
+  await body.click();
+  await body.pressSequentially("Hola @Die");
+  await page.getByRole("option", { name: "Diego Fernández" }).click();
+  await body.pressSequentially("¿podés revisar el generador?");
+  await page.getByRole("button", { name: "Publicar hilo" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(MENTION_TITLE);
+  await expect(page.locator("article").getByText("@Diego Fernández")).toBeVisible();
+});
+
+test("al mencionado le llega el aviso y ve la novedad en el foro", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const forumLink = page.getByRole("navigation", { name: "Principal" }).getByRole("link", { name: /^Foro/ });
+  await expect(forumLink).toHaveText(/Foro\s*\d+/);
+
+  await page.goto(`/app/${NEBULA}/inbox`);
+  await expect(page.getByRole("button", { name: new RegExp(`te mencionó en «${MENTION_TITLE}»`) })).toBeVisible();
+
+  await page.goto(`/app/${NEBULA}/forum`);
+  const item = page.getByRole("list", { name: "Hilos del foro" }).getByRole("listitem").filter({ hasText: MENTION_TITLE });
+  await expect(item.getByText("Nuevo", { exact: true })).toBeVisible();
+  // Al ver el foro, el aviso del menú vuelve a cero
+  await expect(forumLink).toHaveText(/^Foro$/);
+});

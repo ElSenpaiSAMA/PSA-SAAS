@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
+import { getMentionables } from "@/lib/data/forum";
 import { getOrgContext } from "@/lib/data/session";
 import { createThread } from "../actions";
 import { ThreadForm } from "../thread-form";
@@ -10,7 +11,8 @@ export const metadata: Metadata = { title: "Nuevo hilo · Foro" };
 
 export default async function NewThreadPage({ params }: PageProps<"/app/[orgId]/forum/new">) {
   const { orgId } = await params;
-  await getOrgContext(orgId);
+  const ctx = await getOrgContext(orgId);
+  const people = (await getMentionables(orgId)).filter((p) => p.id !== ctx.membership.id);
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -22,7 +24,7 @@ export default async function NewThreadPage({ params }: PageProps<"/app/[orgId]/
       </Link>
       <PageHeader title="Nuevo hilo" description="Lo van a ver todas las personas de la empresa." />
       <div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-        <ThreadForm action={createThread.bind(null, orgId)} submitLabel="Publicar hilo" />
+        <ThreadForm action={createThread.bind(null, orgId)} submitLabel="Publicar hilo" people={people} />
       </div>
     </div>
   );

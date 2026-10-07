@@ -28,7 +28,7 @@ export interface NavItem {
   permission?: Permission;
   keywords?: string[];
   /** Muestra un contador (p. ej. pendientes de la bandeja) */
-  badge?: "inbox";
+  badge?: "inbox" | "forum";
 }
 
 export const NAV: NavItem[] = [
@@ -36,7 +36,7 @@ export const NAV: NavItem[] = [
   { href: "inbox", label: "Bandeja", icon: "inbox", badge: "inbox", keywords: ["pendientes", "notificaciones", "avisos", "aprobar"] },
   { href: "time-tracking", label: "Fichaje y horas", icon: "clock", keywords: ["fichar", "horas", "tiempo"] },
   { href: "calendar", label: "Calendario", icon: "calendar", keywords: ["agenda", "festivos", "vencimientos", "ausencias"] },
-  { href: "forum", label: "Foro", icon: "forum", keywords: ["dudas", "avisos", "incidencias", "hilos", "comunidad", "preguntas"] },
+  { href: "forum", label: "Foro", icon: "forum", badge: "forum", keywords: ["dudas", "avisos", "incidencias", "hilos", "comunidad", "preguntas"] },
   { href: "projects", label: "Proyectos", icon: "projects", keywords: ["clientes", "presupuesto"] },
   { href: "work-orders", label: "Órdenes de trabajo", icon: "workOrders", keywords: ["ot", "mes", "facturación", "tareas"] },
   { href: "planning", label: "Planificación", icon: "planning", keywords: ["carga", "capacidad", "semanas", "recursos"] },
