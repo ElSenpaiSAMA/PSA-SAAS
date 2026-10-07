@@ -356,11 +356,11 @@ Cubierto por `supabase/tests/forum_mentions.test.sql` (10 tests).
 
 El formulario de contacto de la web pública guarda cada consulta en `contact_messages` (datos de contacto, tipo y modelo de barco, servicio, mensaje y estado `new` → `in_progress` → `closed`).
 
-- **Entrada:** la web (anónima) no escribe en la tabla: llama a `submit_contact_message`, `security definer`, que la guarda en la empresa marcada con `organizations.receives_web_contact` (una sola por instalación, índice único parcial; no se cambia desde la app). Frena envíos repetidos: 3 por email y 60 en total por hora.
+- **Entrada:** la web (anónima) no escribe en la tabla: llama a `submit_contact_message`, `security definer`, que la guarda en Diplonautic, la empresa de esta instalación. Frena envíos repetidos: 3 por email y 60 en total por hora.
 - **Lectura y gestión:** permiso nuevo `contact.manage` (owner y admin). Un trigger solo deja cambiar el estado y registra quién y cuándo (`handled_by`, `handled_at`). Cambios y borrados quedan en la auditoría.
 - **Aviso:** cada mensaje nuevo genera una notificación `contact.received` para quienes tienen `contact.manage`. `contact_new_count(org)` alimenta el contador del menú.
 
-Cubierto por `supabase/tests/contact_messages.test.sql` (13 tests).
+Cubierto por `supabase/tests/contact_messages.test.sql` (12 tests).
 
 ## Desarrollo local
 

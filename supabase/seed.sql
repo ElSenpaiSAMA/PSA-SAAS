@@ -36,9 +36,9 @@ select pg_temp.demo_user('55555555-5555-5555-5555-555555555555', 'sofia@demo.com
 -- La empresa: Diplonautic. La plataforma es multi-tenant por dentro (RLS por
 -- organización): la segunda organización no tiene miembros de demo y solo existe
 -- para que los tests comprueben el aislamiento entre empresas.
-insert into public.organizations (id, name, receives_web_contact) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', 'Diplonautic', true),
-  ('aaaaaaaa-0000-0000-0000-000000000002', 'Otra empresa (pruebas de aislamiento)', false);
+insert into public.organizations (id, name) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'Diplonautic'),
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'Otra empresa (pruebas de aislamiento)');
 
 -- Diplonautic: Laura (owner) → Carlos (manager) → Ana, Diego ; Sofía (admin)
 insert into public.memberships (id, org_id, user_id, role_id, manager_id, position, weekly_hours) values

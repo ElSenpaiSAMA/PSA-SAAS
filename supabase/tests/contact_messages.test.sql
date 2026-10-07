@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(13);
+select plan(12);
 
 create or replace function pg_temp.login_as(p_user uuid, p_email text)
 returns void
@@ -34,10 +34,6 @@ begin
   perform set_config('request.jwt.claims', '', true);
 end;
 $$;
-
--- La empresa de la web es Diplonautic (sin depender de lo que traiga la base)
-update public.organizations set receives_web_contact = false where id <> 'aaaaaaaa-0000-0000-0000-000000000001';
-update public.organizations set receives_web_contact = true where id = 'aaaaaaaa-0000-0000-0000-000000000001';
 
 create temp table t_ids (id uuid);
 grant all on t_ids to anon, authenticated;
@@ -98,11 +94,6 @@ select throws_ok(
   $$ update public.contact_messages set message = 'Mensaje cambiado por la empresa' where id = (select id from t_ids) $$,
   'only the status of a contact message can be changed',
   'el contenido del mensaje no se puede editar'
-);
-select throws_ok(
-  $$ update public.organizations set receives_web_contact = false where id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
-  'receives_web_contact cannot be changed from the app',
-  'un admin no cambia desde la app qué empresa recibe la web'
 );
 
 -- ── Freno a envíos repetidos ──────────────────────────────────

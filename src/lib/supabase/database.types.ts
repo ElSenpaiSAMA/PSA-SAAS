@@ -29,7 +29,6 @@ export type Organization = {
   default_annual_vacation_days: number;
   default_weekly_hours: number;
   timezone: string;
-  receives_web_contact: boolean;
   created_at: Timestamp;
 };
 

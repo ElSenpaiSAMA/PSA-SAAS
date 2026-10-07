@@ -4,13 +4,12 @@
 -- El formulario de contacto de la web pública deja de ser visual:
 -- cada consulta se guarda y la gestiona la empresa desde la intranet.
 --
---   organizations.receives_web_contact → la empresa que recibe los
---     mensajes de la web (una sola por instalación)
 --   contact_messages → consulta: datos de contacto, barco, servicio,
 --     mensaje y estado (nuevo → en curso → cerrado)
 --
 -- La web no escribe en la tabla: llama a submit_contact_message
--- (security definer), que valida, limita envíos repetidos y la guarda.
+-- (security definer), que valida, limita envíos repetidos y la guarda
+-- en Diplonautic, la empresa de esta instalación.
 -- Lo leen y gestionan quienes tienen contact.manage (owner/admin), a
 -- quienes se avisa en la campana con cada mensaje nuevo.
 -- ============================================================
@@ -21,37 +20,7 @@ insert into public.role_permissions (role_id, permission_key) values
   ('owner', 'contact.manage'),
   ('admin', 'contact.manage');
 
--- 1 · Qué empresa recibe los mensajes de la web
-alter table public.organizations
-  add column receives_web_contact boolean not null default false;
-
-create unique index organizations_web_contact_idx
-  on public.organizations (receives_web_contact) where receives_web_contact;
-
--- Lo decide la instalación (seed / SQL), no un admin desde la app
-create or replace function public.guard_organization_web_contact()
-returns trigger
-language plpgsql
-as $$
-begin
-  if auth.uid() is not null and new.receives_web_contact is distinct from old.receives_web_contact then
-    raise exception 'receives_web_contact cannot be changed from the app';
-  end if;
-  return new;
-end;
-$$;
-
-create trigger trg_organizations_guard_web_contact
-  before update on public.organizations
-  for each row execute function public.guard_organization_web_contact();
-
--- En una base existente, la empresa de la web es Diplonautic
-update public.organizations
-set receives_web_contact = true
-where id = (select id from public.organizations where name = 'Diplonautic' order by created_at limit 1)
-  and not exists (select 1 from public.organizations where receives_web_contact);
-
--- 2 · Mensajes
+-- 1 · Mensajes
 create table public.contact_messages (
   id uuid primary key default gen_random_uuid(),
   org_id uuid not null references public.organizations (id) on delete cascade,
@@ -119,7 +88,7 @@ create trigger trg_audit_contact_messages
   after update or delete on public.contact_messages
   for each row execute function audit.log_change();
 
--- 3 · Entrada desde la web (anónima)
+-- 2 · Entrada desde la web (anónima)
 create or replace function public.submit_contact_message(
   p_name text,
   p_email text,
@@ -135,11 +104,11 @@ security definer
 set search_path = public
 as $$
 declare
-  v_org uuid := (select id from public.organizations where receives_web_contact);
+  v_org uuid := (select id from public.organizations where name = 'Diplonautic' order by created_at limit 1);
   v_id uuid;
 begin
   if v_org is null then
-    raise exception 'contact inbox is not configured';
+    raise exception 'company not found';
   end if;
 
   -- Freno a envíos repetidos: 3 por email por hora y 60 en total por hora
@@ -170,7 +139,7 @@ $$;
 revoke execute on function public.submit_contact_message(text, text, text, text, text, text, text) from public;
 grant execute on function public.submit_contact_message(text, text, text, text, text, text, text) to anon, authenticated;
 
--- 4 · Aviso a quien gestiona los mensajes
+-- 3 · Aviso a quien gestiona los mensajes
 create or replace function public.notify_contact_message()
 returns trigger
 language plpgsql

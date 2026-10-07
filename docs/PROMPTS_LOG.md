@@ -536,8 +536,8 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Decisiones:**
 - **Se guarda en la base y se gestiona en la intranet**, en lugar de enviarlo por email: no depende de un servicio externo, funciona igual en local y en producción, y conecta la web pública con la intranet.
-- **La web no escribe en la tabla:** llama a una función de la base que valida, guarda la consulta en la empresa de la web y frena envíos repetidos (3 por email y 60 en total por hora). Se mantiene el campo trampa para bots.
+- **La web no escribe en la tabla:** llama a una función de la base que valida, guarda la consulta en Diplonautic y frena envíos repetidos (3 por email y 60 en total por hora). Se mantiene el campo trampa para bots.
 - **Solo administración la ve** (permiso nuevo `contact.manage`, owner y admin), con aviso en la campana y un contador en el menú.
 - **Bandeja "Mensajes web":** lista y detalle con estados nuevo → en curso → cerrado. La base registra quién y cuándo la tomó, y el mensaje del cliente no se puede editar. Se responde con un email ya armado (asunto y consulta citada) o por teléfono.
 
-**Pruebas:** 13 pgTAP (envío anónimo, sin acceso directo a la tabla, aviso solo a administración, permisos, solo cambia el estado, freno a envíos repetidos), 8 unitarios del dominio y E2E: una consulta enviada desde la web llega a Sofía, que la toma, y una empleada no ve la sección.
+**Pruebas:** 12 pgTAP (envío anónimo, sin acceso directo a la tabla, aviso solo a administración, permisos, solo cambia el estado, freno a envíos repetidos), 8 unitarios del dominio y E2E: una consulta enviada desde la web llega a Sofía, que la toma, y una empleada no ve la sección.
