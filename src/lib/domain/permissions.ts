@@ -13,6 +13,7 @@ export const PERMISSIONS = [
   "people.sensitive",
   "automations.manage",
   "forum.moderate",
+  "contact.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
