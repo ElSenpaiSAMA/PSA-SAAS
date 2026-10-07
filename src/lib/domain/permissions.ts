@@ -24,6 +24,8 @@ export const PERMISSIONS = [
   "planning.view",
   "people.view",
   "workspace.access",
+  "audit.view",
+  "platform.manage",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -51,7 +53,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 
 /** Qué abarca cada nivel, en una línea (para los selectores y la ayuda). */
 export const ROLE_SCOPE: Record<Role, string> = {
-  superadmin: "La plataforma: todo, oculto en la empresa",
+  superadmin: "La plataforma: auditoría, errores y estructura de permisos. No ve la gestión de la empresa",
   owner: "Toda la empresa",
   director: "Las personas y los módulos de su rama",
   manager: "Su departamento",
@@ -64,8 +66,10 @@ export const ROLE_SCOPE: Record<Role, string> = {
 // Espejo de public.role_permissions (permisos BASE de cada nivel). La rama que dirige
 // o el departamento que encabeza cada persona suman los de su función.
 const BASE: Record<Role, readonly Permission[]> = {
-  superadmin: PERMISSIONS,
-  owner: PERMISSIONS,
+  // La plataforma: solo auditoría y configuración (no la gestión de la empresa)
+  superadmin: ["audit.view", "platform.manage"],
+  // El CEO: toda la empresa, pero no la configuración de la plataforma
+  owner: PERMISSIONS.filter((p) => p !== "platform.manage"),
   director: ["time.view_team", "vacations.approve", "planning.view", "people.view", "workspace.access"],
   manager: ["time.view_team", "vacations.approve", "planning.view", "people.view", "workspace.access"],
   coordinator: ["time.view_team", "planning.view", "people.view", "workspace.access"],
@@ -115,3 +119,19 @@ export const PROJECT_ROLE_HINT: Record<ProjectRole, string> = {
 export function isProjectRole(value: unknown): value is ProjectRole {
   return (PROJECT_ROLES as readonly unknown[]).includes(value);
 }
+
+// ── Funciones de empresa que se asignan a ramas y departamentos ──
+/** Lo que una rama (su director) o un departamento (su responsable) gestiona para toda la empresa. */
+export const FUNCTION_PERMISSIONS: { key: Permission; label: string; hint: string }[] = [
+  { key: "employees.manage", label: "Personas", hint: "Invitar, editar niveles y departamentos, ajustes de la empresa" },
+  { key: "people.sensitive", label: "Fichas y datos sensibles", hint: "DNI, contrato, sueldo, IBAN" },
+  { key: "departments.manage", label: "Departamentos y ramas", hint: "Crearlos y asignar responsables" },
+  { key: "holidays.manage", label: "Festivos", hint: "El calendario laboral" },
+  { key: "projects.manage", label: "Proyectos de toda la empresa", hint: "Crear y gestionar cualquier proyecto" },
+  { key: "tasks.manage_all", label: "Tareas de cualquier proyecto", hint: "Crear, asignar y editar" },
+  { key: "billing.manage", label: "Facturación", hint: "Tarifas y facturar OT" },
+  { key: "contact.manage", label: "Mensajes web", hint: "Consultas del formulario de contacto" },
+  { key: "automations.manage", label: "Automatizaciones", hint: "Reglas que trabajan solas" },
+  { key: "forum.moderate", label: "Moderar el foro", hint: "Fijar, cerrar y borrar hilos" },
+  { key: "audit.view", label: "Auditoría", hint: "Historial de cambios de la empresa" },
+];

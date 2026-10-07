@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bug,
   CalendarDays,
   CalendarRange,
   ClipboardList,
@@ -10,6 +11,7 @@ import {
   LayoutDashboard,
   Mail,
   MessagesSquare,
+  Network,
   Palmtree,
   Settings,
   ScrollText,
@@ -19,11 +21,11 @@ import {
 } from "lucide-react";
 import type { Permission } from "@/lib/domain/permissions";
 
-export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports" | "forum" | "contact";
+export type NavIcon = "dashboard" | "inbox" | "clock" | "calendar" | "vacations" | "projects" | "workOrders" | "planning" | "team" | "staff" | "automations" | "audit" | "settings" | "reports" | "forum" | "contact" | "errors" | "structure";
 
-export type NavGroup = "Mi día" | "Trabajo" | "Personas" | "Gestión";
+export type NavGroup = "Mi día" | "Trabajo" | "Personas" | "Gestión" | "Plataforma";
 
-export const NAV_GROUPS: NavGroup[] = ["Mi día", "Trabajo", "Personas", "Gestión"];
+export const NAV_GROUPS: NavGroup[] = ["Mi día", "Trabajo", "Personas", "Gestión", "Plataforma"];
 
 export interface NavItem {
   href: string;
@@ -36,6 +38,8 @@ export interface NavItem {
   group: NavGroup;
   /** Muestra un contador (p. ej. pendientes de la bandeja) */
   badge?: "inbox" | "forum" | "contact";
+  /** Lo ve también el superadmin, que solo ve lo de plataforma */
+  platform?: true;
 }
 
 export const NAV: NavItem[] = [
@@ -54,7 +58,9 @@ export const NAV: NavItem[] = [
   { href: "reports", group: "Gestión", label: "Informes", icon: "reports", permission: "time.view_team", keywords: ["excel", "csv", "exportar", "facturación", "horas", "ausencias"] },
   { href: "automations", group: "Gestión", label: "Automatizaciones", icon: "automations", permission: "automations.manage", keywords: ["reglas", "workflows", "flujos", "recordatorios", "automático"] },
   { href: "settings", group: "Gestión", label: "Ajustes", icon: "settings", permission: "employees.manage", keywords: ["configuración", "empresa", "zona horaria", "roles", "permisos"] },
-  { href: "audit", group: "Gestión", label: "Auditoría", icon: "audit", permission: "employees.manage", keywords: ["log", "historial"] },
+  { href: "audit", group: "Gestión", label: "Auditoría", icon: "audit", permission: "audit.view", platform: true, keywords: ["log", "historial"] },
+  { href: "errors", group: "Plataforma", label: "Errores", icon: "errors", permission: "platform.manage", platform: true, keywords: ["fallos", "bugs", "logs", "excepciones"] },
+  { href: "structure", group: "Plataforma", label: "Estructura", icon: "structure", permission: "platform.manage", platform: true, keywords: ["ramas", "departamentos", "permisos", "roles"] },
 ];
 
 export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
@@ -74,4 +80,15 @@ export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   reports: BarChart3,
   forum: MessagesSquare,
   contact: Mail,
+  errors: Bug,
+  structure: Network,
 };
+
+/**
+ * Qué secciones ve alguien según sus permisos efectivos. El superadmin (plataforma sin
+ * acceso al espacio de la empresa) ve solo lo de plataforma: auditoría, errores y estructura.
+ */
+export function visibleNav(permissions: readonly Permission[]): NavItem[] {
+  const platformOnly = permissions.includes("platform.manage") && !permissions.includes("workspace.access");
+  return NAV.filter((n) => (platformOnly ? n.platform : !n.permission || permissions.includes(n.permission)));
+}

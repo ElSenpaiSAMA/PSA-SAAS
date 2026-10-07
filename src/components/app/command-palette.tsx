@@ -9,7 +9,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { signOut } from "@/app/(auth)/actions";
 import type { Permission } from "@/lib/domain/permissions";
 import { AssistantView } from "./assistant-view";
-import { NAV, NAV_ICONS } from "./nav";
+import { NAV_ICONS, visibleNav } from "./nav";
 
 function Item({ children, onSelect, value, shortcut }: { children: ReactNode; onSelect: () => void; value: string; shortcut?: string }) {
   return (
@@ -156,7 +156,7 @@ export function CommandPalette({
                   </Command.Group>
 
                   <Command.Group heading="Ir a">
-                    {NAV.filter((n) => !n.permission || permissions.includes(n.permission)).map((n) => {
+                    {visibleNav(permissions).map((n) => {
                       const Icon = NAV_ICONS[n.icon];
                       return (
                         <Item key={n.href} value={`${n.label} ${n.keywords?.join(" ") ?? ""}`} onSelect={() => go(n.href)}>
