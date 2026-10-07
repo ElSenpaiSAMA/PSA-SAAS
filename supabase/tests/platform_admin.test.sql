@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(15);
+select plan(16);
 
 create or replace function pg_temp.login_as(p_user uuid, p_email text)
 returns void
@@ -30,12 +30,16 @@ returns text[]
 language sql
 as $$ select coalesce(array_agg(k order by k), '{}') from public.my_permissions('aaaaaaaa-0000-0000-0000-000000000001') k $$;
 
--- ── El superadmin: solo auditoría y plataforma ────────────────
+-- ── El superadmin: acceso a todo (0024) ───────────────────────
 select pg_temp.login_as('10000000-0000-0000-0000-000000000001', 'dev@demo.com');
-select is(pg_temp.perms(), array['audit.view', 'platform.manage'], 'el superadmin solo tiene auditoría y plataforma');
-select is((select count(*)::int from public.forum_threads), 0, 'no ve el foro de la empresa');
-select is((select count(*)::int from public.projects), 0, 'ni los proyectos');
-select ok((select count(*) from public.memberships) > 1, 'pero sí los nombres de las personas (para leer la auditoría)');
+select is(pg_temp.perms(), (select array_agg(key order by key) from public.permissions), 'el superadmin tiene todos los permisos');
+select ok((select count(*) from public.forum_threads) > 0, 've el foro de la empresa');
+select ok((select count(*) from public.projects) >= 3, 've todos los proyectos');
+select ok((select count(*) from public.memberships) > 1, 've a todas las personas');
+select lives_ok(
+  $$ update public.profiles set muted_notifications = array['forum.notice'] where id = '10000000-0000-0000-0000-000000000001' $$,
+  'el superadmin elige sus propios avisos (al resto se los configura administración)'
+);
 
 -- Configura qué gestiona cada rama
 select lives_ok(

@@ -394,6 +394,10 @@ Cubierto por `supabase/tests/org_structure.test.sql` (27 tests).
 
 Cubierto por `supabase/tests/platform_admin.test.sql` (15 tests).
 
+## El superadmin tiene acceso a todo (`0024_superadmin_full_access.sql`)
+
+Corrige el alcance de `0023`: el superadmin ve y gestiona toda la empresa, además de la plataforma (`platform.manage`: errores y estructura de permisos, que sigue siendo solo suya). Vuelve a recibir avisos y es el único que elige los suyos (al resto se los configura administración). No cambia: no aprueba vacaciones, no aparece en listados y nadie de la empresa lo toca.
+
 ## Desarrollo local
 
 ```bash

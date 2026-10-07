@@ -36,7 +36,7 @@ Hay un usuario por cada puesto de la estructura de la empresa (ver [Roles y jera
 
 | Usuario | Nivel | Rama / departamento | Puesto |
 |---|---|---|---|
-| `dev@demo.com` | Superadmin | La plataforma: solo Auditoría, Errores y Estructura | Desarrollo |
+| `dev@demo.com` | Superadmin | Todo, más Errores y Estructura (solo suyos) | Desarrollo |
 | `laura@demo.com` | **CEO** | Toda la empresa | CEO |
 | `jorge@demo.com` | Dirección de rama | Técnica | Director técnico |
 | `raul@demo.com` | Dirección de rama | Comercial | Director comercial |
@@ -72,7 +72,7 @@ Dos estructuras conviven, como en una organización matricial:
 
 | Nivel | Ve y gestiona |
 |---|---|
-| Superadmin | La plataforma (el desarrollador): auditoría, registro de errores y qué gestiona cada rama. No ve la gestión de la empresa ni aparece en ella |
+| Superadmin | Todo (el desarrollador), y además lo de plataforma: registro de errores y qué gestiona cada rama. No aparece en los listados de la empresa |
 | CEO | Toda la empresa |
 | Dirección de rama | Las personas de su rama y lo que la rama gestiona para toda la empresa |
 | Responsable de departamento | Su departamento |

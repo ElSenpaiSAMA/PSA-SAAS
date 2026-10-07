@@ -58,3 +58,9 @@ export const MUTABLE_KINDS: readonly string[] = NOTIFICATION_GROUPS.flatMap((g) 
 export function isGroupEnabled(group: NotificationGroup, muted: readonly string[]): boolean {
   return !group.kinds.some((k) => muted.includes(k));
 }
+
+/** Lista de avisos silenciados a partir de los grupos apagados (solo tipos válidos, sin repetir). */
+export function mutedFromDisabledGroups(disabled: readonly string[]): string[] {
+  const kinds = NOTIFICATION_GROUPS.filter((g) => disabled.includes(g.key)).flatMap((g) => g.kinds);
+  return [...new Set(kinds)];
+}
