@@ -4,9 +4,9 @@ import { PageHeader } from "@/components/app/page-header";
 import { StatCard } from "@/components/app/stat-card";
 import { getDepartments } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
-import { getOrgContext } from "@/lib/data/session";
+import { requirePermission } from "@/lib/data/session";
 import { recordAt } from "@/lib/domain/employee-records";
-import { displayName } from "@/lib/domain/hierarchy";
+import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
 import { isRole, ROLE_LABEL } from "@/lib/domain/permissions";
 import { todayISO } from "@/lib/domain/periods";
 import { createClient } from "@/lib/supabase/server";
@@ -16,8 +16,10 @@ export const metadata: Metadata = { title: "Empleados" };
 
 export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staff">) {
   const { orgId } = await params;
-  const ctx = await getOrgContext(orgId);
+  const ctx = await requirePermission(orgId, "workspace.access");
   const sensitive = ctx.can("people.sensitive");
+  // Con people.view se abren las fichas de quienes supervisa; sin él, es un directorio básico
+  const seesTeam = ctx.can("people.view");
 
   const supabase = await createClient();
   const [employees, departments, records] = await Promise.all([
@@ -34,6 +36,7 @@ export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staf
   ]);
 
   const names = new Map(employees.map((e) => [e.id, displayName(e.profile)]));
+  const supervised = seesTeam ? supervisedIds(employees, ctx.membership.id, ctx.can("employees.manage")) : new Set<string>();
   const deptName = new Map(departments.map((d) => [d.id, d.name]));
   const today = todayISO();
 
@@ -57,6 +60,7 @@ export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staf
           )?.hire_date ?? null)
         : null,
       isMe: e.id === ctx.membership.id,
+      canOpen: e.id === ctx.membership.id || supervised.has(e.id),
     }))
     .sort((a, b) => a.name.localeCompare(b.name, "es"));
 
@@ -65,8 +69,12 @@ export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staf
   return (
     <>
       <PageHeader
-        title="Empleados"
-        description="Todas las personas de la empresa. Abrí un perfil para ver su ficha, su trabajo, sus horas, vacaciones y actividad."
+        title={seesTeam ? "Empleados" : "Directorio"}
+        description={
+          seesTeam
+            ? "Todas las personas de la empresa. Abrí el perfil de alguien de tu equipo para ver su ficha, su trabajo, sus horas y vacaciones."
+            : "Quién es quién en la empresa: puesto y departamento de cada persona."
+        }
       />
       <div className="mb-6 grid gap-px overflow-hidden rounded-2xl border border-border bg-border sm:grid-cols-3">
         <StatCard index={0} label="Empleados activos" value={active.length} icon={Users} />

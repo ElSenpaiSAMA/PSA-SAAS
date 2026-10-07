@@ -6,7 +6,7 @@ import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
 import { getEmployees } from "@/lib/data/employees";
 import { getOrgContext } from "@/lib/data/session";
 import { wouldCreateCycle } from "@/lib/domain/hierarchy";
-import { isRole, outranks } from "@/lib/domain/permissions";
+import { isRole, outranks, assignableRoles } from "@/lib/domain/permissions";
 import { env } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -22,9 +22,9 @@ export async function inviteEmployee(orgId: string, _prev: ActionState, formData
   const parsed = invitationSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fail("Revisá los campos marcados.", fieldErrors(parsed.error));
 
-  const { email, role, managerId, departmentId, position } = parsed.data;
-  if (ctx.role !== "owner" && !outranks(ctx.role, role)) {
-    return fail("No podés invitar con un rango igual o superior al tuyo.", { role: ["Rango no permitido"] });
+  const { email, role, branchId, managerId, departmentId, position } = parsed.data;
+  if (!assignableRoles(ctx.role).includes(role)) {
+    return fail("No podés invitar con un nivel igual o superior al tuyo.", { role: ["Nivel no permitido"] });
   }
 
   const supabase = await createClient();
@@ -39,6 +39,7 @@ export async function inviteEmployee(orgId: string, _prev: ActionState, formData
     role_id: role,
     manager_id: departmentId ? null : (managerId ?? null),
     department_id: departmentId ?? null,
+    directs_branch_id: role === "director" ? (branchId ?? null) : null,
     position,
   });
   if (error) {
@@ -83,15 +84,16 @@ export async function updateMember(orgId: string, _prev: ActionState, formData: 
   const parsed = memberUpdateSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return fail("Revisá los campos marcados.", fieldErrors(parsed.error));
 
-  const { membershipId, fullName, role, managerId, departmentId, position, weeklyHours } = parsed.data;
+  const { membershipId, fullName, role, branchId, headOf, managerId, departmentId, position, weeklyHours } = parsed.data;
   if (membershipId === ctx.membership.id) return fail("No podés editar tu propio rol desde acá.");
 
   const employees = await getEmployees(orgId);
   const target = employees.find((e) => e.id === membershipId);
   if (!target || !isRole(target.role_id)) return fail("Miembro no encontrado.");
 
-  if (ctx.role !== "owner" && (!outranks(ctx.role, target.role_id) || !outranks(ctx.role, role))) {
-    return fail("Tu rango no permite este cambio.", { role: ["Rango no permitido"] });
+  const top = ctx.role === "owner" || ctx.role === "superadmin";
+  if (!top && (!outranks(ctx.role, target.role_id) || !assignableRoles(ctx.role).includes(role))) {
+    return fail("Tu nivel no permite este cambio.", { role: ["Nivel no permitido"] });
   }
   // Si cambia de departamento, el manager lo define el responsable (trigger en la base)
   const departmentChanged = (departmentId ?? null) !== target.department_id;
@@ -106,12 +108,23 @@ export async function updateMember(orgId: string, _prev: ActionState, formData: 
       role_id: role,
       manager_id: managerId ?? null,
       department_id: departmentId ?? null,
+      directs_branch_id: role === "director" ? (branchId ?? null) : null,
       position,
       weekly_hours: weeklyHours,
     })
     .eq("id", membershipId)
     .eq("org_id", orgId);
   if (error) return fail(dbErrorMessage(error));
+  // "Responsable de departamento": de cuál. Queda como responsable (la base lo suma al
+  // departamento y le pasa el equipo)
+  if (role === "manager" && headOf) {
+    const { error: headError } = await supabase.from("departments").update({ head_id: membershipId }).eq("id", headOf).eq("org_id", orgId);
+    if (headError) {
+      return headError.code === "23505"
+        ? fail("Esa persona ya es responsable de otro departamento.", { headOf: ["Ya es responsable de otro"] })
+        : fail(dbErrorMessage(headError));
+    }
+  }
   // El nombre vive en el perfil (no en la membresía): lo cambia la base, que vuelve a validar permiso y rango
   if (fullName && fullName !== (target.profile?.full_name ?? "")) {
     const { error: nameError } = await supabase.rpc("set_member_name", { p_membership_id: membershipId, p_name: fullName });
@@ -129,7 +142,7 @@ export async function saveDepartment(orgId: string, _prev: ActionState, formData
   const departmentId = formData.get("departmentId");
 
   const supabase = await createClient();
-  const values = { name: parsed.data.name, head_id: parsed.data.headId ?? null };
+  const values = { name: parsed.data.name, head_id: parsed.data.headId ?? null, branch_id: parsed.data.branchId ?? null };
   const { error } =
     typeof departmentId === "string" && departmentId
       ? await supabase.from("departments").update(values).eq("id", z.guid().parse(departmentId)).eq("org_id", orgId)

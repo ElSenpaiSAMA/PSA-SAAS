@@ -5,17 +5,23 @@ import { UserPlus, X } from "lucide-react";
 import { useActionState, useEffect, useRef, useTransition } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { idle } from "@/lib/actions";
+import { PROJECT_ROLE_HINT, PROJECT_ROLE_LABEL, type ProjectRole } from "@/lib/domain/permissions";
 import { addProjectMember, removeProjectMember } from "../actions";
 
-interface Member {
+export interface Member {
   id: string;
   name: string;
+  avatar: string | null;
   position: string | null;
+  role: ProjectRole;
   isMe: boolean;
 }
+
+const ROLE_TONE = { lead: "accent", member: "neutral", observer: "warning" } as const;
 
 interface Candidate {
   id: string;
@@ -29,12 +35,15 @@ export function MembersPanel({
   members,
   candidates,
   canManage,
+  canAppointLead,
 }: {
   orgId: string;
   projectId: string;
   members: Member[];
   candidates: Candidate[];
   canManage: boolean;
+  /** Nombrar responsables queda para quien gestiona por encima del proyecto */
+  canAppointLead: boolean;
 }) {
   const [state, action] = useActionState(addProjectMember.bind(null, orgId), idle);
   const handled = useRef<number | undefined>(undefined);
@@ -52,11 +61,12 @@ export function MembersPanel({
   return (
     <div className="grid gap-4">
       {canManage && candidates.length > 0 ? (
-        <form key={state.status === "success" ? state.submittedAt : "draft"} action={action} className="flex gap-2">
+        <form key={state.status === "success" ? state.submittedAt : "draft"} action={action} className="grid gap-2">
           <input type="hidden" name="projectId" value={projectId} />
-          <Select name="membershipId" defaultValue="" aria-label="Persona a sumar" className="h-10">
+          <div className="flex gap-2">
+          <Select name="membershipId" defaultValue="" aria-label="Persona a invitar" className="h-10">
             <option value="" disabled>
-              Sumar a alguien…
+              Invitar a alguien…
             </option>
             {ownDepartment.length > 0 ? (
               <optgroup label="Del departamento">
@@ -77,9 +87,17 @@ export function MembersPanel({
               </optgroup>
             ) : null}
           </Select>
-          <SubmitButton size="icon" aria-label="Sumar al proyecto" className="h-10 w-10 shrink-0">
+          <SubmitButton size="icon" aria-label="Invitar al proyecto" className="h-10 w-10 shrink-0">
             <UserPlus className="size-4" />
           </SubmitButton>
+          </div>
+          <Select name="role" defaultValue="member" aria-label="Rol en el proyecto" className="h-9 text-[13px]">
+            {(canAppointLead ? (["member", "observer", "lead"] as const) : (["member", "observer"] as const)).map((r) => (
+              <option key={r} value={r}>
+                {PROJECT_ROLE_LABEL[r]}: {PROJECT_ROLE_HINT[r].toLowerCase()}
+              </option>
+            ))}
+          </Select>
         </form>
       ) : null}
 
@@ -97,13 +115,16 @@ export function MembersPanel({
                 exit={{ opacity: 0, x: 20 }}
                 className="group flex items-center gap-3 rounded-xl px-1 py-1.5"
               >
-                <Avatar name={m.name} size={30} className="ring-0" />
+                <Avatar name={m.name} src={m.avatar} size={30} className="ring-0" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] font-medium">
                     {m.name} {m.isMe ? <span className="font-normal text-muted-foreground">(vos)</span> : null}
                   </p>
                   {m.position ? <p className="truncate text-[12px] text-muted-foreground">{m.position}</p> : null}
                 </div>
+                <Badge tone={ROLE_TONE[m.role]} title={PROJECT_ROLE_HINT[m.role]}>
+                  {PROJECT_ROLE_LABEL[m.role]}
+                </Badge>
                 {canManage ? <RemoveMember orgId={orgId} projectId={projectId} member={m} /> : null}
               </motion.li>
             ))}

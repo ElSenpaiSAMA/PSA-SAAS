@@ -6,7 +6,7 @@ import { z } from "zod";
 import { Avatar } from "@/components/ui/avatar";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { getMentionables, getThread, getThreads } from "@/lib/data/forum";
-import { getOrgContext } from "@/lib/data/session";
+import { requirePermission } from "@/lib/data/session";
 import { relatedThreads, threadAbilities, threadParticipants } from "@/lib/domain/forum";
 import { CategoryBadge } from "../category-badge";
 import { MentionText } from "../mention-text";
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps<"/app/[orgId]/forum
 export default async function ThreadPage({ params }: PageProps<"/app/[orgId]/forum/[threadId]">) {
   const { orgId, threadId } = await params;
   if (!z.guid().safeParse(threadId).success) notFound();
-  const ctx = await getOrgContext(orgId);
+  const ctx = await requirePermission(orgId, "workspace.access");
   const [data, mentionables, threads] = await Promise.all([getThread(orgId, threadId), getMentionables(orgId), getThreads(orgId)]);
   if (!data) notFound();
 

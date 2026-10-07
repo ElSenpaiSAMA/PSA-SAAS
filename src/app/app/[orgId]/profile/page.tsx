@@ -91,7 +91,7 @@ export default async function ProfilePage({ params }: PageProps<"/app/[orgId]/pr
                 <span className="break-all">{profile?.email ?? "—"}</span>
               </Row>
               <Row label="Rol">
-                <Badge tone={ctx.role === "owner" || ctx.role === "admin" ? "accent" : "neutral"}>{ROLE_LABEL[ctx.role]}</Badge>
+                <Badge tone={ctx.role === "owner" || ctx.role === "director" ? "accent" : "neutral"}>{ROLE_LABEL[ctx.role]}</Badge>
               </Row>
               <Row label="Puesto">{me.position ?? "—"}</Row>
               <Row label="Departamento">{department?.name ?? "—"}</Row>

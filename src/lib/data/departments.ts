@@ -1,11 +1,19 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { Department } from "@/lib/supabase/database.types";
+import type { Branch, Department } from "@/lib/supabase/database.types";
 
 export const getDepartments = cache(async (orgId: string): Promise<Department[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase.from("departments").select("*").eq("org_id", orgId).order("name");
+  if (error) throw error;
+  return data ?? [];
+});
+
+/** Ramas de la empresa (Técnica, Comercial, Administración y RRHH…). */
+export const getBranches = cache(async (orgId: string): Promise<Branch[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("branches").select("*").eq("org_id", orgId).order("name");
   if (error) throw error;
   return data ?? [];
 });

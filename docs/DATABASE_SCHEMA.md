@@ -370,6 +370,21 @@ Cubierto por `supabase/tests/contact_messages.test.sql` (12 tests).
 
 Cubierto por `supabase/tests/profile_preferences.test.sql` (18 tests).
 
+## Estructura de la empresa: niveles, ramas y rol por proyecto (`0022_org_structure.sql`)
+
+Dos estructuras conviven:
+
+- **Organización** (gestiona personas). `roles.level`: superadmin 8, owner/CEO 7, director (dirección de rama) 6, manager (responsable de departamento) 5, coordinator 4, employee 3, intern 2, external 1. `branches` agrupa departamentos (`departments.branch_id`); `memberships.directs_branch_id` dice qué rama dirige cada director (y las invitaciones lo llevan).
+- **Trabajo** (gestiona proyectos y OT). `project_members.role`: `lead` (responsable: gestiona e invita), `member` o `observer` (solo mira); `added_by` registra quién invitó.
+
+**Permisos efectivos.** `membership_can()` / `has_permission()` = permisos base del nivel (`role_permissions`) + los de la rama que dirige (`branch_permissions`) + los del departamento que encabeza (`department_permissions`); owner y superadmin, todos. `my_permissions(org)` los devuelve para armar el menú. Asignar permisos a ramas o departamentos lo hace solo el CEO o el superadmin.
+
+**Alcance sobre personas.** `can_supervise()` suma a la línea de reporte el departamento que encabeza y la rama que dirige. **Proyectos:** `can_manage_project()` suma el director de la rama del departamento y el responsable del proyecto; un responsable invita miembros u observadores, pero solo quien gestiona por encima nombra responsables.
+
+**Reglas nuevas.** Los observadores no imputan horas y los aprendices solo en sus tareas (trigger en `time_entries`). Los externos no ven el foro, el directorio ni el calendario de la empresa (`workspace.access`). El calendario muestra las vacaciones aprobadas del propio departamento (o de quienes supervisa / RRHH). El superadmin no se crea ni se toca desde la empresa, no aprueba vacaciones y no aparece en listados. Los datos existentes migran solos: el viejo rol *admin* pasa a dirigir la rama "Administración y RRHH", que conserva todos sus permisos.
+
+Cubierto por `supabase/tests/org_structure.test.sql` (27 tests).
+
 ## Desarrollo local
 
 ```bash

@@ -6,16 +6,18 @@ import { NewTaskForm } from "@/components/app/new-task-form";
 import { PageHeader } from "@/components/app/page-header";
 import { StatCard } from "@/components/app/stat-card";
 import { TaskBoard, type BoardTask } from "@/components/app/task-board";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getDepartments, getHeadedDepartmentId } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
-import { getProject, getProjectMembers, getTaskMinutes, getTasks } from "@/lib/data/projects";
+import { canManageProjectDb, getProject, getProjectMembers, getTaskMinutes, getTasks } from "@/lib/data/projects";
 import { getOrgContext } from "@/lib/data/session";
 import { getProjectWorkOrders, getWorkOrder } from "@/lib/data/work-orders";
 import { displayName } from "@/lib/domain/hierarchy";
+import { projectTeam } from "@/lib/domain/projects";
 import { formatMonth, formatRange, nextPeriod, toMonthParam } from "@/lib/domain/periods";
-import { canManageProject } from "@/lib/domain/projects";
 import { findContinuation, formatMoney, titleForPeriod, workOrderAmounts, workOrderCode } from "@/lib/domain/work-orders";
+import { MembersPanel } from "../../projects/[projectId]/members-panel";
 import { NextStepPanel, RepeatWorkOrder, TasksPanel } from "./controls";
 
 export const metadata: Metadata = { title: "Orden de trabajo" };
@@ -39,13 +41,18 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
   ]);
   if (!project) notFound();
 
-  const manage = canManageProject(
-    {
-      managesAllProjects: ctx.can("projects.manage"),
-      headOfDepartmentId: headed,
-      memberOf: new Set(),
-    },
+  const manage = await canManageProjectDb(project.id);
+  // Equipo de la OT = equipo del proyecto: invitar acá suma a la persona al proyecto
+  const projectMembers = allMembers.filter((m) => m.project_id === project.id);
+  const myProjectRole = projectMembers.find((m) => m.membership_id === ctx.membership.id)?.role;
+  const canAppointLead = ctx.can("projects.manage") || headed === project.department_id || (manage && myProjectRole !== "lead");
+  const team = projectTeam(
+    employees
+      .filter((e) => e.status === "active")
+      .map((e) => ({ id: e.id, name: displayName(e.profile), avatar: e.profile?.avatar_url ?? null, position: e.position, departmentId: e.department_id })),
+    projectMembers,
     project,
+    ctx.membership.id,
   );
   const locked = wo.billing_status === "invoiced";
   const names = new Map(employees.map((e) => [e.id, displayName(e.profile)]));
@@ -188,6 +195,27 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
             />
           )}
         </TasksPanel>
+
+        <Card>
+          <CardHeader
+            title={`Equipo · ${team.members.length}`}
+            description={
+              manage
+                ? "Invitá a quien necesites para esta OT: entra al proyecto al instante y lo ve todo el equipo"
+                : "Quiénes trabajan en esta OT y con qué rol"
+            }
+          />
+          <CardBody>
+            <MembersPanel
+              orgId={orgId}
+              projectId={project.id}
+              members={team.members}
+              candidates={team.candidates}
+              canManage={manage && !locked}
+              canAppointLead={canAppointLead}
+            />
+          </CardBody>
+        </Card>
       </div>
     </>
   );

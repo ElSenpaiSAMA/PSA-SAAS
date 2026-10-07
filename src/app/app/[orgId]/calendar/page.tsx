@@ -7,7 +7,7 @@ import { getAbsences, getHolidays } from "@/lib/data/calendar";
 import { getHeadedDepartmentId } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
 import { getProjects, getTasks } from "@/lib/data/projects";
-import { getOrgContext } from "@/lib/data/session";
+import { requirePermission } from "@/lib/data/session";
 import { getWorkOrdersInRange } from "@/lib/data/work-orders";
 import type { CalendarEvent } from "@/lib/domain/calendar";
 import { displayName } from "@/lib/domain/hierarchy";
@@ -55,7 +55,7 @@ export default async function CalendarPage({ params, searchParams }: PageProps<"
   const from = weeks[0].start;
   const to = weeks[weeks.length - 1].end;
 
-  const ctx = await getOrgContext(orgId);
+  const ctx = await requirePermission(orgId, "workspace.access");
   const [tasks, projects, workOrders, absences, holidays, employees, headed] = await Promise.all([
     getTasks(orgId),
     getProjects(orgId),

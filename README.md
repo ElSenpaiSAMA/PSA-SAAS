@@ -17,7 +17,7 @@
 | Página de contacto con formulario | `src/app/(marketing)/contacto/`, migración `0020_contact_messages.sql` | `/contacto`: el mensaje se guarda y llega a la intranet (**Mensajes web**, como Sofía o Laura) |
 | Login de empleados (registro **o** alta por el admin, justificado) | `src/app/(auth)/`, migración `0017_single_company.sql` | Ver [Alta de empleados](#alta-de-empleados-por-qué-por-invitación) |
 | Login y logout | `src/app/(auth)/actions.ts` | Menú del avatar → "Cerrar sesión" |
-| Roles: empleado y administrador | `roles` / `permissions` en la base, `src/lib/domain/permissions.ts` | `ana@demo.com` (empleada) vs `sofia@demo.com` (admin) |
+| Roles: empleado y administrador | Niveles, ramas y rol por proyecto: `0022_org_structure.sql`, `src/lib/domain/permissions.ts` | Un usuario de demo por puesto (tabla de abajo): `ana@demo.com` (empleada) vs `sofia@demo.com` (dirección de Administración y RRHH) |
 | Foro: lista de hilos con título, autor y fecha | `src/app/app/[orgId]/forum/` | Intranet → Foro |
 | Foro: crear hilo y responder | `forum/new`, `forum/[threadId]` | "Nuevo hilo", "Responder" |
 | Foro solo para personas autenticadas | RLS en `0016_forum.sql` + `proxy.ts` | Sin sesión, `/app/.../forum` redirige al login; por API, la base no devuelve nada |
@@ -32,14 +32,26 @@
 
 Contraseña de todos los usuarios de demo: **`Demo1234!`**
 
-| Usuario | Rol en la intranet | Puesto |
-|---|---|---|
-| `laura@demo.com` | Owner (administración total) | Gerente |
-| `sofia@demo.com` | **Administradora** | Administración y RRHH |
-| `carlos@demo.com` | Manager, responsable del Taller | Jefe de taller |
-| `ana@demo.com` | **Empleada** | Técnica de climatización |
-| `diego@demo.com` | Empleado | Técnico electricista |
-| `marc.vidal@demo.com` | *Invitación pendiente* (todavía sin cuenta) | Técnico electricista |
+Hay un usuario por cada puesto de la estructura de la empresa (ver [Roles y jerarquía](#roles-y-jerarquía)):
+
+| Usuario | Nivel | Rama / departamento | Puesto |
+|---|---|---|---|
+| `dev@demo.com` | Superadmin | La plataforma (oculto en la empresa) | Desarrollo |
+| `laura@demo.com` | **CEO** | Toda la empresa | CEO |
+| `jorge@demo.com` | Dirección de rama | Técnica | Director técnico |
+| `raul@demo.com` | Dirección de rama | Comercial | Director comercial |
+| `sofia@demo.com` | Dirección de rama | Administración y RRHH | Directora de administración y RRHH |
+| `carlos@demo.com` | Responsable de departamento | Taller | Jefe de taller |
+| `nuria@demo.com` | Responsable de departamento | Oficina técnica | Responsable de oficina técnica |
+| `irene@demo.com` | Responsable de departamento | RRHH | Responsable de RRHH |
+| `toni@demo.com` | Coordinador / Encargado | Taller (a cargo de Lucía) | Encargado de varadero |
+| `ana@demo.com` | **Empleada** | Taller | Técnica de climatización |
+| `diego@demo.com` | Empleado · *responsable del proyecto Lagoon* | Taller | Técnico electricista |
+| `pol@demo.com` | Empleado · *observador del proyecto Princess* | Oficina técnica | Técnico comercial |
+| `ivan@demo.com` | Empleado | Administración | Administrativo |
+| `lucia@demo.com` | Aprendiz | Taller | Aprendiz de taller |
+| `gestoria@demo.com` | Externo | Administración | Gestoría externa |
+| `marc.vidal@demo.com` | *Invitación pendiente* (todavía sin cuenta) | Taller | Técnico electricista |
 
 Recorrido sugerido:
 
@@ -51,6 +63,29 @@ Recorrido sugerido:
 6. **Alta por invitación**: abrir `/signup?email=marc.vidal@demo.com`, elegir una contraseña y entrar directo como técnico. Con otro email, el registro se rechaza. *(En local se entra directo; en un proyecto con confirmación de email activada, primero llega el email de confirmación.)*
 
 ---
+
+## Roles y jerarquía
+
+Dos estructuras conviven, como en una organización matricial:
+
+**1. La organización (quién depende de quién) gestiona a las personas**: fichajes, vacaciones, fichas.
+
+| Nivel | Ve y gestiona |
+|---|---|
+| Superadmin | La plataforma (el desarrollador). No aparece en la empresa |
+| CEO | Toda la empresa |
+| Dirección de rama | Las personas de su rama y lo que la rama gestiona para toda la empresa |
+| Responsable de departamento | Su departamento |
+| Coordinador / Encargado | El grupo a su cargo |
+| Empleado | Lo suyo y los proyectos donde está |
+| Aprendiz | Como empleado, pero imputa horas solo en sus tareas |
+| Externo | Solo lo que le asignan: sin foro, calendario ni directorio |
+
+Las **ramas** (Técnica, Comercial, Administración y RRHH) agrupan departamentos y definen *qué* gestiona cada una para toda la empresa: RRHH gestiona personas, Comercial los proyectos de clientes y los mensajes web… Lo recibe quien dirige la rama o encabeza el departamento.
+
+**2. El trabajo (rol en cada proyecto u OT)**: *Responsable* (gestiona e invita gente), *Miembro* (ve e imputa horas) u *Observador* (solo mira). Es independiente del nivel: un técnico puede ser responsable de un proyecto. Un empleado solo ve los proyectos y OT donde está.
+
+Todo lo valida la base (RLS): `has_permission()` junta nivel, rama y departamento; la app arma el menú con `my_permissions()`. Detalle en [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md).
 
 ## Alta de empleados: por qué por invitación
 
