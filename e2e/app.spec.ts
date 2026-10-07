@@ -726,16 +726,20 @@ test("la CEO asigna la dirección de una rama: elige exactamente cuál", async (
   await expect(page.getByText("Dirección · Técnica").first()).toBeVisible();
 });
 
-test("el responsable de un proyecto invita a alguien desde la OT", async ({ page }) => {
+test("el responsable de un proyecto invita a alguien; el equipo se ve también en sus OT", async ({ page }) => {
   await login(page, "diego@demo.com");
-  await page.goto(`/app/${NEBULA}/work-orders`);
-  await page.getByRole("link", { name: /^Lagoon 46 · / }).first().click();
-  await expect(page.getByText(/^Equipo · /)).toBeVisible();
+  await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
   await page.getByLabel("Persona a invitar").selectOption({ label: "Iván Soler" });
   // Quien solo lleva el proyecto no nombra responsables
   await expect(page.getByLabel("Rol en el proyecto").locator("option", { hasText: "Responsable" })).toHaveCount(0);
   await page.getByRole("button", { name: "Invitar al proyecto" }).click();
   await expect(page.getByText("Invitación hecha: ya está en el proyecto")).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: "Iván Soler" })).toContainText("Miembro");
+
+  // En las OT del proyecto aparece el mismo equipo (y, si la OT no está facturada, se invita desde ahí)
+  await page.goto(`/app/${NEBULA}/work-orders`);
+  await page.getByRole("link", { name: /^Lagoon 46 · / }).first().click();
+  await expect(page.getByText(/^Equipo · /)).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Iván Soler" })).toBeVisible();
 });
 
