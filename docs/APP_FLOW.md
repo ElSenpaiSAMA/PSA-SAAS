@@ -29,6 +29,8 @@ src/
       forum/                   # foro interno: hilos (duda, incidencia, aviso), respuestas y moderación
       contact/                 # mensajes de la web: consultas del formulario de contacto (contact.manage)
       profile/                 # mi perfil: foto, nombre, tema, avisos y resumen del puesto (desde el avatar)
+      errors/                  # registro de errores (solo superadmin)
+      structure/               # qué gestiona cada rama y departamento (solo superadmin)
       calendar/                # calendario general: tareas, OT, ausencias y festivos (mes/semana)
       planning/                # carga de trabajo persona × semana vs. capacidad
       staff/                   # empleados: listado y perfil (/staff/[membershipId]) con ficha versionada

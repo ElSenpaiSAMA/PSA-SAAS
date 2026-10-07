@@ -36,7 +36,7 @@ Hay un usuario por cada puesto de la estructura de la empresa (ver [Roles y jera
 
 | Usuario | Nivel | Rama / departamento | Puesto |
 |---|---|---|---|
-| `dev@demo.com` | Superadmin | La plataforma (oculto en la empresa) | Desarrollo |
+| `dev@demo.com` | Superadmin | La plataforma: solo Auditoría, Errores y Estructura | Desarrollo |
 | `laura@demo.com` | **CEO** | Toda la empresa | CEO |
 | `jorge@demo.com` | Dirección de rama | Técnica | Director técnico |
 | `raul@demo.com` | Dirección de rama | Comercial | Director comercial |
@@ -72,7 +72,7 @@ Dos estructuras conviven, como en una organización matricial:
 
 | Nivel | Ve y gestiona |
 |---|---|
-| Superadmin | La plataforma (el desarrollador). No aparece en la empresa |
+| Superadmin | La plataforma (el desarrollador): auditoría, registro de errores y qué gestiona cada rama. No ve la gestión de la empresa ni aparece en ella |
 | CEO | Toda la empresa |
 | Dirección de rama | Las personas de su rama y lo que la rama gestiona para toda la empresa |
 | Responsable de departamento | Su departamento |
@@ -86,6 +86,17 @@ Las **ramas** (Técnica, Comercial, Administración y RRHH) agrupan departamento
 **2. El trabajo (rol en cada proyecto u OT)**: *Responsable* (gestiona e invita gente), *Miembro* (ve e imputa horas) u *Observador* (solo mira). Es independiente del nivel: un técnico puede ser responsable de un proyecto. Un empleado solo ve los proyectos y OT donde está.
 
 Todo lo valida la base (RLS): `has_permission()` junta nivel, rama y departamento; la app arma el menú con `my_permissions()`. Detalle en [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md).
+
+## Registro de errores
+
+Todo lo que falla queda en una tabla aparte (`error_logs`) que el superadmin revisa en **Errores**:
+
+- **Servidor:** `src/instrumentation.ts` (`onRequestError`) captura lo que falla al renderizar, en acciones y en rutas.
+- **Acciones:** las reglas de negocio conocidas ("no podés aprobar tus propias vacaciones") no son fallos; un error de la base desconocido se registra (`reportDbError`) y el usuario ve un mensaje genérico.
+- **Navegador:** las pantallas de error (`error.tsx`, `global-error.tsx`) y un escucha de errores no capturados (`ErrorReporter`) lo reportan.
+- **Datos que no deben tumbar la página** (contadores del menú): se muestran vacíos y el fallo queda registrado (`fallback()`).
+
+La base recorta los textos y limita la frecuencia, así un bug en bucle no llena la tabla.
 
 ## Alta de empleados: por qué por invitación
 

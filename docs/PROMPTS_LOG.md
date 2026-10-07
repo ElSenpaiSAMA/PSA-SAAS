@@ -575,3 +575,17 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** 27 pgTAP (qué da cada nivel y rama, alcance de supervisión, externos, invitar sin nombrar responsables, observadores y aprendices que no imputan, calendario por departamento, rangos y superadmin), unitarios de niveles y del equipo de un proyecto, y E2E: menú de un técnico, externo sin foro, director técnico, CEO que asigna una rama y responsable de proyecto que invita desde la OT.
 
+---
+
+## 2026-10-07 Superadmin de plataforma y registro de errores
+
+**Prompt (resumen):** configurar qué gestiona cada rama no debería hacerlo el CEO sino el desarrollador; el desarrollador solo debería ver la auditoría; y hace falta un sistema de log para encontrar errores, en una tabla aparte, que capture lo que falla en toda la app.
+
+**Decisiones:**
+- **El superadmin pasa a ser solo plataforma:** auditoría, registro de errores y estructura de permisos. No ve el día a día de la empresa (foro, proyectos, personas) y entra directo a "Errores". La estructura de permisos por rama y departamento la configura él; el CEO gestiona la empresa, pero no se puede dar permisos a sí mismo ni a otros por esta vía.
+- **Registro de errores centralizado en lugar de try/catch en cada función:** capturar en los puntos por donde pasa todo es más simple y no se olvida ningún caso. Son cuatro puntos: `onRequestError` (servidor), `reportDbError` en las acciones, las pantallas de error y un escucha global en el navegador. Los try/catch quedan donde hay que seguir funcionando aunque algo falle (contadores del menú), y ahí el fallo se registra.
+- **Solo se registra lo que es un fallo:** las reglas de negocio conocidas, como "no podés aprobar tus propias vacaciones", no ensucian el registro.
+- **Protección del registro:** textos recortados y límite de frecuencia en la base, para que un bug en bucle no la llene.
+
+**Pruebas:** 15 pgTAP (permisos del superadmin y del CEO, quién configura la estructura, quién reporta y quién lee errores, resolución), unitarios de normalización de errores y E2E del superadmin y del CEO.
+
