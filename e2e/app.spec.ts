@@ -715,11 +715,13 @@ test("la CEO asigna la dirección de una rama: elige exactamente cuál", async (
   await login(page, "laura@demo.com");
   await page.goto(`/app/${NEBULA}/employees`);
   await page.getByRole("button", { name: "Editar a Toni Ferrer" }).click();
-  await page.getByLabel("Nivel").selectOption("director");
-  await page.getByRole("button", { name: "Guardar" }).click();
-  await expect(page.getByText("Elegí qué rama dirige")).toBeVisible();
-  await page.getByLabel("Rama que dirige").selectOption({ label: "Técnica" });
-  await page.getByRole("button", { name: "Guardar" }).click();
+  // El formulario de edición (en la misma página está también el de invitar)
+  const form = page.locator("form").filter({ has: page.locator('input[name="membershipId"]') });
+  await form.getByLabel("Nivel").selectOption("director");
+  await form.getByRole("button", { name: "Guardar" }).click();
+  await expect(form.getByText("Elegí qué rama dirige")).toBeVisible();
+  await form.getByLabel("Rama que dirige").selectOption({ label: "Técnica" });
+  await form.getByRole("button", { name: "Guardar" }).click();
   await expect(page.getByText("Cambios guardados")).toBeVisible();
   await expect(page.getByText("Dirección · Técnica").first()).toBeVisible();
 });
