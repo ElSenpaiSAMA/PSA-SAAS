@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getHeadedDepartmentId } from "@/lib/data/departments";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
@@ -49,7 +50,7 @@ export async function createProject(orgId: string, _prev: ActionState, formData:
     hourly_rate: parsed.data.hourlyRate ?? null,
     department_id: departmentId,
   });
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok(`Proyecto "${parsed.data.name}" creado`);
 }
@@ -64,7 +65,7 @@ export async function setProjectStatus(orgId: string, projectId: string, status:
     .update({ status: z.enum(["active", "archived"]).parse(status) })
     .eq("id", id)
     .eq("org_id", orgId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok(status === "archived" ? "Proyecto archivado" : "Proyecto reactivado");
 }
@@ -82,7 +83,7 @@ export async function addProjectMember(orgId: string, _prev: ActionState, formDa
   if (error) {
     if (error.code === "23505") return fail("Ya está en el proyecto.");
     if (error.message.includes("appoint a lead")) return fail("Solo quien gestiona por encima del proyecto nombra responsables.");
-    return fail(dbErrorMessage(error));
+    return fail(await reportDbError(error));
   }
   refresh(orgId);
   return ok("Invitación hecha: ya está en el proyecto");
@@ -99,7 +100,7 @@ export async function removeProjectMember(orgId: string, projectId: string, memb
     .delete()
     .eq("project_id", parsed.projectId)
     .eq("membership_id", parsed.membershipId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Miembro quitado");
 }
@@ -120,7 +121,7 @@ export async function createTask(orgId: string, _prev: ActionState, formData: Fo
     start_date: parsed.data.startDate ?? null,
     due_date: parsed.data.dueDate ?? null,
   });
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   refresh(orgId);
   return ok("Tarea creada");
 }
@@ -137,7 +138,7 @@ export async function updateTaskStatus(orgId: string, taskId: string, status: st
     .eq("id", z.guid().parse(taskId))
     .eq("org_id", orgId)
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("Solo podés mover tus propias tareas.");
   refresh(orgId);
   return ok("Tarea actualizada");
@@ -163,7 +164,7 @@ export async function updateTask(orgId: string, taskId: string, _prev: ActionSta
     .select("id");
   if (error) {
     if (error.message.includes("only status can be changed")) return fail("Solo quien gestiona el proyecto puede editar la tarea.");
-    return fail(dbErrorMessage(error));
+    return fail(await reportDbError(error));
   }
   if (!data?.length) return fail("No tenés permisos para editar esta tarea.");
   refresh(orgId);
@@ -178,7 +179,7 @@ export async function deleteTask(orgId: string, taskId: string): Promise<ActionS
     if (error.message.includes("task has logged hours")) {
       return fail("Tiene horas imputadas: no se puede borrar. Marcala como hecha.");
     }
-    return fail(dbErrorMessage(error));
+    return fail(await reportDbError(error));
   }
   if (!data?.length) return fail("No tenés permisos para borrar esta tarea.");
   refresh(orgId);

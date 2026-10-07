@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
 import { employeeRecordSchema, fieldErrors } from "@/lib/validation/schemas";
@@ -34,7 +35,7 @@ export async function saveEmployeeRecord(
     },
     { onConflict: "membership_id,effective_from" },
   );
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   revalidatePath(`/app/${orgId}/staff/${membershipId}`);
   return ok("Ficha actualizada");
 }

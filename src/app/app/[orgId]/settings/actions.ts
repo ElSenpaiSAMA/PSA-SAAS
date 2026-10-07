@@ -1,7 +1,8 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { createClient } from "@/lib/supabase/server";
 import { fieldErrors, orgSettingsSchema } from "@/lib/validation/schemas";
@@ -23,7 +24,7 @@ export async function saveOrgSettings(orgId: string, _prev: ActionState, formDat
     })
     .eq("id", orgId)
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("No se pudieron guardar los ajustes.");
   // El nombre aparece en el menú de todas las páginas
   revalidatePath(`/app/${orgId}`, "layout");

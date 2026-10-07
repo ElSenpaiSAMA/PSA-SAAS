@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getOrgContext } from "@/lib/data/session";
 import { CONTACT_STATUSES } from "@/lib/domain/contact";
 import { createClient } from "@/lib/supabase/server";
@@ -22,7 +23,7 @@ export async function setContactStatus(orgId: string, id: string, status: string
     .update({ status: parsed.data.status })
     .eq("id", parsed.data.id)
     .eq("org_id", orgId);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
 
   revalidatePath(`/app/${orgId}`, "layout");
   return ok();

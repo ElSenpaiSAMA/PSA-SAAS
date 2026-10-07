@@ -1,8 +1,9 @@
 "use server";
 
+import { reportDbError } from "@/lib/errors/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { dbErrorMessage, fail, ok, type ActionState } from "@/lib/actions";
+import { fail, ok, type ActionState } from "@/lib/actions";
 import { getHolidaySet } from "@/lib/data/calendar";
 import { getOrgContext } from "@/lib/data/session";
 import { getVisibleVacationRequests } from "@/lib/data/vacations";
@@ -48,7 +49,7 @@ export async function requestVacation(orgId: string, _prev: ActionState, formDat
     reason,
     kind,
   });
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
 
   refresh(orgId);
   const days = businessDays({ start_date: startDate, end_date: endDate }, holidays);
@@ -66,7 +67,7 @@ export async function cancelVacation(orgId: string, requestId: string): Promise<
     .eq("membership_id", membership.id)
     .eq("status", "pending")
     .select("id");
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
   if (!data?.length) return fail("La solicitud ya no está pendiente.");
   refresh(orgId);
   return ok("Solicitud cancelada");
@@ -93,7 +94,7 @@ export async function decideVacation(
 
   // decided_by y decided_at los fija un trigger en la base
   const { error } = await supabase.from("vacation_requests").update({ status, decision_note: decisionNote }).eq("id", id);
-  if (error) return fail(dbErrorMessage(error));
+  if (error) return fail(await reportDbError(error));
 
   refresh(orgId);
   if (status === "rejected") return ok("Solicitud rechazada");
