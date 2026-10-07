@@ -626,3 +626,16 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 
 **Pruebas:** unitarios de la plantilla (contenido y escape de HTML).
 
+---
+
+## 2026-10-07 OT mensuales con botones
+
+**Prompt (resumen):** las automatizaciones tienen que ser más fáciles, con botones donde corresponda. Por ejemplo, repetir en noviembre una OT de octubre, porque las OT no son permanentes sino que se arman según el mes.
+
+**Decisiones (como en otros PSA, por ejemplo los presupuestos recurrentes de Productive o Kantata):**
+- **"Renovar la OT cada mes" en cada proyecto:** un interruptor. Para un mantenimiento mensual se activa una vez y el día 1 la OT del mes nuevo se crea sola en borrador, con sus tareas y su presupuesto, avisando al responsable. Los trabajos puntuales quedan apagados. Reemplaza a la automatización que copiaba todos los proyectos o ninguno.
+- **"Copiar a…" con elección de mes:** el botón de cada OT copia al mes siguiente con un click, y su flecha ofrece los meses que siguen. El menú se dibuja por encima de todo, para que ninguna tabla lo recorte.
+- **Se mantienen** el aviso para copiar todas las OT del mes anterior juntas y "Otro período…" dentro de la OT.
+
+**Pruebas:** 6 pgTAP (quién marca un proyecto como mensual, solo se renuevan los mensuales, en borrador), unitarios de `shiftPeriod` y E2E del interruptor y de copiar a otro mes.
+
