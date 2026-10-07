@@ -73,6 +73,8 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
   const isMe = person.id === ctx.membership.id;
   const canSeeWork =
     isMe || (ctx.can("time.view_team") && supervisedIds(employees, ctx.membership.id, ctx.can("employees.manage")).has(person.id));
+  // Un directorio no da acceso a perfiles ajenos: solo el propio o el de alguien que supervisa
+  if (!canSeeWork && !ctx.can("employees.manage")) notFound();
   const canEditRecord = ctx.can("people.sensitive");
   const canSeeRecord = isMe || canEditRecord;
   const canSeeAudit = ctx.can("employees.manage");

@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { getHolidays } from "@/lib/data/calendar";
 import { getDepartments } from "@/lib/data/departments";
 import { getEmployees } from "@/lib/data/employees";
-import { getOrgContext } from "@/lib/data/session";
+import { requirePermission } from "@/lib/data/session";
 import { getVisibleVacationRequests } from "@/lib/data/vacations";
 import { getWorkloadItems } from "@/lib/data/work-orders";
 import { displayName, supervisedIds } from "@/lib/domain/hierarchy";
@@ -42,7 +42,7 @@ export default async function PlanningPage({ params, searchParams }: PageProps<"
   const from = month;
   const to = monthEnd(month);
 
-  const ctx = await getOrgContext(orgId);
+  const ctx = await requirePermission(orgId, "planning.view");
   const [employees, departments, items, holidayRows] = await Promise.all([
     getEmployees(orgId),
     getDepartments(orgId),

@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { buttonClasses } from "@/components/ui/button";
 import { getForumSeenAt, getThreads } from "@/lib/data/forum";
-import { getOrgContext } from "@/lib/data/session";
+import { requirePermission } from "@/lib/data/session";
 import { ForumSeen } from "./forum-seen";
 import { ThreadList, type ThreadItem } from "./thread-list";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Foro" };
 
 export default async function ForumPage({ params }: PageProps<"/app/[orgId]/forum">) {
   const { orgId } = await params;
-  const ctx = await getOrgContext(orgId);
+  const ctx = await requirePermission(orgId, "workspace.access");
   const [threads, seenAt] = await Promise.all([getThreads(orgId), getForumSeenAt(ctx.membership.id, ctx.membership.created_at)]);
 
   // Solo datos serializables al cliente
