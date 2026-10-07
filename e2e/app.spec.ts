@@ -29,7 +29,7 @@ test("al iniciar sesión se entra directo a la intranet de Diplonautic", async (
   await login(page, "carlos@demo.com");
   await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/dashboard`));
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Hola, Carlos");
-  await expect(page.getByText("Intranet · Manager")).toBeVisible();
+  await expect(page.getByText("Intranet · Responsable de departamento")).toBeVisible();
 });
 test("empleada ficha entrada, pausa para almorzar, reanuda y ficha salida", async ({ page }) => {
   await login(page, "ana@demo.com");
@@ -147,9 +147,9 @@ test("el responsable ve los proyectos de su departamento y suma miembros", async
   expect((await projectNames(page)).sort()).toEqual(["Climatización Princess V58", "Refit eléctrico Lagoon 46"]);
 
   await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
-  await page.getByLabel("Persona a sumar").selectOption({ label: "Ana Torres" });
-  await page.getByRole("button", { name: "Sumar al proyecto" }).click();
-  await expect(page.getByText("Miembro agregado")).toBeVisible();
+  await page.getByLabel("Persona a invitar").selectOption({ label: "Ana Torres" });
+  await page.getByRole("button", { name: "Invitar al proyecto" }).click();
+  await expect(page.getByText("Invitación hecha: ya está en el proyecto")).toBeVisible();
 });
 
 test("la empleada pasa a ver el proyecto al que la sumaron", async ({ page }) => {
@@ -233,7 +233,8 @@ const isoDay = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 test("el calendario muestra festivos y las vacaciones aprobadas del equipo", async ({ page }) => {
-  await login(page, "diego@demo.com");
+  // Carlos es el responsable del Taller: ve las vacaciones de su departamento (Diego ya encabeza otro)
+  await login(page, "carlos@demo.com");
   const year = new Date().getFullYear();
   await page.goto(`/app/${NEBULA}/calendar?month=${year}-10`);
   await expect(page.getByText("Fiesta Nacional")).toBeVisible();

@@ -137,8 +137,8 @@ select is(pg_temp.count_for('bbbbbbbb-0000-0000-0000-000000000004', 'task.assign
 select is(
   (select count(distinct recipient_id)::int from public.notifications
    where kind = 'work_order.to_invoice' and created_at = now()),
-  2,
-  'una OT cerrada avisa a quienes facturan (owner y admin)'
+  3,
+  'una OT cerrada avisa a quienes facturan: la CEO y las ramas de Administración y Comercial (nunca el superadmin)'
 );
 
 select * from finish();

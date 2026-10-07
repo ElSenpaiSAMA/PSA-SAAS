@@ -691,3 +691,40 @@ begin
       and public.membership_can(m.id, 'vacations.approve');
 end;
 $$;
+
+-- El superadmin es la plataforma: no recibe los avisos de la gestión diaria de la empresa.
+-- (Mismo notify() que en 0021, con preferencias de avisos.)
+create or replace function public.notify(
+  p_org_id uuid,
+  p_recipient_id uuid,
+  p_kind text,
+  p_title text,
+  p_body text,
+  p_link text,
+  p_entity_type text,
+  p_entity_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_actor uuid := case when public.in_automation() then null else public.my_membership_id(p_org_id) end;
+begin
+  if p_recipient_id is null or p_recipient_id = v_actor then
+    return;
+  end if;
+  if exists (
+    select 1 from public.memberships m
+    join public.profiles p on p.id = m.user_id
+    where m.id = p_recipient_id and (m.role_id = 'superadmin' or p_kind = any (p.muted_notifications))
+  ) then
+    return;
+  end if;
+  insert into public.notifications (org_id, recipient_id, actor_id, kind, title, body, link, entity_type, entity_id)
+  values (p_org_id, p_recipient_id, v_actor, p_kind, p_title, p_body, p_link, p_entity_type, p_entity_id);
+end;
+$$;
+
+revoke execute on function public.notify(uuid, uuid, text, text, text, text, text, uuid) from public, anon, authenticated;
