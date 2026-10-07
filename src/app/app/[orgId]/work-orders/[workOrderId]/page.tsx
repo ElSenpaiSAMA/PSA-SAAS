@@ -16,7 +16,7 @@ import { displayName } from "@/lib/domain/hierarchy";
 import { formatMonth, formatRange, nextPeriod, toMonthParam } from "@/lib/domain/periods";
 import { canManageProject } from "@/lib/domain/projects";
 import { findContinuation, formatMoney, titleForPeriod, workOrderAmounts, workOrderCode } from "@/lib/domain/work-orders";
-import { Collapsible, NextStepPanel, RepeatWorkOrder } from "./controls";
+import { NextStepPanel, RepeatWorkOrder, TasksPanel } from "./controls";
 
 export const metadata: Metadata = { title: "Orden de trabajo" };
 
@@ -40,7 +40,11 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
   if (!project) notFound();
 
   const manage = canManageProject(
-    { managesAllProjects: ctx.can("projects.manage"), headOfDepartmentId: headed, memberOf: new Set() },
+    {
+      managesAllProjects: ctx.can("projects.manage"),
+      headOfDepartmentId: headed,
+      memberOf: new Set(),
+    },
     project,
   );
   const locked = wo.billing_status === "invoiced";
@@ -132,50 +136,58 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
         />
       </div>
 
-      {manage ? (
-        <div className="mt-4 grid gap-3 lg:grid-cols-2 lg:items-start">
-          {!locked ? (
-          <Collapsible title="Agregar tarea" icon="plus" defaultOpen={tasks.length === 0}>
-            <NewTaskForm
+      <div className="mt-4">
+        <TasksPanel
+          count={board.length}
+          defaultOpen={manage && !locked && tasks.length === 0 ? "add" : undefined}
+          addForm={
+            manage && !locked ? (
+              <NewTaskForm
+                orgId={orgId}
+                projectId={project.id}
+                workOrderId={wo.id}
+                periodStart={wo.period_start}
+                periodEnd={wo.period_end}
+                people={employees
+                  .filter((e) => e.status === "active" && memberIds.has(e.id))
+                  .map((e) => ({ id: e.id, name: displayName(e.profile) }))}
+              />
+            ) : undefined
+          }
+          repeatForm={
+            manage ? (
+              <RepeatWorkOrder
+                orgId={orgId}
+                workOrderId={wo.id}
+                nextLabel={formatMonth(next.start)}
+                continuationHref={continuation ? `/app/${orgId}/work-orders/${continuation.id}` : undefined}
+                defaultTitle={titleForPeriod(wo.title, wo.period_start, next.start)}
+                defaultStart={next.start}
+                defaultEnd={next.end}
+              />
+            ) : undefined
+          }
+        >
+          {board.length > 0 ? (
+            <TaskBoard
               orgId={orgId}
-              projectId={project.id}
-              workOrderId={wo.id}
-              periodStart={wo.period_start}
-              periodEnd={wo.period_end}
+              tasks={board}
               people={employees
                 .filter((e) => e.status === "active" && memberIds.has(e.id))
                 .map((e) => ({ id: e.id, name: displayName(e.profile) }))}
             />
-          </Collapsible>
-          ) : null}
-          <Collapsible title="Repetir esta OT en otro período" icon="repeat">
-            <RepeatWorkOrder
-              orgId={orgId}
-              workOrderId={wo.id}
-              nextLabel={formatMonth(next.start)}
-              continuationHref={continuation ? `/app/${orgId}/work-orders/${continuation.id}` : undefined}
-              defaultTitle={titleForPeriod(wo.title, wo.period_start, next.start)}
-              defaultStart={next.start}
-              defaultEnd={next.end}
+          ) : (
+            <EmptyState
+              icon={SquareCheckBig}
+              title="Esta OT todavía no tiene tareas"
+              description={
+                manage && !locked
+                  ? "Agregá las tareas del período: el equipo imputa sus horas sobre ellas."
+                  : "Cuando se planifiquen tareas, las vas a ver acá."
+              }
             />
-          </Collapsible>
-        </div>
-      ) : null}
-
-      <div className="mt-6">
-        {board.length > 0 ? (
-          <TaskBoard
-            orgId={orgId}
-            tasks={board}
-            people={employees.filter((e) => e.status === "active" && memberIds.has(e.id)).map((e) => ({ id: e.id, name: displayName(e.profile) }))}
-          />
-        ) : (
-          <EmptyState
-            icon={SquareCheckBig}
-            title="Esta OT todavía no tiene tareas"
-            description={manage && !locked ? "Agregá las tareas del período: el equipo imputa sus horas sobre ellas." : "Cuando se planifiquen tareas, las vas a ver acá."}
-          />
-        )}
+          )}
+        </TasksPanel>
       </div>
     </>
   );
