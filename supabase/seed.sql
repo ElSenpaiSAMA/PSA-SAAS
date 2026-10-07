@@ -36,9 +36,9 @@ select pg_temp.demo_user('55555555-5555-5555-5555-555555555555', 'sofia@demo.com
 -- La empresa: Diplonautic. La plataforma es multi-tenant por dentro (RLS por
 -- organización): la segunda organización no tiene miembros de demo y solo existe
 -- para que los tests comprueben el aislamiento entre empresas.
-insert into public.organizations (id, name) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', 'Diplonautic'),
-  ('aaaaaaaa-0000-0000-0000-000000000002', 'Otra empresa (pruebas de aislamiento)');
+insert into public.organizations (id, name, receives_web_contact) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'Diplonautic', true),
+  ('aaaaaaaa-0000-0000-0000-000000000002', 'Otra empresa (pruebas de aislamiento)', false);
 
 -- Diplonautic: Laura (owner) → Carlos (manager) → Ana, Diego ; Sofía (admin)
 insert into public.memberships (id, org_id, user_id, role_id, manager_id, position, weekly_hours) values
@@ -224,3 +224,26 @@ insert into public.forum_posts (thread_id, author_id, body, created_at) values
    'Para bajo flotación usamos Sikaflex 291i, sí. Limpiá bien con Sika Aktivator y dejá curar 24 h antes de botar.', now() - interval '4 days' + interval '1 hour'),
   ('99999999-0000-0000-0000-000000000004', 'bbbbbbbb-0000-0000-0000-000000000004',
    'Queda uno en la estantería B3, caja de Volvo. Te lo dejo en el banco del taller.', now() - interval '1 day');
+
+-- Mensajes del formulario de contacto de la web (se gestionan en Intranet → Mensajes web)
+insert into public.contact_messages (id, org_id, name, email, phone, boat_type, boat_model, service, message, status, handled_by, handled_at, created_at) values
+  ('88888888-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'Marta Soler', 'marta.soler@example.com', '+34 612 345 678', 'Velero', 'Beneteau Oceanis 41',
+   'Aire acondicionado',
+   E'Hola, el aire acondicionado del camarote de proa enfría muy poco y hace ruido al arrancar. El barco está en Port Olímpic. ¿Podrían revisarlo esta semana?',
+   'new', null, null, now() - interval '3 hours'),
+  ('88888888-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'Jordi Puig', 'jordi.puig@example.com', null, 'Lancha / motor', 'Sunseeker Portofino 40',
+   'Generadores',
+   E'El generador Onan se para a los diez minutos con una alarma de temperatura. Querría un presupuesto para la revisión completa antes del verano.',
+   'new', null, null, now() - interval '1 day'),
+  ('88888888-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'Elena Ruiz', 'elena.ruiz@example.com', '+34 699 112 233', 'Catamarán', 'Lagoon 42',
+   'Potabilizadoras',
+   E'Queremos instalar una potabilizadora de unos 60 l/h para navegar por Baleares en julio. ¿Qué modelos recomiendan y cuánto tiempo lleva la instalación?',
+   'in_progress', 'bbbbbbbb-0000-0000-0000-000000000005', now() - interval '2 days', now() - interval '3 days'),
+  ('88888888-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001',
+   'Pau Ferrer', 'pau.ferrer@example.com', null, 'Semirrígida', null,
+   'ElectroMotor: arranque, alternador o dinamo',
+   E'El motor de arranque hace clic pero no gira. Ya cambié la batería. ¿Reparan motores de arranque fuera del barco si se los llevo al taller?',
+   'closed', 'bbbbbbbb-0000-0000-0000-000000000001', now() - interval '6 days', now() - interval '9 days');
