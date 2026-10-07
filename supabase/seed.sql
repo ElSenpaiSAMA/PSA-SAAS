@@ -59,11 +59,11 @@ insert into public.branches (id, org_id, name, color) values
   ('dddddddd-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Administración y RRHH', 'violet');
 
 insert into public.branch_permissions (branch_id, permission_key)
-select 'dddddddd-0000-0000-0000-000000000001', k from unnest(array['tasks.manage_all']) k
+select 'dddddddd-0000-0000-0000-000000000001'::uuid, k from unnest(array['tasks.manage_all']) k
 union all
-select 'dddddddd-0000-0000-0000-000000000002', k from unnest(array['projects.manage', 'tasks.manage_all', 'billing.manage', 'contact.manage']) k
+select 'dddddddd-0000-0000-0000-000000000002'::uuid, k from unnest(array['projects.manage', 'tasks.manage_all', 'billing.manage', 'contact.manage']) k
 union all
-select 'dddddddd-0000-0000-0000-000000000003', k from unnest(array[
+select 'dddddddd-0000-0000-0000-000000000003'::uuid, k from unnest(array[
   'employees.manage', 'people.sensitive', 'departments.manage', 'holidays.manage', 'automations.manage',
   'billing.manage', 'projects.manage', 'tasks.manage_all', 'contact.manage', 'forum.moderate'
 ]) k;
@@ -101,11 +101,11 @@ insert into public.departments (id, org_id, name, head_id, branch_id) values
 
 -- Lo que gestiona cada responsable a nivel empresa, por la función de su departamento
 insert into public.department_permissions (department_id, permission_key)
-select 'eeeeeeee-0000-0000-0000-000000000004', k from unnest(array['projects.manage', 'contact.manage']) k
+select 'eeeeeeee-0000-0000-0000-000000000004'::uuid, k from unnest(array['projects.manage', 'contact.manage']) k
 union all
-select 'eeeeeeee-0000-0000-0000-000000000005', k from unnest(array['employees.manage', 'people.sensitive', 'holidays.manage']) k
+select 'eeeeeeee-0000-0000-0000-000000000005'::uuid, k from unnest(array['employees.manage', 'people.sensitive', 'holidays.manage']) k
 union all
-select 'eeeeeeee-0000-0000-0000-000000000003', k from unnest(array['billing.manage']) k;
+select 'eeeeeeee-0000-0000-0000-000000000003'::uuid, k from unnest(array['billing.manage']) k;
 
 update public.memberships set department_id = 'eeeeeeee-0000-0000-0000-000000000002'
 where id in ('bbbbbbbb-0000-0000-0000-000000000003', 'bbbbbbbb-0000-0000-0000-000000000004',
