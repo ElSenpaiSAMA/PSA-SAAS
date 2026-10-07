@@ -201,7 +201,7 @@ test("el responsable repite el mes: copia en bloque las OT sin continuación", a
   await expect(page.getByRole("link", { name: /^Princess V58 · / })).toBeVisible();
 });
 
-test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo", async ({ page }) => {
+test("una empleada solo puede imputar horas en OT abiertas y no ve la planificación", async ({ page }) => {
   await login(page, "ana@demo.com");
   await page.goto(`/app/${NEBULA}/time-tracking`);
   // El formulario aparece con el registro semanal, que espera a hidratar (zona horaria del navegador)
@@ -212,10 +212,10 @@ test("una empleada solo puede imputar horas en OT abiertas y planifica lo suyo",
   expect(options).not.toContain("Revisión del aire acondicionado");
   expect(options.filter((o) => o === "Instalación de unidades de 16.000 BTU")).toHaveLength(1);
 
+  // La planificación es de quien organiza el trabajo de otros
+  await expect(page.getByRole("link", { name: "Planificación" })).toHaveCount(0);
   await page.goto(`/app/${NEBULA}/planning`);
-  await expect(page.getByRole("heading", { name: "Planificación" })).toBeVisible();
-  await expect(page.locator("tbody tr").filter({ hasText: "(vos)" })).toHaveCount(1);
-  await expect(page.getByText("Diego Fernández")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
 });
 
 test("una admin cierra y factura una OT", async ({ page }) => {
@@ -322,18 +322,20 @@ test("una admin abre la ficha de un empleado, navega en el tiempo y registra un 
   await expect(page.getByText("Revisión salarial")).toBeVisible();
 });
 
-test("un empleado ve su propia ficha pero no los datos sensibles de otros", async ({ page }) => {
+test("un empleado ve su propia ficha, pero no el perfil de otros", async ({ page }) => {
   await login(page, "diego@demo.com");
   await page.goto(`/app/${NEBULA}/staff/bbbbbbbb-0000-0000-0000-000000000004`);
   await expect(page.getByText("Ficha personal", { exact: true })).toBeVisible();
   await expect(page.getByText("45678901G")).toBeVisible();
   await expect(page.getByRole("button", { name: "Registrar un cambio" })).toHaveCount(0);
 
+  // Diego no supervisa a Ana: en el directorio la ve, pero no puede abrir su perfil
+  await page.goto(`/app/${NEBULA}/staff`);
+  await expect(page.getByRole("cell", { name: /Ana Torres/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Ver perfil de Ana Torres" })).toHaveCount(0);
   await page.goto(`/app/${NEBULA}/staff/bbbbbbbb-0000-0000-0000-000000000003`);
-  await expect(page.getByRole("heading", { name: "Ana Torres" })).toBeVisible();
-  await expect(page.getByText("Ficha personal", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
   await expect(page.getByText("34567890V")).toHaveCount(0);
-  await expect(page.getByText(/solo las ven la propia persona/)).toBeVisible();
 });
 
 test("una admin configura y ejecuta una automatización", async ({ page }) => {
@@ -669,3 +671,68 @@ test("una empleada entra a su perfil desde el avatar y sube su foto; nombre y av
   // Lo que pide una acción ni siquiera aparece: no se puede silenciar
   await expect(page.getByRole("switch", { name: /vacaciones/i })).toHaveCount(0);
 });
+
+// ── Estructura: niveles, ramas y rol en cada proyecto ─────────
+
+test("un técnico solo ve su día, el trabajo donde está y el espacio común", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  for (const visible of ["Inicio", "Bandeja", "Fichaje y horas", "Calendario", "Foro", "Proyectos", "Órdenes de trabajo", "Vacaciones"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${visible}`) })).toBeVisible();
+  }
+  for (const hidden of ["Planificación", "Personas", "Informes", "Automatizaciones", "Ajustes", "Auditoría", "Mensajes web"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${hidden}`) })).toHaveCount(0);
+  }
+  // "Empleados" es solo un directorio
+  await nav.getByRole("link", { name: /^Empleados/ }).click();
+  await expect(page.getByRole("heading", { name: "Directorio" })).toBeVisible();
+});
+
+test("un externo no ve el foro, el calendario ni el directorio", async ({ page }) => {
+  await login(page, "gestoria@demo.com");
+  await page.goto(`/app/${NEBULA}/dashboard`);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  for (const hidden of ["Foro", "Calendario", "Empleados"]) {
+    await expect(nav.getByRole("link", { name: new RegExp(`^${hidden}`) })).toHaveCount(0);
+  }
+  await page.goto(`/app/${NEBULA}/forum`);
+  await expect(page.getByRole("heading", { name: "Página no encontrada" })).toBeVisible();
+});
+
+test("el director técnico ve los proyectos de su rama y la planificación, pero no gestiona personas", async ({ page }) => {
+  await login(page, "jorge@demo.com");
+  await page.goto(`/app/${NEBULA}/projects`);
+  await expect(page.getByText("Climatización Princess V58")).toBeVisible();
+  await expect(page.getByText("Formación interna")).toHaveCount(0);
+  const nav = page.getByRole("navigation", { name: "Principal" });
+  await expect(nav.getByRole("link", { name: /^Planificación/ })).toBeVisible();
+  await expect(nav.getByRole("link", { name: /^Personas/ })).toHaveCount(0);
+});
+
+test("la CEO asigna la dirección de una rama: elige exactamente cuál", async ({ page }) => {
+  await login(page, "laura@demo.com");
+  await page.goto(`/app/${NEBULA}/employees`);
+  await page.getByRole("button", { name: "Editar a Toni Ferrer" }).click();
+  await page.getByLabel("Nivel").selectOption("director");
+  await page.getByRole("button", { name: "Guardar" }).click();
+  await expect(page.getByText("Elegí qué rama dirige")).toBeVisible();
+  await page.getByLabel("Rama que dirige").selectOption({ label: "Técnica" });
+  await page.getByRole("button", { name: "Guardar" }).click();
+  await expect(page.getByText("Cambios guardados")).toBeVisible();
+  await expect(page.getByText("Dirección · Técnica").first()).toBeVisible();
+});
+
+test("el responsable de un proyecto invita a alguien desde la OT", async ({ page }) => {
+  await login(page, "diego@demo.com");
+  await page.goto(`/app/${NEBULA}/work-orders`);
+  await page.getByRole("link", { name: /^Lagoon 46 · / }).first().click();
+  await expect(page.getByText(/^Equipo · /)).toBeVisible();
+  await page.getByLabel("Persona a invitar").selectOption({ label: "Iván Soler" });
+  // Quien solo lleva el proyecto no nombra responsables
+  await expect(page.getByLabel("Rol en el proyecto").locator("option", { hasText: "Responsable" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Invitar al proyecto" }).click();
+  await expect(page.getByText("Invitación hecha: ya está en el proyecto")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Iván Soler" })).toContainText("Miembro");
+});
+
