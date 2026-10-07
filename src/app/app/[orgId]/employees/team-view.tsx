@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
-import { Building2, Network, Pencil, Rows3, X } from "lucide-react";
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { Building2, Network, Pencil, Rows3, X, Trash2 } from "lucide-react";
+import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Select } from "@/components/ui/input";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -14,7 +15,7 @@ import { idle } from "@/lib/actions";
 import { reportsOf } from "@/lib/domain/hierarchy";
 import { assignableRoles, outranks, ROLE_LABEL, ROLE_SCOPE, type Role } from "@/lib/domain/permissions";
 import { cn } from "@/lib/utils";
-import { updateMember } from "./actions";
+import { deleteMember, updateMember } from "./actions";
 import { DepartmentsView, type BranchOption, type DepartmentInfo } from "./departments-view";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -180,7 +181,53 @@ function EditMember({
           <SubmitButton pendingLabel="Guardando…">Guardar</SubmitButton>
         </div>
       </div>
+      <DeleteMember orgId={orgId} person={person} onDone={onDone} />
     </motion.form>
+  );
+}
+
+/** Eliminar a la persona: dos pasos, porque borra su cuenta y todos sus datos y no se puede deshacer. */
+function DeleteMember({ orgId, person, onDone }: { orgId: string; person: Person; onDone: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [pending, start] = useTransition();
+
+  const remove = () =>
+    start(async () => {
+      const r = await deleteMember(orgId, person.id);
+      if (r.status === "error") {
+        toast.error(r.message);
+        return;
+      }
+      toast.success(r.message);
+      onDone();
+    });
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-danger/25 bg-danger/5 px-4 py-3">
+      <p className="max-w-md text-[12.5px] text-muted-foreground">
+        {confirming
+          ? `Se borra la cuenta de ${person.name} y todos sus datos: fichajes, vacaciones, ficha y avisos. No se puede deshacer.`
+          : "Eliminar a esta persona de la empresa."}
+      </p>
+      {confirming ? (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            className="h-9 rounded-xl px-3 text-[13px] text-muted-foreground hover:bg-muted"
+          >
+            Cancelar
+          </button>
+          <Button type="button" size="sm" variant="danger" disabled={pending} onClick={remove}>
+            <Trash2 className="size-3.5" /> {pending ? "Eliminando…" : "Sí, eliminar"}
+          </Button>
+        </div>
+      ) : (
+        <Button type="button" size="sm" variant="danger" onClick={() => setConfirming(true)}>
+          <Trash2 className="size-3.5" /> Eliminar persona
+        </Button>
+      )}
+    </div>
   );
 }
 

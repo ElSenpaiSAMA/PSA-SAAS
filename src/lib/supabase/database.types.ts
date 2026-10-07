@@ -463,6 +463,7 @@ export type Database = {
         Returns: undefined;
       };
       set_member_name: { Args: { p_membership_id: string; p_name: string }; Returns: undefined };
+      delete_member: { Args: { p_membership_id: string }; Returns: undefined };
       submit_contact_message: {
         Args: {
           p_name: string;

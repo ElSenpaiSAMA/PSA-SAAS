@@ -169,3 +169,30 @@ export async function deleteDepartment(orgId: string, departmentId: string): Pro
   refresh(orgId);
   return ok("Departamento eliminado");
 }
+
+/**
+ * Elimina a una persona: su cuenta y todos sus datos (fichajes, vacaciones, ficha…).
+ * La base valida permiso y nivel, y deja constancia en la auditoría. No se puede deshacer.
+ */
+export async function deleteMember(orgId: string, membershipId: string): Promise<ActionState> {
+  const ctx = await getOrgContext(orgId);
+  if (!ctx.can("employees.manage")) return fail("No tenés permisos para eliminar personas.");
+  const id = z.guid().parse(membershipId);
+  if (id === ctx.membership.id) return fail("No podés eliminarte a vos mismo.");
+
+  const target = (await getEmployees(orgId)).find((e) => e.id === id);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("delete_member", { p_membership_id: id });
+  if (error) {
+    if (error.message.includes("insufficient rank")) return fail("Tu nivel no permite eliminar a esta persona.");
+    if (error.message.includes("cannot delete yourself")) return fail("No podés eliminarte a vos mismo.");
+    return fail(await reportDbError(error));
+  }
+
+  // La foto de perfil vive en Storage: se borra con la clave de servicio, si está configurada
+  const admin = createAdminClient();
+  if (admin && target) await admin.storage.from("avatars").remove([`${target.user_id}/avatar.webp`]);
+
+  refresh(orgId);
+  return ok(`${target?.profile?.full_name ?? "La persona"} fue eliminada.`);
+}
