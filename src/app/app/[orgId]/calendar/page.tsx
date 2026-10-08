@@ -83,7 +83,7 @@ export default async function CalendarPage({ params, searchParams }: PageProps<"
           start: t.start_date ?? t.due_date!,
           end: t.due_date!,
           hasStart: t.start_date !== null,
-          href: t.work_order_id ? `/app/${orgId}/work-orders/${t.work_order_id}` : `/app/${orgId}/projects/${t.project_id}`,
+          href: t.work_order_id ? `/app/work-orders/${t.work_order_id}` : `/app/projects/${t.project_id}`,
           status: t.status,
           mine: t.assigned_to === ctx.membership.id,
           movable: !!project && canManageProject(access, project) && t.status !== "done",
@@ -97,7 +97,7 @@ export default async function CalendarPage({ params, searchParams }: PageProps<"
         subtitle: projectById.get(w.project_id)?.name,
         start: w.period_start,
         end: w.period_end,
-        href: `/app/${orgId}/work-orders/${w.id}`,
+        href: `/app/work-orders/${w.id}`,
         status: w.status,
       }),
     ),
@@ -109,7 +109,7 @@ export default async function CalendarPage({ params, searchParams }: PageProps<"
         subtitle: "Vacaciones",
         start: a.start_date,
         end: a.end_date,
-        href: `/app/${orgId}/vacations`,
+        href: `/app/vacations`,
         status: a.status,
         mine: a.membership_id === ctx.membership.id,
       }),
@@ -117,7 +117,7 @@ export default async function CalendarPage({ params, searchParams }: PageProps<"
     ...holidays.map((h): CalendarEvent => ({ id: `hol:${h.id}`, kind: "holiday", title: h.name, start: h.date, end: h.date })),
   ];
 
-  const base = `/app/${orgId}/calendar`;
+  const base = `/app/calendar`;
   const weekHref = Object.fromEntries(weeks.map((w) => [w.start, `${base}?view=week&week=${w.start}`]));
   const navBtn =
     "inline-flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";

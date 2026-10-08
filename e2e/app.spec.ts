@@ -27,7 +27,7 @@ test("credenciales inválidas muestran un error genérico", async ({ page }) => 
 
 test("al iniciar sesión se entra directo a la intranet de Diplonautic", async ({ page }) => {
   await login(page, "carlos@demo.com");
-  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/dashboard`));
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Hola, Carlos");
   await expect(page.getByText("Intranet · Responsable de departamento")).toBeVisible();
 });
@@ -292,7 +292,7 @@ test("un técnico invitado activa su cuenta y entra directo a Diplonautic", asyn
   const confirm = page.getByText("Te enviamos un email para confirmar tu cuenta.");
   await expect(page.getByRole("heading", { name: /Hola, Marc/ }).or(confirm)).toBeVisible();
   if (await confirm.isVisible()) return;
-  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/dashboard`));
+  await expect(page).toHaveURL(/\/app\/dashboard$/);
   await expect(page.getByText("Intranet · Empleado")).toBeVisible();
 });
 test("una admin abre la ficha de un empleado, navega en el tiempo y registra un cambio", async ({ page }) => {
@@ -655,7 +655,7 @@ test("una empleada entra a su perfil desde el avatar y sube su foto; nombre y av
   await page.goto(`/app/${NEBULA}/dashboard`);
   await page.getByRole("button", { name: "Menú de usuario" }).click();
   await page.getByRole("link", { name: "Mi perfil" }).click();
-  await expect(page).toHaveURL(new RegExp(`/app/${NEBULA}/profile$`));
+  await expect(page).toHaveURL(/\/app\/profile$/);
   await expect(page.getByRole("heading", { name: "Mi perfil" })).toBeVisible();
   await expect(page.getByText("Técnica de climatización")).toBeVisible();
 
@@ -821,4 +821,15 @@ test("una OT se copia a otro mes desde su botón", async ({ page }) => {
   // Se abre la OT nueva, con el mes elegido en el título
   await expect(page).toHaveURL(/\/work-orders\/[0-9a-f-]{36}$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(month.split(" ")[0]);
+});
+
+test("las URL de la intranet no llevan el id de la empresa; los enlaces viejos redirigen", async ({ page }) => {
+  await login(page, "ana@demo.com");
+  await expect(page).not.toHaveURL(new RegExp(NEBULA));
+  await page.goto(`/app/${NEBULA}/inbox`);
+  await expect(page).toHaveURL(/\/app\/inbox$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.goto("/app/time-tracking");
+  await expect(page).toHaveURL(/\/app\/time-tracking$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });

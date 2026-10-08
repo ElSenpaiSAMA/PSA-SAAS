@@ -55,7 +55,7 @@ export default async function VacationsPage({ params, searchParams }: PageProps<
     );
 
   const pending = requests.filter((r) => r.status === "pending" && supervised.has(r.membership_id));
-  const base = `/app/${orgId}/vacations`;
+  const base = `/app/vacations`;
 
   const tabs = isApprover ? (
     <nav aria-label="Vacaciones" className="mb-6 inline-flex rounded-xl border border-border bg-muted/40 p-1">
@@ -163,7 +163,7 @@ export default async function VacationsPage({ params, searchParams }: PageProps<
             action={<MonthNav month={month} basePath={base} query={{ tab: "equipo" }} />}
           />
           <CardBody>
-            <TeamCalendar orgId={orgId} days={days} rows={calendarRows} today={today} />
+            <TeamCalendar days={days} rows={calendarRows} today={today} />
           </CardBody>
         </Card>
 

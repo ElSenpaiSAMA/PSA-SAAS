@@ -663,3 +663,16 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Se borraron las ramas ya mergeadas en `main`:** 65 en GitHub y 70 en local. Quedan `main` y `dev`.
 - **`release/v1.0.0` nunca se había mergeado ni etiquetado.** Tenía un CHANGELOG del 5 de octubre y la versión 1.0.0, pero quedó desactualizada después de todo lo construido para Diplonautic.
 - **Se trajo su contenido a `main` actualizado:** la versión pasa a 1.0.0 y el CHANGELOG suma la entrega de Diplonautic. Lo anterior queda como 0.1.0, que era la versión real del `package.json` en ese momento. Se crea el tag `v1.0.0` en `main` y se borra la rama.
+
+---
+
+## 2026-10-08 URL limpias en la intranet
+
+**Prompt (resumen):** las URL de la intranet mostraban el id interno de la empresa (`/app/aaaaaaaa-…/inbox`). Había que arreglarlas.
+
+**Decisiones:**
+- **URL sin el id:** `/app/inbox`, `/app/projects/…`. El proxy sirve cada página internamente desde `/app/<empresa>/…`, así que las páginas, los permisos y RLS no cambian.
+- **La empresa activa va en una cookie** (`httpOnly`). Si no está, se toma la primera empresa de la persona. Se borra al iniciar y al cerrar sesión, para que una sesión nueva no herede la empresa de otra persona.
+- **Los enlaces con el id siguen funcionando** (avisos ya guardados en la base, marcadores, cambio de empresa): recuerdan esa empresa y redirigen a la URL limpia. Solo se recuerda una empresa de la que la persona es miembro; una ajena sigue respondiendo 404.
+
+**Pruebas:** E2E de la URL limpia, de la redirección de un enlace viejo y del acceso a una empresa ajena.

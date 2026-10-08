@@ -49,7 +49,7 @@ const chip = (active: boolean) =>
   );
 
 /** Tabla de proyectos (estilo Productive / Kantata): buscador, estado y salud de cada uno. */
-export function ProjectsTable({ orgId, rows }: { orgId: string; rows: ProjectRow[] }) {
+export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
   const [status, setStatus] = useState<(typeof STATUS)[number]["key"]>("active");
   const [query, setQuery] = useState("");
   const visible = useMemo(() => {
@@ -106,7 +106,7 @@ export function ProjectsTable({ orgId, rows }: { orgId: string; rows: ProjectRow
                   <tr key={p.id} className={cn("group relative border-t border-border transition-colors hover:bg-muted/40", p.status === "archived" && "opacity-60")}>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/app/${orgId}/projects/${p.id}`}
+                        href={`/app/projects/${p.id}`}
                         className="font-medium after:absolute after:inset-0 after:content-[''] group-hover:text-accent"
                       >
                         {p.name}

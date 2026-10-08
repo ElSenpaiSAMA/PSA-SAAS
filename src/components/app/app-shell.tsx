@@ -118,7 +118,7 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
     <div className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center border-b border-white/10 px-5">
         <Link
-          href={`/app/${props.orgId}/dashboard`}
+          href={`/app/dashboard`}
           onClick={onNavigate}
           aria-label={`${props.orgName} OS: ir al inicio`}
           className="flex items-center gap-2.5"
@@ -143,7 +143,7 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
               <p className="mb-1.5 px-3 text-[11px] font-medium tracking-[0.08em] text-white/40 uppercase">{group}</p>
               <div className="grid gap-0.5">
                 {groupItems.map((item) => {
-                  const href = `/app/${props.orgId}/${item.href}`;
+                  const href = `/app/${item.href}`;
                   const active = pathname === href || pathname.startsWith(`${href}/`);
                   const Icon = NAV_ICONS[item.icon];
                   const count = item.badge ? props.badges?.[item.badge] : undefined;
@@ -189,7 +189,7 @@ function SidebarContent({ props, onNavigate }: { props: ShellProps; onNavigate?:
 }
 
 /** Avatar de la barra superior: nombre, puesto, acceso a "Mi perfil" y cerrar sesión. */
-function UserMenu({ orgId, user }: { orgId: string; user: ShellProps["user"] }) {
+function UserMenu({ user }: { user: ShellProps["user"] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(open, ref, () => setOpen(false));
@@ -212,7 +212,7 @@ function UserMenu({ orgId, user }: { orgId: string; user: ShellProps["user"] }) 
             className="absolute top-full right-0 z-50 mt-1 w-60 origin-top-right rounded-xl border border-border bg-card p-1 shadow-[0_16px_48px_-12px_rgb(0_0_0/0.25)]"
           >
             <Link
-              href={`/app/${orgId}/profile`}
+              href={`/app/profile`}
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-muted"
             >
@@ -224,7 +224,7 @@ function UserMenu({ orgId, user }: { orgId: string; user: ShellProps["user"] }) 
             </Link>
             <div className="my-1 h-px bg-border" />
             <Link
-              href={`/app/${orgId}/profile`}
+              href={`/app/profile`}
               onClick={() => setOpen(false)}
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
@@ -252,10 +252,10 @@ function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
   const pathname = usePathname();
   // "Mi perfil" no está en el menú lateral: se entra desde el avatar
   const current =
-    pathname === `/app/${props.orgId}/profile`
+    pathname === `/app/profile`
       ? { group: "Cuenta", label: "Mi perfil" }
       : NAV.find((n) => {
-          const href = `/app/${props.orgId}/${n.href}`;
+          const href = `/app/${n.href}`;
           return pathname === href || pathname.startsWith(`${href}/`);
         });
   const inbox = props.badges?.inbox ?? 0;
@@ -301,7 +301,7 @@ function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
           <Search className="size-[18px]" strokeWidth={1.75} />
         </button>
         <Link
-          href={`/app/${props.orgId}/inbox`}
+          href={`/app/inbox`}
           aria-label={inbox ? `Bandeja: ${inbox} pendientes` : "Bandeja"}
           className="relative inline-flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
@@ -309,7 +309,7 @@ function Topbar({ props, onMenu }: { props: ShellProps; onMenu: () => void }) {
           {inbox ? <span className="absolute top-2 right-2 size-2 rounded-full bg-blue-500 ring-2 ring-background" /> : null}
         </Link>
         <ThemeToggle />
-        <UserMenu orgId={props.orgId} user={props.user} />
+        <UserMenu user={props.user} />
       </div>
     </header>
   );

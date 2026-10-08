@@ -29,7 +29,7 @@ export default async function ReportsPage({ params, searchParams }: PageProps<"/
   if (available.length === 0) notFound();
   const tab: ReportType = available.includes(tabParam as ReportType) ? (tabParam as ReportType) : available[0];
   const month = parseMonthParam(monthParam) ?? monthStart(todayISO());
-  const base = `/app/${orgId}/reports`;
+  const base = `/app/reports`;
   const exportHref = `${base}/export?type=${tab}&month=${toMonthParam(month)}`;
 
   return (

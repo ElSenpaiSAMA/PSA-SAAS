@@ -87,7 +87,7 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
   return (
     <>
       <Link
-        href={`/app/${orgId}/work-orders?month=${toMonthParam(wo.period_start)}`}
+        href={`/app/work-orders?month=${toMonthParam(wo.period_start)}`}
         className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> Órdenes de {formatMonth(wo.period_start)}
@@ -167,7 +167,7 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
                 orgId={orgId}
                 workOrderId={wo.id}
                 nextLabel={formatMonth(next.start)}
-                continuationHref={continuation ? `/app/${orgId}/work-orders/${continuation.id}` : undefined}
+                continuationHref={continuation ? `/app/work-orders/${continuation.id}` : undefined}
                 defaultTitle={titleForPeriod(wo.title, wo.period_start, next.start)}
                 defaultStart={next.start}
                 defaultEnd={next.end}

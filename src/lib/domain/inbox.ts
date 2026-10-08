@@ -32,8 +32,8 @@ export interface PendingInput {
 
 /** Lo que espera una acción de esta persona, con lo más urgente arriba. */
 export function buildPending(input: PendingInput): PendingItem[] {
-  const { orgId, today } = input;
-  const base = `/app/${orgId}`;
+  const { today } = input;
+  const base = "/app";
   const items: PendingItem[] = [];
 
   for (const w of input.toInvoice) {

@@ -94,7 +94,7 @@ export default async function ProjectsPage({ params }: PageProps<"/app/[orgId]/p
       ) : null}
 
       <div className="mt-4">
-        <ProjectsTable orgId={orgId} rows={rows} />
+        <ProjectsTable rows={rows} />
       </div>
     </>
   );

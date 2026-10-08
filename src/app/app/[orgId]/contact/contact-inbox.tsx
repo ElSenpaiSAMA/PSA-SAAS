@@ -55,7 +55,7 @@ export function ContactInbox({
   /** El mensaje se eligió a mano (en móvil se muestra el detalle en vez de la lista) */
   explicit: boolean;
 }) {
-  const base = `/app/${orgId}/contact`;
+  const base = `/app/contact`;
   const href = (f: ContactFilter, id?: string) => `${base}?estado=${f}${id ? `&id=${id}` : ""}`;
 
   return (

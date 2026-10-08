@@ -41,7 +41,7 @@ const chip = (active: boolean) =>
     active ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:text-foreground",
   );
 
-export function ThreadList({ orgId, threads }: { orgId: string; threads: ThreadItem[] }) {
+export function ThreadList({ threads }: { threads: ThreadItem[] }) {
   // Las novedades se fijan al abrir la página: al marcar el foro como visto, la lista se
   // vuelve a pedir, pero las marcas de "Nuevo" se mantienen mientras la persona está acá
   const [unread] = useState(() => new Set(threads.filter((t) => t.unread).map((t) => t.id)));
@@ -92,7 +92,7 @@ export function ThreadList({ orgId, threads }: { orgId: string; threads: ThreadI
         <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card" aria-label="Hilos del foro">
           {visible.map((t) => (
             <li key={t.id}>
-              <Link href={`/app/${orgId}/forum/${t.id}`} className="group flex gap-4 px-5 py-4 transition-colors hover:bg-muted/50">
+              <Link href={`/app/forum/${t.id}`} className="group flex gap-4 px-5 py-4 transition-colors hover:bg-muted/50">
                 <Avatar name={t.author} src={t.authorAvatar} size={36} className="mt-0.5 hidden sm:inline-flex" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">

@@ -154,13 +154,13 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
       0,
     );
 
-  const base = `/app/${orgId}/staff/${person.id}`;
+  const base = `/app/staff/${person.id}`;
   const roleLabel = isRole(person.role_id) ? ROLE_LABEL[person.role_id] : person.role_id;
 
   return (
     <>
       <Link
-        href={`/app/${orgId}/staff`}
+        href={`/app/staff`}
         className="mb-6 inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> Empleados
@@ -249,7 +249,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
                   {myProjects.map((p) => (
                     <Link
                       key={p.id}
-                      href={`/app/${orgId}/projects/${p.id}`}
+                      href={`/app/projects/${p.id}`}
                       className="inline-flex h-7 items-center rounded-full border border-border px-3 text-[12.5px] transition-colors hover:border-border-strong"
                     >
                       {p.name}
@@ -358,7 +358,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
                   <p className="text-[13px] text-muted-foreground">Sin actividad registrada en {formatMonth(month)}.</p>
                 )}
                 <Link
-                  href={`/app/${orgId}/audit`}
+                  href={`/app/audit`}
                   className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] text-muted-foreground hover:text-foreground"
                 >
                   <ScrollText className="size-3.5" /> Ver auditoría completa
@@ -383,7 +383,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
                 <Row label="Reporta a">
                   {manager ? (
                     <Link
-                      href={`/app/${orgId}/staff/${manager.id}?month=${month.slice(0, 7)}`}
+                      href={`/app/staff/${manager.id}?month=${month.slice(0, 7)}`}
                       className="hover:text-accent hover:underline"
                     >
                       {names.get(manager.id)}
@@ -398,7 +398,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
                       {reports.map((r) => (
                         <Link
                           key={r.id}
-                          href={`/app/${orgId}/staff/${r.id}?month=${month.slice(0, 7)}`}
+                          href={`/app/staff/${r.id}?month=${month.slice(0, 7)}`}
                           className="hover:text-accent hover:underline"
                         >
                           {names.get(r.id)}
