@@ -69,7 +69,8 @@ const SVG_PROPS = { viewBox: "0 0 1440 900", preserveAspectRatio: "xMidYMid slic
  * por debajo, dentro de la sección siguiente, y se desvanecen de a poco. La derrota, las
  * sondas y la rosa quedan dentro de la sección, para no invadir el contenido de abajo.
  */
-export function ChartBackground({ flowInto = false }: { flowInto?: boolean }) {
+/** `subtle`: líneas más tenues, para secciones con dibujos o mucho contenido encima */
+export function ChartBackground({ flowInto = false, subtle = false }: { flowInto?: boolean; subtle?: boolean }) {
   // Las dos capas miden lo mismo que la sección; la extensión solo la ocupan las curvas
   const layer = { height: flowInto ? `calc(100% - ${FLOW})` : "100%" };
   return (
@@ -77,6 +78,7 @@ export function ChartBackground({ flowInto = false }: { flowInto?: boolean }) {
       aria-hidden
       className={cn(
         "pointer-events-none absolute inset-x-0 top-0 -z-10 overflow-hidden",
+        subtle && "opacity-60",
         flowInto
           ? "bg-[linear-gradient(180deg,#e6f0fc_0%,#f4f8fe_40%,#ffffff_70%)]"
           : "bottom-0 bg-[linear-gradient(180deg,#e6f0fc_0%,#f4f8fe_45%,#ffffff_100%)]",
