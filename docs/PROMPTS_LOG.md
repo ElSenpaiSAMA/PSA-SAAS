@@ -694,3 +694,20 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Presupuesto con el servicio elegido:** cada servicio abre el contacto con su opción ya seleccionada (`/contacto?servicio=aire`, `generadores`…).
 
 **Pruebas:** unitario de la ruta pública y E2E (navbar → Diplonautic → elegir hélices de proa → contacto con el servicio preseleccionado).
+
+---
+
+## 2026-10-08 URL legibles en proyectos, OT y personas
+
+**Prompt (resumen):** las URL de proyectos, OT, personas y empleados se veían "turbias" (`/app/projects/cccccccc-0000-…`). Se pidieron URL legibles.
+
+**Decisiones:**
+- **Slug por registro, calculado por la base** (migración 0027): `/app/projects/climatizacion-princess-v58`, `/app/work-orders/princess-v58-octubre-2026` y `/app/staff/ana-torres`.
+  - Es único dentro de la empresa; si un nombre se repite, el segundo lleva `-2`.
+  - Se recalcula al crear y al renombrar, y no se puede fijar a mano.
+  - El de las personas sale de su nombre y cambia cuando administración lo cambia.
+- **Los enlaces con el id siguen funcionando:** las páginas de detalle reciben slug o id, y con un id redirigen a la URL legible. Así no se rompen los avisos ya guardados en la base ni los marcadores.
+- **El control de cambios de memberships** deja pasar los cambios que solo tocan el slug: los hace la base al renombrar a alguien, incluso cuando es la propia persona.
+- **Sin la migración aplicada, la app sigue usando los ids** (`urlKey`), así que el código se puede publicar antes que la migración sin romper nada.
+
+**Pruebas:** pgTAP (10: slugify, repetidos, otra empresa, renombrar, no se fija a mano, OT, personas) y E2E (un enlace con el id redirige a la URL legible y los links de Personas son legibles).
