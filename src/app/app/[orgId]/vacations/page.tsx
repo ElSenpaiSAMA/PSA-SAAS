@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Approvals, MyRequests, type PendingApproval } from "./request-list";
 import { RequestForm } from "./request-form";
 import { TeamCalendar, type TeamCalendarRow } from "./team-calendar";
+import { urlKey } from "@/lib/domain/slug";
 
 export const metadata: Metadata = { title: "Vacaciones" };
 
@@ -94,6 +95,7 @@ export default async function VacationsPage({ params, searchParams }: PageProps<
     const { days, rows } = absenceGrid(teamIds, teamRequests, month, holidays);
     const calendarRows: TeamCalendarRow[] = rows.map((row) => ({
       ...row,
+      memberSlug: urlKey(byId.get(row.memberId) ?? { id: row.memberId }),
       name: nameOf(row.memberId),
       position: byId.get(row.memberId)?.position ?? null,
       available: balanceOf(row.memberId).available,

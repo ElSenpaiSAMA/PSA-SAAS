@@ -11,6 +11,7 @@ import { displayName } from "@/lib/domain/hierarchy";
 import { creatableDepartments } from "@/lib/domain/projects";
 import { NewProject } from "./project-form";
 import { ProjectsTable, type ProjectRow } from "./projects-table";
+import { urlKey } from "@/lib/domain/slug";
 
 export const metadata: Metadata = { title: "Proyectos" };
 
@@ -47,6 +48,7 @@ export default async function ProjectsPage({ params }: PageProps<"/app/[orgId]/p
     const own = tasks.filter((t) => t.project_id === p.id);
     return {
       id: p.id,
+      slug: urlKey(p),
       name: p.name,
       client: p.client_name,
       department: (p.department_id && departmentName.get(p.department_id)) || "Sin área",

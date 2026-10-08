@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 
 export interface StaffRow {
   id: string;
+  /** Para la URL legible */
+  slug: string;
   name: string;
   avatar: string | null;
   email: string | null;
@@ -130,7 +132,7 @@ export function StaffTable({
                   <td className="px-5 py-3">
                     {r.canOpen ? (
                       <Link
-                        href={`/app/staff/${r.id}`}
+                        href={`/app/staff/${r.slug}`}
                         className="flex items-center gap-3 after:absolute after:inset-0 after:content-['']"
                         aria-label={`Ver perfil de ${r.name}`}
                       >

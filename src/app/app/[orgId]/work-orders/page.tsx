@@ -57,7 +57,7 @@ export default async function WorkOrdersPage({ params, searchParams }: PageProps
         projectName: project?.name,
         clientName: project?.client_name,
         canCopy: canManage(wo.project_id),
-        continuationId: findContinuation(wo, nextOrders)?.id,
+        continuation: findContinuation(wo, nextOrders),
       });
     })
     .sort((a, b) => (a.projectName ?? "").localeCompare(b.projectName ?? "", "es") || a.number - b.number);

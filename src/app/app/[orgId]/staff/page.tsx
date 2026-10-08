@@ -11,6 +11,7 @@ import { isRole, ROLE_LABEL } from "@/lib/domain/permissions";
 import { todayISO } from "@/lib/domain/periods";
 import { createClient } from "@/lib/supabase/server";
 import { StaffTable, type StaffRow } from "./staff-table";
+import { urlKey } from "@/lib/domain/slug";
 
 export const metadata: Metadata = { title: "Empleados" };
 
@@ -43,6 +44,7 @@ export default async function StaffPage({ params }: PageProps<"/app/[orgId]/staf
   const rows: StaffRow[] = employees
     .map((e) => ({
       id: e.id,
+      slug: urlKey(e),
       name: displayName(e.profile),
       avatar: e.profile?.avatar_url ?? null,
       email: e.profile?.email ?? null,
