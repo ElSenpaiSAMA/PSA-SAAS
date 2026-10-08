@@ -87,7 +87,7 @@ export default async function DiplonauticPage() {
         {/* Recorrido por dentro del barco */}
         <section id="recorrido" className="relative isolate scroll-mt-20 py-16 sm:py-20" aria-labelledby="servicios-title">
           {/* La ola del encabezado usa el mismo tono que este fondo suavizado (#f0f6fd) */}
-          <ChartBackground subtle flowInto />
+          <ChartBackground subtle flowInto fadeTop />
           <div className="mx-auto max-w-6xl px-6">
             <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
               <div>

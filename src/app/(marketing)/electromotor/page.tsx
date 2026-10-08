@@ -70,7 +70,7 @@ export default async function ElectromotorPage() {
 
         {/* El taller en 3D, sobre la carta náutica */}
         <section className="relative isolate pt-12 pb-20 sm:pt-16" aria-labelledby="taller-title">
-          <ChartBackground />
+          <ChartBackground fadeTop />
           <div className="mx-auto max-w-6xl px-6 text-center">
             <p className="text-[13px] font-medium text-blue-700">El taller</p>
             <h2 id="taller-title" className="mt-2 text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.05] font-semibold tracking-[-0.04em] text-slate-950">
