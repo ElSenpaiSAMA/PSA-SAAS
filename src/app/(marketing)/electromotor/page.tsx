@@ -28,27 +28,55 @@ export default async function ElectromotorPage() {
 
   return (
     <>
-      <SiteHeader signedIn={!!user} />
+      <SiteHeader signedIn={!!user} overDark />
       <main className="bg-white">
-        {/* Hero + taller en 3D */}
-        <section className="relative isolate pt-32 pb-20 sm:pt-40">
-          <ChartBackground />
-          <Reveal className="mx-auto max-w-3xl px-6 text-center">
+        {/* Encabezado con foto, como Contacto y Diplonautic */}
+        <section className="relative isolate overflow-hidden pt-36 pb-36 text-white sm:pt-44">
+          <Image src="/barcos/yate-deportivo.jpg" alt="" fill preload sizes="100vw" className="-z-20 object-cover object-[60%_50%]" />
+          <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(11,31,58,.86)_0%,rgba(18,58,107,.66)_55%,rgba(11,31,58,.88)_100%)]" />
+          <Reveal className="mx-auto max-w-6xl px-6">
             <RevealItem>
-              <p className="text-[12.5px] font-medium tracking-[0.22em] text-blue-700 uppercase">ElectroMotor · Taller de Diplonautic</p>
+              <p className="text-[12.5px] font-medium tracking-[0.22em] text-sky-300 uppercase">ElectroMotor · Taller de Diplonautic</p>
             </RevealItem>
             <RevealItem>
-              <h1 className="mt-4 text-[clamp(2.3rem,5.4vw,4.1rem)] leading-[1.03] font-semibold tracking-[-0.045em] text-balance text-slate-950">
-                Alternadores y motores de arranque, <span className="font-serif font-normal text-blue-700 italic">por dentro.</span>
+              <h1 className="mt-4 max-w-3xl text-[clamp(2.4rem,5.5vw,4.2rem)] leading-[1.02] font-semibold tracking-[-0.045em] text-balance">
+                Alternadores y motores de arranque, <span className="font-serif font-normal text-sky-300 italic">como nuevos.</span>
               </h1>
             </RevealItem>
             <RevealItem>
-              <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-slate-600">
-                Reparamos la parte eléctrica que hace arrancar y cargar a barcos y vehículos. Elegí un equipo, desmontalo y mirá qué
-                revisamos pieza por pieza.
+              <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-white/75">
+                Reparamos la parte eléctrica que hace arrancar y cargar a barcos y vehículos, con banco de pruebas propio en Sant Adrià de
+                Besòs.
               </p>
             </RevealItem>
+            <RevealItem>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/contacto?servicio=electromotor"
+                  className="inline-flex h-12 items-center gap-2 rounded-2xl bg-blue-600 px-6 text-[15px] font-medium text-white transition-colors hover:bg-blue-500"
+                >
+                  Pedir presupuesto <ArrowRight className="size-4" />
+                </Link>
+                <a href={company.phoneHref} className="inline-flex h-12 items-center gap-2 rounded-2xl px-4 text-[15px] text-white/85 hover:bg-white/10">
+                  <Phone className="size-4" /> {company.phone}
+                </a>
+              </div>
+            </RevealItem>
           </Reveal>
+          <svg aria-hidden className="absolute inset-x-0 -bottom-px h-24 w-full text-[#e6f0fc]" viewBox="0 0 1440 96" preserveAspectRatio="none">
+            <path d="M0 50 C240 10 480 90 720 50 S1200 10 1440 50 V96 H0 Z" fill="currentColor" />
+          </svg>
+        </section>
+
+        {/* El taller en 3D, sobre la carta náutica */}
+        <section className="relative isolate pt-12 pb-20 sm:pt-16" aria-labelledby="taller-title">
+          <ChartBackground fadeTop />
+          <div className="mx-auto max-w-6xl px-6 text-center">
+            <p className="text-[13px] font-medium text-blue-700">El taller</p>
+            <h2 id="taller-title" className="mt-2 text-[clamp(1.8rem,4vw,2.8rem)] leading-[1.05] font-semibold tracking-[-0.04em] text-slate-950">
+              Elegí un equipo <span className="font-serif font-normal text-blue-700 italic">y mirá qué revisamos.</span>
+            </h2>
+          </div>
           <div className="mx-auto mt-4 max-w-6xl px-6">
             <MachineStage />
           </div>
