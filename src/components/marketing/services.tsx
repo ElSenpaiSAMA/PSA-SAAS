@@ -85,6 +85,14 @@ export function Services() {
               tecnología de punta.
             </p>
           </RevealItem>
+          <RevealItem>
+            <Link
+              href="/diplonautic"
+              className="group mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-blue-700 hover:underline hover:underline-offset-4"
+            >
+              Ver los servicios en detalle <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </RevealItem>
         </Reveal>
 
         <Reveal className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" stagger={0.06}>

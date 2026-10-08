@@ -9,6 +9,7 @@ describe("web pública", () => {
     expect(isPublicSitePath("/contacto")).toBe(true);
     expect(isPublicSitePath("/contacto/")).toBe(true);
     expect(isPublicSitePath("/electromotor")).toBe(true);
+    expect(isPublicSitePath("/diplonautic")).toBe(true);
   });
 
   it("la intranet no lo es", () => {

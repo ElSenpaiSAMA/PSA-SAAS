@@ -14,9 +14,15 @@ export const metadata: Metadata = {
   description: "Pedí presupuesto para la instalación, reparación o mantenimiento de los equipos de tu barco.",
 };
 
-// /contacto?servicio=electromotor llega con el servicio ya elegido en el formulario
+// /contacto?servicio=electromotor (o aire, generadores…) llega con el servicio ya elegido en el formulario
 const SERVICE_BY_PARAM: Record<string, (typeof CONTACT_SERVICES)[number]> = {
   electromotor: "ElectroMotor: arranque, alternador o dinamo",
+  aire: "Aire acondicionado",
+  refrigeracion: "Refrigeración",
+  generadores: "Generadores",
+  potabilizadoras: "Potabilizadoras",
+  electricos: "Sistemas eléctricos",
+  helices: "Hélices de proa",
 };
 
 const CHANNELS = [

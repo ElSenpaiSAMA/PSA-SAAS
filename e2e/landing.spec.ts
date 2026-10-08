@@ -1,4 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+/** En el celular los links del header van en un menú: se abre antes de buscarlos. */
+async function headerNav(page: Page) {
+  const toggle = page.getByRole("button", { name: "Abrir menú" });
+  if (await toggle.isVisible()) {
+    await toggle.click();
+    return page.getByRole("navigation", { name: "Menú" });
+  }
+  return page.getByRole("banner");
+}
 
 test.describe("web pública", () => {
   test("la home presenta la empresa y sus servicios", async ({ page }) => {
@@ -21,7 +31,7 @@ test.describe("web pública", () => {
     await page.goto("/");
     await page.locator("#servicios").getByRole("link", { name: /ElectroMotor/ }).click();
     await expect(page).toHaveURL(/\/electromotor$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("por dentro");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("como nuevos");
 
     await page.getByRole("tab", { name: "Motores de arranque" }).click();
     await expect(page.getByText("Cuando el motor hace clic y no gira")).toBeVisible();
@@ -31,9 +41,23 @@ test.describe("web pública", () => {
     await expect(page.getByLabel("Servicio")).toHaveValue("ElectroMotor: arranque, alternador o dinamo");
   });
 
+  test("Diplonautic: el recorrido por el barco muestra cada servicio y lleva al presupuesto", async ({ page }) => {
+    await page.goto("/");
+    await (await headerNav(page)).getByRole("link", { name: "Diplonautic", exact: true }).click();
+    await expect(page).toHaveURL(/\/diplonautic$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("en Barcelona");
+
+    await page.getByRole("tab", { name: /Hélices de proa/ }).click();
+    await expect(page.locator("#recorrido").getByRole("heading", { level: 3 })).toHaveText("Hélices de proa");
+
+    await page.locator('a[href="/contacto?servicio=helices"]').first().click();
+    await expect(page).toHaveURL(/\/contacto\?servicio=helices$/);
+    await expect(page.getByLabel("Servicio")).toHaveValue("Hélices de proa");
+  });
+
   test("el acceso de empleados lleva al login", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("banner").getByRole("link", { name: /acceso/i }).click();
+    await (await headerNav(page)).getByRole("link", { name: /acceso/i }).click();
     await expect(page).toHaveURL(/\/login$/);
   });
 
