@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils";
 
 export interface ProjectRow {
   id: string;
+  /** Para la URL legible */
+  slug: string;
   name: string;
   client: string | null;
   department: string;
@@ -106,7 +108,7 @@ export function ProjectsTable({ rows }: { rows: ProjectRow[] }) {
                   <tr key={p.id} className={cn("group relative border-t border-border transition-colors hover:bg-muted/40", p.status === "archived" && "opacity-60")}>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/app/projects/${p.id}`}
+                        href={`/app/projects/${p.slug}`}
                         className="font-medium after:absolute after:inset-0 after:content-[''] group-hover:text-accent"
                       >
                         {p.name}

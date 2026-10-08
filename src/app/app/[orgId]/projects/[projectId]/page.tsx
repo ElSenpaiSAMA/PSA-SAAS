@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { resolveSlug } from "@/lib/data/slugs";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ClipboardList, Clock3, Euro, Tag } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
@@ -24,8 +25,9 @@ import { RecurringToggle } from "./recurring-toggle";
 export const metadata: Metadata = { title: "Proyecto" };
 
 export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/projects/[projectId]">) {
-  const { orgId, projectId } = await params;
+  const { orgId, projectId: param } = await params;
   const ctx = await getOrgContext(orgId);
+  const projectId = await resolveSlug("projects", orgId, param);
   // RLS: si el usuario no puede ver el proyecto, no vuelve nada → 404
   const project = await getProject(projectId);
   if (!project || project.org_id !== orgId) notFound();
@@ -60,7 +62,7 @@ export default async function ProjectPage({ params }: PageProps<"/app/[orgId]/pr
   const rows = workOrders.map((wo) =>
     toWorkOrderRow(wo, allTasks, minutes, {
       canCopy: manage && project.status === "active",
-      continuationId: findContinuation(wo, workOrders)?.id,
+      continuation: findContinuation(wo, workOrders),
     }),
   );
   const totalLogged = rows.reduce((s, r) => s + r.loggedHours, 0);

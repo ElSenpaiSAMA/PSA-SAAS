@@ -22,6 +22,8 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 export interface Person {
   id: string;
+  /** Para la URL legible */
+  slug: string;
   name: string;
   /** Nombre tal como está en el perfil (null si la persona todavía no lo eligió) */
   fullName: string | null;
@@ -276,7 +278,7 @@ function Directory({
               <Avatar name={p.name} src={p.avatar} size={44} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
-                  <Link href={`/app/staff/${p.id}`} className="transition-colors hover:text-accent hover:underline">
+                  <Link href={`/app/staff/${p.slug}`} className="transition-colors hover:text-accent hover:underline">
                     {p.name}
                   </Link>{" "}
                   {p.isMe ? <span className="text-[12px] font-normal text-muted-foreground">(vos)</span> : null}
