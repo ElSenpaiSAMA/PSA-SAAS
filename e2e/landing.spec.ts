@@ -1,4 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+/** En el celular los links del header van en un menú: se abre antes de buscarlos. */
+async function headerNav(page: Page) {
+  const toggle = page.getByRole("button", { name: "Abrir menú" });
+  if (await toggle.isVisible()) {
+    await toggle.click();
+    return page.getByRole("navigation", { name: "Menú" });
+  }
+  return page.getByRole("banner");
+}
 
 test.describe("web pública", () => {
   test("la home presenta la empresa y sus servicios", async ({ page }) => {
@@ -33,7 +43,7 @@ test.describe("web pública", () => {
 
   test("Diplonautic: el recorrido por el barco muestra cada servicio y lleva al presupuesto", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("banner").getByRole("link", { name: "Diplonautic", exact: true }).click();
+    await (await headerNav(page)).getByRole("link", { name: "Diplonautic", exact: true }).click();
     await expect(page).toHaveURL(/\/diplonautic$/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("en Barcelona");
 
@@ -47,7 +57,7 @@ test.describe("web pública", () => {
 
   test("el acceso de empleados lleva al login", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("banner").getByRole("link", { name: /acceso/i }).click();
+    await (await headerNav(page)).getByRole("link", { name: /acceso/i }).click();
     await expect(page).toHaveURL(/\/login$/);
   });
 
