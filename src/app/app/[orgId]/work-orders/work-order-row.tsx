@@ -12,9 +12,12 @@ import {
 } from "@/lib/domain/work-orders";
 import type { WorkOrder } from "@/lib/supabase/database.types";
 import { CopyNextButton } from "./copy-next-button";
+import { urlKey } from "@/lib/domain/slug";
 
 export interface WorkOrderRowData {
   id: string;
+  /** Para la URL legible */
+  slug: string;
   number: number;
   title: string;
   status: WorkOrderStatus;
@@ -32,6 +35,7 @@ export interface WorkOrderRowData {
   canCopy: boolean;
   /** OT que ya continúa a esta en el período siguiente (si existe) */
   continuationId?: string;
+  continuationSlug?: string;
 }
 
 const fmtHours = (h: number) => `${Math.round(h * 10) / 10} h`;
@@ -47,7 +51,7 @@ export function WorkOrderRow({ orgId, row }: { orgId: string; row: WorkOrderRowD
     <li className="group relative grid grid-cols-[minmax(0,1fr)_auto] gap-x-6 gap-y-3 border-b border-border px-5 py-4 transition-colors last:border-b-0 hover:bg-muted/40 @3xl:grid-cols-[minmax(0,1.7fr)_7.5rem_minmax(0,1.1fr)_6.5rem_11.5rem] @3xl:items-center">
       <div className="order-1 col-span-2 min-w-0 @xl:col-span-1 @3xl:order-1">
         <Link
-          href={`/app/work-orders/${row.id}`}
+          href={`/app/work-orders/${row.slug}`}
           className="block text-[14px] font-medium @xl:truncate after:absolute after:inset-0 after:content-[''] group-hover:text-accent"
         >
           {row.title}
@@ -77,7 +81,7 @@ export function WorkOrderRow({ orgId, row }: { orgId: string; row: WorkOrderRowD
         <div className="order-5 col-span-2 -ml-2.5 flex @xl:order-4 @xl:col-span-1 @xl:ml-0 @xl:items-end @xl:justify-end @3xl:order-5 @3xl:items-center">
         {row.continuationId ? (
           <Link
-            href={`/app/work-orders/${row.continuationId}`}
+            href={`/app/work-orders/${row.continuationSlug}`}
             className="relative z-10 inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-[12.5px] whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Sigue en {formatMonth(next.start)} <ArrowRight className="size-3.5" />
@@ -146,11 +150,12 @@ export function toWorkOrderRow(
   wo: WorkOrder,
   tasks: { work_order_id: string | null; id: string; status: string }[],
   minutes: Map<string, number>,
-  extra: { projectName?: string; clientName?: string | null; canCopy: boolean; continuationId?: string },
+  extra: { projectName?: string; clientName?: string | null; canCopy: boolean; continuation?: { id: string; slug: string } },
 ): WorkOrderRowData {
   const own = tasks.filter((t) => t.work_order_id === wo.id);
   return {
     id: wo.id,
+    slug: urlKey(wo),
     number: wo.number,
     title: wo.title,
     status: wo.status,
@@ -162,6 +167,10 @@ export function toWorkOrderRow(
     loggedHours: own.reduce((s, t) => s + (minutes.get(t.id) ?? 0), 0) / 60,
     taskCount: own.length,
     doneCount: own.filter((t) => t.status === "done").length,
-    ...extra,
+    projectName: extra.projectName,
+    clientName: extra.clientName,
+    canCopy: extra.canCopy,
+    continuationId: extra.continuation?.id,
+    continuationSlug: extra.continuation && urlKey(extra.continuation),
   };
 }

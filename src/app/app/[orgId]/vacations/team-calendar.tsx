@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 export interface TeamCalendarRow {
   memberId: string;
+  /** Para la URL legible de la ficha */
+  memberSlug: string;
   name: string;
   position: string | null;
   available: number;
@@ -61,7 +63,7 @@ export function TeamCalendar({ days, rows, today }: { days: GridDay[]; rows: Tea
           {rows.map((row) => (
             <div key={row.memberId} className="group grid border-b border-border last:border-b-0" style={{ gridTemplateColumns: cols }}>
               <Link
-                href={`/app/staff/${row.memberId}`}
+                href={`/app/staff/${row.memberSlug}`}
                 className="sticky left-0 z-10 flex items-center gap-2.5 bg-card px-3 py-2 transition-colors group-hover:bg-muted/60"
               >
                 <Avatar name={row.name} size={26} />

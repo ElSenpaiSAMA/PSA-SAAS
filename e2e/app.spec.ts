@@ -185,7 +185,7 @@ test("una OT facturada enlaza su continuación en lugar de ofrecer copiarla", as
   await expect(page.getByText("Ciclo completo")).toBeVisible();
   await page.getByRole("button", { name: "Repetir esta OT en otro período" }).click();
   await page.getByRole("link", { name: /^Ver la OT de / }).click();
-  await expect(page).toHaveURL(/\/work-orders\/ffffffff-0000-0000-0000-000000000002$/);
+  await expect(page).toHaveURL(/\/work-orders\/princess-v58-[a-z0-9-]+$/);
   await expect(page.getByText("Siguiente paso: Cerrar OT")).toBeVisible();
 });
 
@@ -819,7 +819,7 @@ test("una OT se copia a otro mes desde su botón", async ({ page }) => {
   const month = (await option.innerText()).trim();
   await option.click();
   // Se abre la OT nueva, con el mes elegido en el título
-  await expect(page).toHaveURL(/\/work-orders\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(/\/work-orders\/[a-z0-9-]+$/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(month.split(" ")[0]);
 });
 
@@ -831,5 +831,20 @@ test("las URL de la intranet no llevan el id de la empresa; los enlaces viejos r
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
   await page.goto("/app/time-tracking");
   await expect(page).toHaveURL(/\/app\/time-tracking$/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});
+
+test("proyectos, OT y personas tienen URL legibles; un enlace con el id redirige", async ({ page }) => {
+  await login(page, "laura@demo.com");
+  await page.goto(`/app/${NEBULA}/projects/cccccccc-0000-0000-0000-000000000002`);
+  await expect(page).toHaveURL(/\/app\/projects\/[a-z0-9]+(-[a-z0-9]+)*$/);
+  await expect(page).not.toHaveURL(/cccccccc/);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+
+  await page.goto("/app/staff");
+  const first = page.locator("main a[href^='/app/staff/']").first();
+  await expect(first).toHaveAttribute("href", /^\/app\/staff\/[a-z0-9]+(-[a-z0-9]+)*$/);
+  await first.click();
+  await expect(page).toHaveURL(/\/app\/staff\/[a-z0-9-]+$/);
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });

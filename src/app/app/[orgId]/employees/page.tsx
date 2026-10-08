@@ -12,6 +12,7 @@ import { isRole } from "@/lib/domain/permissions";
 import type { DepartmentInfo } from "./departments-view";
 import { InvitePanel } from "./invite-panel";
 import { TeamView, type Person } from "./team-view";
+import { urlKey } from "@/lib/domain/slug";
 
 export const metadata: Metadata = { title: "Personas" };
 
@@ -32,6 +33,7 @@ export default async function PeoplePage({ params }: PageProps<"/app/[orgId]/emp
     .filter((e) => e.status === "active" && isRole(e.role_id))
     .map((e) => ({
       id: e.id,
+      slug: urlKey(e),
       name: displayName(e.profile),
       avatar: e.profile?.avatar_url ?? null,
       fullName: e.profile?.full_name ?? null,

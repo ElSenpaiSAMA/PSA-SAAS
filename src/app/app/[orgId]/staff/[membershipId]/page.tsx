@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { resolveSlug } from "@/lib/data/slugs";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, Clock3, FolderKanban, History, Lock, Palmtree, ScrollText, SquareCheckBig } from "lucide-react";
 import { MonthNav } from "@/components/app/month-nav";
@@ -33,6 +34,7 @@ import { formatMinutes, periodActivity } from "@/lib/domain/time";
 import { businessDays, vacationBalance } from "@/lib/domain/vacations";
 import { cn } from "@/lib/utils";
 import { RecordForm } from "./record-form";
+import { urlKey } from "@/lib/domain/slug";
 
 export const metadata: Metadata = { title: "Perfil de empleado" };
 
@@ -54,9 +56,11 @@ const fmtDay = (iso: string) => formatFieldValue("hire_date", iso);
 const isoAt = (date: string) => new Date(`${date}T00:00:00`).toISOString();
 
 export default async function EmployeeProfilePage({ params, searchParams }: PageProps<"/app/[orgId]/staff/[membershipId]">) {
-  const { orgId, membershipId } = await params;
-  const { month: monthParam } = await searchParams;
+  const { orgId, membershipId: param } = await params;
+  const query = await searchParams;
+  const { month: monthParam } = query;
   const ctx = await getOrgContext(orgId);
+  const membershipId = await resolveSlug("memberships", orgId, param, query);
   const today = todayISO();
   const currentMonth = monthStart(today);
   const month = parseMonthParam(monthParam) ?? currentMonth;
@@ -154,7 +158,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
       0,
     );
 
-  const base = `/app/staff/${person.id}`;
+  const base = `/app/staff/${urlKey(person)}`;
   const roleLabel = isRole(person.role_id) ? ROLE_LABEL[person.role_id] : person.role_id;
 
   return (
@@ -249,7 +253,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
                   {myProjects.map((p) => (
                     <Link
                       key={p.id}
-                      href={`/app/projects/${p.id}`}
+                      href={`/app/projects/${urlKey(p)}`}
                       className="inline-flex h-7 items-center rounded-full border border-border px-3 text-[12.5px] transition-colors hover:border-border-strong"
                     >
                       {p.name}
@@ -383,7 +387,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
                 <Row label="Reporta a">
                   {manager ? (
                     <Link
-                      href={`/app/staff/${manager.id}?month=${month.slice(0, 7)}`}
+                      href={`/app/staff/${urlKey(manager)}?month=${month.slice(0, 7)}`}
                       className="hover:text-accent hover:underline"
                     >
                       {names.get(manager.id)}
@@ -398,7 +402,7 @@ export default async function EmployeeProfilePage({ params, searchParams }: Page
                       {reports.map((r) => (
                         <Link
                           key={r.id}
-                          href={`/app/staff/${r.id}?month=${month.slice(0, 7)}`}
+                          href={`/app/staff/${urlKey(r)}?month=${month.slice(0, 7)}`}
                           className="hover:text-accent hover:underline"
                         >
                           {names.get(r.id)}

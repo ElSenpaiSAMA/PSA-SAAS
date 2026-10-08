@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { resolveSlug } from "@/lib/data/slugs";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock3, Euro, ListChecks, SquareCheckBig } from "lucide-react";
 import { NewTaskForm } from "@/components/app/new-task-form";
@@ -19,12 +20,14 @@ import { formatMonth, formatRange, nextPeriod, toMonthParam } from "@/lib/domain
 import { findContinuation, formatMoney, titleForPeriod, workOrderAmounts, workOrderCode } from "@/lib/domain/work-orders";
 import { MembersPanel } from "../../projects/[projectId]/members-panel";
 import { NextStepPanel, RepeatWorkOrder, TasksPanel } from "./controls";
+import { urlKey } from "@/lib/domain/slug";
 
 export const metadata: Metadata = { title: "Orden de trabajo" };
 
 export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/work-orders/[workOrderId]">) {
-  const { orgId, workOrderId } = await params;
+  const { orgId, workOrderId: param } = await params;
   const ctx = await getOrgContext(orgId);
+  const workOrderId = await resolveSlug("work_orders", orgId, param);
   // RLS: sin acceso al proyecto, la OT no vuelve → 404
   const wo = await getWorkOrder(workOrderId);
   if (!wo || wo.org_id !== orgId) notFound();
@@ -167,7 +170,7 @@ export default async function WorkOrderPage({ params }: PageProps<"/app/[orgId]/
                 orgId={orgId}
                 workOrderId={wo.id}
                 nextLabel={formatMonth(next.start)}
-                continuationHref={continuation ? `/app/work-orders/${continuation.id}` : undefined}
+                continuationHref={continuation ? `/app/work-orders/${urlKey(continuation)}` : undefined}
                 defaultTitle={titleForPeriod(wo.title, wo.period_start, next.start)}
                 defaultStart={next.start}
                 defaultEnd={next.end}

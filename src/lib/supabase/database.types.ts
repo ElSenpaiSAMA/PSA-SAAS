@@ -47,6 +47,8 @@ export type Membership = {
   weekly_hours: number;
   annual_vacation_days: number;
   status: MembershipStatus;
+  /** Nombre en formato URL (/app/staff/ana-torres), único en la empresa; lo fija la base */
+  slug: string;
   created_at: Timestamp;
 };
 
@@ -89,6 +91,8 @@ export type Project = {
   created_at: Timestamp;
   /** OT mensual: el día 1 se crea sola la del mes nuevo */
   recurring_work_orders: boolean;
+  /** Nombre en formato URL, único en la empresa; lo fija la base */
+  slug: string;
 };
 
 export type Task = {
@@ -168,6 +172,8 @@ export type WorkOrder = {
   invoiced_at: Timestamp | null;
   created_by: string | null;
   created_at: Timestamp;
+  /** Nombre en formato URL, único en la empresa; lo fija la base */
+  slug: string;
 };
 
 export type Holiday = {
