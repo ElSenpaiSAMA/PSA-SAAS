@@ -676,3 +676,21 @@ Con esto se completa la fase 3 del plan: tipos de ausencia y motivo de rechazo, 
 - **Los enlaces con el id siguen funcionando** (avisos ya guardados en la base, marcadores, cambio de empresa): recuerdan esa empresa y redirigen a la URL limpia. Solo se recuerda una empresa de la que la persona es miembro; una ajena sigue respondiendo 404.
 
 **Pruebas:** E2E de la URL limpia, de la redirección de un enlace viejo y del acceso a una empresa ajena.
+
+---
+
+## 2026-10-08 Página Diplonautic y encabezados con foto
+
+**Prompt (resumen):** faltaba la página de diplonautic.com/diplonautic. Se pedía el mismo estilo que el resto del sitio, la información de la web original y las fotos de `public/diplonautic`.
+
+**Decisiones:**
+- **Se probaron varias ideas y se descartaron:** el barco 3D con flujos (repetía la home), una vitrina 3D giratoria y un recorrido editorial con scroll. El pedido fue "un recorrido desde dentro del barco", sin que todo tenga que ser 3D.
+- **Recorrido por el barco:** un corte lateral del yate dibujado como un plano, siempre entero, sin zoom y sin que el scroll lo maneje. Cada equipo tiene un punto para elegirlo (también hay pestañas). El elegido se ilumina con lo que hace (energía, agua, aire frío, frío, empuje) y debajo aparece su ficha con foto, lo que hacemos, marcas y presupuesto. Debajo, los seis servicios de un vistazo.
+- **Coherencia del sitio:**
+  - Diplonautic y ElectroMotor tienen encabezado con foto, capa azul marino y ola, como Contacto. ElectroMotor usa una foto de mayor resolución.
+  - La carta náutica se suaviza y continúa en la sección siguiente.
+  - El header lleva vidrio azul marino al hacer scroll en todas las páginas y suma "Diplonautic" (en pantallas medianas se ocultan Empresa y Cómo trabajamos para que entre en una línea).
+  - "Diplonautic" se suma también al footer y a la sección Servicios de la home.
+- **Presupuesto con el servicio elegido:** cada servicio abre el contacto con su opción ya seleccionada (`/contacto?servicio=aire`, `generadores`…).
+
+**Pruebas:** unitario de la ruta pública y E2E (navbar → Diplonautic → elegir hélices de proa → contacto con el servicio preseleccionado).

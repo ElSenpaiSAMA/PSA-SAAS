@@ -21,7 +21,7 @@ test.describe("web pública", () => {
     await page.goto("/");
     await page.locator("#servicios").getByRole("link", { name: /ElectroMotor/ }).click();
     await expect(page).toHaveURL(/\/electromotor$/);
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("por dentro");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("como nuevos");
 
     await page.getByRole("tab", { name: "Motores de arranque" }).click();
     await expect(page.getByText("Cuando el motor hace clic y no gira")).toBeVisible();
@@ -29,6 +29,20 @@ test.describe("web pública", () => {
     await page.getByRole("main").getByRole("link", { name: /pedir presupuesto/i }).first().click();
     await expect(page).toHaveURL(/\/contacto\?servicio=electromotor$/);
     await expect(page.getByLabel("Servicio")).toHaveValue("ElectroMotor: arranque, alternador o dinamo");
+  });
+
+  test("Diplonautic: el recorrido por el barco muestra cada servicio y lleva al presupuesto", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("banner").getByRole("link", { name: "Diplonautic", exact: true }).click();
+    await expect(page).toHaveURL(/\/diplonautic$/);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("en Barcelona");
+
+    await page.getByRole("tab", { name: /Hélices de proa/ }).click();
+    await expect(page.locator("#recorrido").getByRole("heading", { level: 3 })).toHaveText("Hélices de proa");
+
+    await page.locator('a[href="/contacto?servicio=helices"]').first().click();
+    await expect(page).toHaveURL(/\/contacto\?servicio=helices$/);
+    await expect(page.getByLabel("Servicio")).toHaveValue("Hélices de proa");
   });
 
   test("el acceso de empleados lleva al login", async ({ page }) => {
